@@ -4,18 +4,8 @@ import { cookies } from 'next/headers';
 export async function createClient() {
   const cookieStore = await cookies();
 
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.warn('Supabase environment variables are missing in server client.');
-    return createServerClient('', '', {
-      cookies: {
-        getAll() { return []; },
-        setAll() {}
-      }
-    });
-  }
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://kuqwqukqsgkbnhkztpyw.supabase.co';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'sb_publishable_Iojn3bf-uWrIwbeJcQ3KqA_5YOF2-gZ';
 
   return createServerClient(
     supabaseUrl,
