@@ -4,14 +4,19 @@ import { createClient } from '@/lib/supabase/client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { GraduationCap, BookOpen, PenTool, FlaskConical, Calculator } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { Suspense } from 'react';
 
-export default function LoginPage() {
+function LoginContent() {
+  const searchParams = useSearchParams();
+  const next = searchParams.get('next') || '/builder';
+
   const handleGoogleSignIn = async () => {
     const supabase = createClient();
     await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
-        redirectTo: `${window.location.origin}/callback`,
+        redirectTo: `${window.location.origin}/callback?next=${encodeURIComponent(next)}`,
       },
     });
   };
@@ -59,14 +64,20 @@ export default function LoginPage() {
           {/* Internal gradient glow */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
-          {/* Logo */}
-          <div className="flex items-center justify-center gap-3 mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center shadow-glow">
-              <GraduationCap className="text-white" size={32} strokeWidth={2} />
+          {/* Logo with Double Space Orbits */}
+          <div className="relative flex items-center justify-center mb-10 h-32">
+            {/* Spinning Outer Orbit Ring */}
+            <div className="absolute w-36 h-36 border border-dashed border-primary/45 rounded-full animate-spin-slow pointer-events-none" />
+            {/* Spinning Inner Reverse Orbit Ring */}
+            <div className="absolute w-[118px] h-[118px] border border-dotted border-secondary/35 rounded-full animate-spin-reverse-slow pointer-events-none" />
+            
+            {/* Core Circular Logo Badge */}
+            <div className="w-32 h-32 rounded-full drop-shadow-[0_0_15px_rgba(245,158,11,0.5)] relative z-10 flex items-center justify-center bg-surface/80 backdrop-blur border border-white/10 p-0 overflow-hidden">
+              <img src="/logo_transparent.png" alt="ClassOrbit Logo" className="w-full h-full object-cover rounded-full" />
             </div>
           </div>
 
-          <h1 className="font-display text-[32px] text-text-main font-bold mb-2 tracking-tight">Welcome to ClassOrbit</h1>
+          <h1 className="font-display text-[32px] font-bold mb-2 tracking-tight bg-gradient-to-r from-white via-slate-100 to-amber-400 bg-clip-text text-transparent">Welcome to ClassOrbit.co</h1>
           <p className="text-body-md text-text-muted mb-10 leading-relaxed">
             Sign in to start engineering premium teaching resources with AI.
           </p>
@@ -112,5 +123,15 @@ export default function LoginPage() {
         </p>
       </motion.div>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-mesh-gradient text-white">Loading...</div>
+    }>
+      <LoginContent />
+    </Suspense>
   );
 }

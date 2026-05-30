@@ -1,11 +1,18 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { GraduationCap, LifeBuoy, Settings } from 'lucide-react';
+import { useEffect, useState, useRef } from 'react';
+import { usePathname } from 'next/navigation';
+import { LifeBuoy, Settings, LogOut, User, ChevronDown, Menu, X } from 'lucide-react';
+import { useUser } from '@/lib/hooks/useUser';
 
 export default function Topbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [dropdownOpen, setDropdownOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const { profile, loading, signOut } = useUser();
+  const pathname = usePathname();
+  const isLanding = pathname === '/';
 
   useEffect(() => {
     const handleScroll = () => {
@@ -15,46 +22,181 @@ export default function Topbar() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
   return (
     <header
-      className={`fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-page h-16 transition-all duration-300 ${
-        scrolled ? 'bg-white/80 backdrop-blur-xl border-b border-border shadow-sm' : 'bg-transparent border-b border-transparent'
+      className={`fixed top-0 left-0 w-full z-50 flex justify-between items-center px-margin-mobile md:px-margin-page transition-all duration-500 ease-out ${
+        scrolled 
+          ? 'h-16 bg-[#06040F]/80 backdrop-blur-2xl border-b border-white/10 shadow-soft' 
+          : 'h-20 bg-transparent border-b border-transparent'
       }`}
     >
       <div className="flex items-center gap-2">
-        <Link href="/" className="text-headline-md font-display font-bold text-text-main flex items-center gap-2">
-          <GraduationCap size={28} className="text-primary" strokeWidth={2.5} />
-          ClassOrbit
+        <Link href="/" className="text-headline-md font-display font-bold text-text-main flex items-center gap-3 group">
+          <span className={`transition-all duration-500 font-extrabold tracking-tight ${scrolled ? 'text-2xl' : 'text-3xl group-hover:scale-105'}`}>
+            Class<span className="text-primary">Orbit</span>
+          </span>
         </Link>
       </div>
 
       <nav className="hidden md:flex items-center gap-8">
-        <Link href="/builder" className="text-text-muted text-label-md font-medium hover:text-primary transition-colors">
-          Prompt Builder
-        </Link>
-        <Link href="/workspace" className="text-text-muted text-label-md font-medium hover:text-primary transition-colors">
-          Workspace
-        </Link>
-        <Link href="/tools" className="text-text-muted text-label-md font-medium hover:text-primary transition-colors">
-          Launchpad
-        </Link>
+        {[
+          { name: 'Prompt Builder', href: '/builder' },
+          { name: 'Workspace', href: '/workspace' },
+          { name: 'Launchpad', href: '/tools' }
+        ].map((link) => {
+          const isActive = pathname === link.href;
+          return (
+            <Link 
+              key={link.name} 
+              href={link.href} 
+              className={`group relative text-label-md font-medium transition-colors py-2 ${
+                isActive ? 'text-primary' : 'text-text-muted hover:text-white'
+              }`}
+            >
+              {link.name}
+              <span className={`absolute bottom-0 left-0 w-full h-[2px] bg-primary transition-transform origin-left duration-300 ease-out rounded-full shadow-glow ${
+                isActive ? 'scale-x-100' : 'scale-x-0 group-hover:scale-x-100'
+              }`} />
+            </Link>
+          );
+        })}
       </nav>
 
-      <div className="flex items-center gap-4 relative z-20">
-        <div className="hidden md:flex items-center gap-2">
-          <button className="text-text-muted p-2 hover:bg-background rounded-full transition-colors cursor-pointer" title="Help">
-            <LifeBuoy size={20} />
-          </button>
-          <button className="text-text-muted p-2 hover:bg-background rounded-full transition-colors cursor-pointer" title="Settings">
-            <Settings size={20} />
-          </button>
-        </div>
-        <Link
-          href="/login"
-          className="bg-text-main text-white px-6 py-2 rounded-lg text-label-md font-semibold hover:bg-text-muted transition-colors shadow-sm active:scale-95"
-        >
-          Sign In
-        </Link>
+      <div className="flex items-center gap-3 relative z-20">
+        {loading ? (
+          <div className="w-10 h-10 rounded-full bg-surface animate-pulse" />
+        ) : profile ? (
+          /* ===== LOGGED IN STATE ===== */
+          <div className="flex items-center gap-3" ref={dropdownRef}>
+            {/* Desktop helper icons */}
+            <div className="hidden md:flex items-center gap-1">
+              <Link 
+                href="/help" 
+                className="text-text-muted hover:text-white hover:bg-white/5 p-2 rounded-full transition-all duration-300"
+                title="Help"
+              >
+                <LifeBuoy size={18} strokeWidth={2} />
+              </Link>
+              <Link 
+                href="/settings" 
+                className="text-text-muted hover:text-white hover:bg-white/5 p-2 rounded-full transition-all duration-300"
+                title="Settings"
+              >
+                <Settings size={18} strokeWidth={2} />
+              </Link>
+            </div>
+
+            {/* User Avatar + Dropdown Trigger */}
+            <button
+              onClick={() => setDropdownOpen(!dropdownOpen)}
+              className="flex items-center gap-2.5 px-2 py-1.5 rounded-full hover:bg-white/5 transition-all cursor-pointer group"
+            >
+              {profile.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt={profile.name || 'User'} 
+                  className="w-9 h-9 rounded-full border-2 border-primary/40 object-cover shadow-sm group-hover:border-primary transition-colors"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-9 h-9 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-primary font-bold text-sm">
+                  {(profile.name || profile.email || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="hidden lg:block text-label-md font-semibold text-text-main max-w-[120px] truncate">
+                {profile.name || profile.email?.split('@')[0] || 'Teacher'}
+              </span>
+              <ChevronDown 
+                size={16} 
+                className={`hidden lg:block text-text-muted transition-transform duration-200 ${dropdownOpen ? 'rotate-180' : ''}`} 
+              />
+            </button>
+
+            {/* Dropdown Menu */}
+            {dropdownOpen && (
+              <div className="absolute right-0 top-full mt-2 w-[240px] bg-surface border border-border rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
+                {/* User info header */}
+                <div className="px-4 py-3 border-b border-border bg-background/50">
+                  <p className="text-label-md font-bold text-text-main truncate">
+                    {profile.name || 'Teacher'}
+                  </p>
+                  <p className="text-label-sm text-text-muted truncate">
+                    {profile.email}
+                  </p>
+                </div>
+
+                <div className="py-1.5">
+                  <Link 
+                    href="/profile"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-label-md text-text-muted hover:text-text-main hover:bg-background transition-colors font-medium"
+                  >
+                    <User size={18} />
+                    My Profile
+                  </Link>
+                  <Link 
+                    href="/settings"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-label-md text-text-muted hover:text-text-main hover:bg-background transition-colors font-medium"
+                  >
+                    <Settings size={18} />
+                    Settings
+                  </Link>
+                  <Link 
+                    href="/help"
+                    onClick={() => setDropdownOpen(false)}
+                    className="flex items-center gap-3 px-4 py-2.5 text-label-md text-text-muted hover:text-text-main hover:bg-background transition-colors font-medium"
+                  >
+                    <LifeBuoy size={18} />
+                    Help Center
+                  </Link>
+                </div>
+
+                <div className="border-t border-border py-1.5">
+                  <button
+                    onClick={() => {
+                      setDropdownOpen(false);
+                      signOut();
+                    }}
+                    className="w-full flex items-center gap-3 px-4 py-2.5 text-label-md text-red-400 hover:text-red-300 hover:bg-red-500/5 transition-colors font-medium cursor-pointer"
+                  >
+                    <LogOut size={18} />
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        ) : (
+          /* ===== LOGGED OUT STATE ===== */
+          <>
+            <div className="hidden md:flex items-center gap-3">
+              <button className="text-text-muted hover:text-white hover:bg-white/5 p-2 rounded-full transition-all duration-300 cursor-pointer" title="Help">
+                <LifeBuoy size={18} strokeWidth={2} />
+              </button>
+            </div>
+            <Link
+              href="/login"
+              className="relative inline-flex h-10 overflow-hidden rounded-full p-[1px] focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background active:scale-95 transition-transform"
+            >
+              <span className="absolute inset-[-1000%] animate-[spin_2s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#06040F_0%,#F59E0B_50%,#06040F_100%)]" />
+              <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-surface px-6 py-1 text-label-md font-semibold text-white backdrop-blur-3xl hover:bg-surface/80 transition-colors">
+                Get Started
+              </span>
+            </Link>
+          </>
+        )}
       </div>
     </header>
   );

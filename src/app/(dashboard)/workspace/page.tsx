@@ -8,8 +8,10 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 import { 
   FolderPlus, FilePlus, Search, Archive, Eye, Trash2, X, Copy, Package,
-  FolderOpen, FileText, LayoutTemplate, Image as ImageIcon, File, Calendar, Sparkles
+  FolderOpen, FileText, LayoutTemplate, Image as ImageIcon, File, Calendar, Sparkles, Rocket
 } from 'lucide-react';
+import { defaultTools } from '@/data/default-tools';
+import { launchTool } from '@/lib/tools/router';
 
 interface FolderData {
   id: string;
@@ -85,6 +87,20 @@ export default function WorkspacePage() {
   const [isExporting, setIsExporting] = useState(false);
   const [exportProgress, setExportProgress] = useState(0);
   const [exportMessage, setExportMessage] = useState('Initializing export...');
+
+  // State to track custom tools for prompt launching
+  const [customToolsForLaunch, setCustomToolsForLaunch] = useState<any[]>([]);
+  useEffect(() => {
+    const localCustom = localStorage.getItem('classorbit_custom_tools');
+    if (localCustom) {
+      setCustomToolsForLaunch(JSON.parse(localCustom));
+    }
+  }, [viewingFile]);
+
+  const allAvailableTools = [
+    ...defaultTools.filter(t => t.active),
+    ...customToolsForLaunch
+  ];
 
   useEffect(() => {
     const localFolders = localStorage.getItem('classorbit_folders');
@@ -605,9 +621,41 @@ export default function WorkspacePage() {
                 </button>
               </div>
 
-              <div className="bg-background border border-border rounded-xl p-5 font-mono text-[13px] text-text-main leading-relaxed max-h-[400px] overflow-y-auto custom-scrollbar whitespace-pre-wrap shadow-inner">
+              <div className="bg-background border border-border rounded-xl p-5 font-mono text-[13px] text-text-main leading-relaxed max-h-[250px] overflow-y-auto custom-scrollbar whitespace-pre-wrap shadow-inner">
                 {viewingFile.content || 'No content available.'}
               </div>
+
+              {viewingFile.type === 'prompt' && (
+                <div className="mt-5 border-t border-border pt-4 text-left">
+                  <p className="text-label-sm font-bold text-text-muted uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                    <Rocket size={14} className="text-primary animate-pulse" />
+                    Launch Platform & Copy Prompt
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5 max-h-[140px] overflow-y-auto custom-scrollbar pr-1">
+                    {allAvailableTools.map((tool) => (
+                      <button
+                        key={tool.id}
+                        onClick={() => launchTool(tool.tool_name, tool.tool_url, viewingFile.content || '')}
+                        className="flex items-center gap-2.5 p-2 bg-background border border-border hover:border-primary rounded-xl text-left transition-all active:scale-95 text-text-main group cursor-pointer"
+                      >
+                        <div className="w-8 h-8 rounded-lg bg-white border border-border shadow-sm flex items-center justify-center p-1 shrink-0">
+                          <img 
+                            src={tool.tool_logo || `https://www.google.com/s2/favicons?sz=128&domain=${tool.tool_url}`} 
+                            alt={tool.tool_name} 
+                            className="w-full h-full object-contain"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=128&domain=google.com';
+                            }}
+                          />
+                        </div>
+                        <span className="text-[12px] font-bold truncate group-hover:text-primary transition-colors">
+                          {tool.tool_name}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div className="mt-6 flex justify-between items-center pt-2">
                 <p className="text-label-sm text-text-muted font-medium flex items-center gap-1.5">

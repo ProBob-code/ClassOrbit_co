@@ -1,13 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { defaultTools } from '@/data/default-tools';
 import Badge from '@/components/ui/Badge';
 import toast from 'react-hot-toast';
 import { 
-  Search, Rocket, Sparkles, PenTool, Presentation, Puzzle, ExternalLink, Loader2 
+  Search, Rocket, Sparkles, PenTool, Presentation, Puzzle, ExternalLink, Loader2, Plus, Trash2, X
 } from 'lucide-react';
+import { useUser } from '@/lib/hooks/useUser';
 
 interface Launchphase {
   id: string;
@@ -42,17 +43,120 @@ const classroomPhases: Launchphase[] = [
 ];
 
 export default function LaunchpadPage() {
+  const { profile, loading } = useUser();
   const [activePhase, setActivePhase] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [launchingId, setLaunchingId] = useState<string | null>(null);
 
-  const getToolPhase = (tool: typeof defaultTools[0]): string => {
-    if (tool.category === 'text' || tool.id === 'notebooklm') return 'prep';
+  // Custom AI Tools state
+  const [customTools, setCustomTools] = useState<any[]>([]);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [toolUrl, setToolUrl] = useState('');
+  const [toolName, setToolName] = useState('');
+  const [toolDesc, setToolDesc] = useState('');
+  const [toolCategory, setToolCategory] = useState<'prep' | 'teach' | 'support'>('prep');
+  const [toolIsFree, setToolIsFree] = useState(true);
+
+  useEffect(() => {
+    const localCustom = localStorage.getItem('classorbit_custom_tools');
+    if (localCustom) {
+      setCustomTools(JSON.parse(localCustom));
+    }
+  }, []);
+
+  const saveCustomTools = (updated: any[]) => {
+    setCustomTools(updated);
+    localStorage.setItem('classorbit_custom_tools', JSON.stringify(updated));
+  };
+
+  const handleUrlChange = (val: string) => {
+    setToolUrl(val);
+    if (val.trim()) {
+      try {
+        let domain = val;
+        if (!domain.startsWith('http://') && !domain.startsWith('https://')) {
+          domain = 'https://' + domain;
+        }
+        const url = new URL(domain);
+        const parts = url.hostname.split('.');
+        const rawName = parts.length > 2 ? parts[parts.length - 2] : parts[0];
+        const suggestedName = rawName.charAt(0).toUpperCase() + rawName.slice(1);
+        if (!toolName) {
+          setToolName(suggestedName);
+        }
+      } catch (e) {
+        // Ignored
+      }
+    }
+  };
+
+  const handleAddCustomTool = () => {
+    if (!toolUrl.trim()) {
+      toast.error('Tool URL is required');
+      return;
+    }
+    if (!toolName.trim()) {
+      toast.error('Tool Name is required');
+      return;
+    }
+
+    let formattedUrl = toolUrl.trim();
+    if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
+      formattedUrl = 'https://' + formattedUrl;
+    }
+
+    const newTool = {
+      id: 'custom-' + Math.random().toString(36).substring(7),
+      tool_name: toolName.trim(),
+      tool_url: formattedUrl,
+      description: toolDesc.trim() || 'Custom AI tool integrated by teacher.',
+      category: toolCategory === 'prep' ? 'text' : toolCategory === 'teach' ? 'presentation' : 'audio',
+      is_free: toolIsFree,
+      supported_outputs: ['notes', 'quiz', 'lesson_plan'],
+      active: true,
+      sort_order: 100 + customTools.length,
+    };
+
+    saveCustomTools([...customTools, newTool]);
+    setToolUrl('');
+    setToolName('');
+    setToolDesc('');
+    setToolCategory('prep');
+    setToolIsFree(true);
+    setShowAddModal(false);
+    toast.success(`${toolName} saved to launcher!`);
+  };
+
+  const handleDeleteCustomTool = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to remove "${name}" from your launcher?`)) {
+      const updated = customTools.filter(t => t.id !== id);
+      saveCustomTools(updated);
+      toast.success(`Removed ${name} from launcher.`);
+    }
+  };
+
+  const getToolPhase = (tool: any): string => {
+    if (tool.category === 'text' || tool.category === 'research' || tool.id === 'notebooklm') return 'prep';
     if (tool.category === 'presentation' || tool.category === 'visual' || tool.id === 'ideogram') return 'teach';
     return 'support';
   };
 
-  const filteredTools = defaultTools
+  const getToolLogoUrl = (url: string, logo?: string) => {
+    if (logo) return logo;
+    try {
+      const parsedUrl = new URL(url);
+      return `https://www.google.com/s2/favicons?sz=128&domain=${parsedUrl.hostname}`;
+    } catch (e) {
+      return `https://www.google.com/s2/favicons?sz=128&domain=${url}`;
+    }
+  };
+
+  const allToolsList = [
+    ...defaultTools.map(t => ({ ...t, isCustom: false })),
+    ...customTools.map(t => ({ ...t, active: true, isCustom: true }))
+  ];
+
+  const filteredTools = allToolsList
     .filter((t) => t.active)
     .filter((t) => {
       if (activePhase === 'all') return true;
@@ -75,29 +179,80 @@ export default function LaunchpadPage() {
   return (
     <div className="w-full max-w-[1400px] mx-auto px-margin-mobile md:px-margin-page py-8 mt-16 md:mt-0 relative min-h-screen">
       
-      {/* Header section */}
-      <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-10">
-        <div>
-          <span className="text-label-sm font-bold text-primary tracking-widest uppercase mb-2 block flex items-center gap-1.5">
-            <Rocket size={16} /> Integrations
-          </span>
-          <h1 className="font-display text-display-lg-mobile md:text-[40px] text-text-main font-bold tracking-tight">
-            AI Launchpad
-          </h1>
-          <p className="text-body-md text-text-muted max-w-xl mt-2">
-            Seamlessly launch into your favorite educational AI tools with pre-configured parameters.
-          </p>
+      {/* Header section with ClassOrbit logo and Google SSO Session Bridge */}
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
+        <div className="flex items-center gap-4 text-left">
+          <img 
+            src="/logo_transparent.png" 
+            alt="ClassOrbit Logo" 
+            className="w-14 h-14 object-contain drop-shadow-[0_0_12px_rgba(245,158,11,0.4)] shrink-0" 
+          />
+          <div>
+            <span className="text-label-sm font-bold text-primary tracking-widest uppercase mb-1 block flex items-center gap-1.5">
+              <Rocket size={14} /> Integrations
+            </span>
+            <h1 className="font-display text-display-lg-mobile md:text-[40px] text-text-main font-bold tracking-tight">
+              AI Launchpad
+            </h1>
+            <p className="text-body-md text-text-muted max-w-xl mt-1 leading-relaxed">
+              Seamlessly launch into your favorite educational AI tools with pre-configured parameters.
+            </p>
+          </div>
         </div>
 
-        <div className="relative group">
-          <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle group-focus-within:text-primary transition-colors" />
-          <input
-            type="text"
-            placeholder="Search tools..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="bg-surface border border-border rounded-xl pl-10 pr-4 py-2.5 text-body-md w-[200px] md:w-[260px] focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
-          />
+        {/* Google SSO Session Bridge Card */}
+        {!loading && profile && (
+          <div className="glass-panel rounded-2xl p-4.5 flex items-center gap-4 border border-emerald-500/20 bg-emerald-500/5 max-w-md w-full lg:w-auto shadow-sm shadow-emerald-500/5 text-left shrink-0">
+            <div className="relative">
+              {profile.avatar_url ? (
+                <img 
+                  src={profile.avatar_url} 
+                  alt={profile.name || ''} 
+                  className="w-11 h-11 rounded-full border-2 border-emerald-500/40 object-cover" 
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="w-11 h-11 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
+                  {(profile.name || profile.email || 'T').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-[#06040F] rounded-full animate-pulse" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block">Google SSO Session Synced</span>
+              <p className="text-label-sm font-bold text-text-main truncate mt-0.5">{profile.email}</p>
+              <p className="text-[11px] text-text-muted mt-0.5 leading-tight max-w-[280px]">
+                Single-sign-on active. Click "Continue with Google" on external tools to log in instantly.
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Toolbar - Search & Register Button */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-surface/30 border border-border/60 rounded-2xl p-4">
+        <p className="text-label-md text-text-muted font-semibold text-left">
+          Discover and navigate to classroom assistants
+        </p>
+        <div className="flex flex-wrap items-center gap-3">
+          <div className="relative group">
+            <Search size={18} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle group-focus-within:text-primary transition-colors" />
+            <input
+              type="text"
+              placeholder="Search tools..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-background border border-border rounded-xl pl-10 pr-4 py-2.5 text-body-md w-full sm:w-[220px] focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm text-text-main placeholder:text-text-subtle"
+            />
+          </div>
+
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="bg-primary/10 text-primary hover:bg-primary/15 border border-primary/20 px-4.5 py-2.5 rounded-xl font-bold flex items-center gap-2 transition-all shadow-sm active:scale-95 shrink-0 text-label-md cursor-pointer"
+          >
+            <Plus size={18} />
+            Register AI Tool
+          </button>
         </div>
       </div>
 
@@ -164,16 +319,37 @@ export default function LaunchpadPage() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="glass-card rounded-[24px] p-6 flex flex-col justify-between h-[280px] group hover:border-primary/50"
+                  className="glass-card rounded-[24px] p-6 flex flex-col justify-between h-[280px] group hover:border-primary/50 text-left"
                 >
                   <div>
                     <div className="flex items-start justify-between mb-4">
-                      <div className="w-14 h-14 rounded-2xl bg-white border border-border shadow-sm overflow-hidden flex items-center justify-center p-2">
-                        <img src={tool.logoUrl} alt={tool.tool_name} className="w-full h-full object-contain" />
+                      <div className="w-14 h-14 rounded-2xl bg-white border border-border shadow-sm overflow-hidden flex items-center justify-center p-2 shrink-0">
+                        <img 
+                          src={getToolLogoUrl(tool.tool_url, tool.tool_logo)} 
+                          alt={tool.tool_name} 
+                          className="w-full h-full object-contain"
+                          onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=128&domain=google.com';
+                          }}
+                        />
                       </div>
-                      <Badge variant={tool.is_free ? 'success' : 'default'} className="font-semibold shadow-sm">
-                        {tool.is_free ? 'Free Tier' : 'Pro'}
-                      </Badge>
+                      <div className="flex items-center gap-1.5">
+                        {tool.isCustom && (
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteCustomTool(tool.id, tool.tool_name);
+                            }}
+                            className="p-1.5 rounded-lg bg-surface hover:bg-error/10 text-text-subtle hover:text-error border border-border transition-colors cursor-pointer"
+                            title="Delete custom tool"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        )}
+                        <Badge variant={tool.is_free ? 'success' : 'default'} className="font-semibold shadow-sm text-[10px] uppercase">
+                          {tool.is_free ? 'Free' : 'Pro'}
+                        </Badge>
+                      </div>
                     </div>
 
                     <h3 className="font-display font-bold text-[20px] text-text-main mb-2">
@@ -212,6 +388,107 @@ export default function LaunchpadPage() {
           </AnimatePresence>
         </div>
       )}
+
+      {/* Register Custom AI Tool Modal */}
+      <AnimatePresence>
+        {showAddModal && (
+          <div className="fixed inset-0 bg-[#06040F]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-surface border border-border rounded-[24px] w-full max-w-[500px] p-7 shadow-2xl relative text-text-main text-left"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-display text-headline-sm font-bold text-text-main flex items-center gap-2">
+                  <Rocket className="text-primary" size={20} />
+                  Register Custom AI Tool
+                </h3>
+                <button onClick={() => setShowAddModal(false)} className="text-text-subtle hover:text-text-main transition-colors">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="space-y-5">
+                <div>
+                  <label className="text-label-sm font-semibold text-text-muted block mb-2">Tool URL</label>
+                  <input
+                    type="text"
+                    placeholder="https://perplexity.ai"
+                    value={toolUrl}
+                    onChange={(e) => handleUrlChange(e.target.value)}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary transition-all text-text-main placeholder:text-text-subtle"
+                    autoFocus
+                  />
+                </div>
+
+                <div>
+                  <label className="text-label-sm font-semibold text-text-muted block mb-2">Tool Name</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Perplexity"
+                    value={toolName}
+                    onChange={(e) => setToolName(e.target.value)}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary transition-all text-text-main placeholder:text-text-subtle"
+                  />
+                </div>
+
+                <div>
+                  <label className="text-label-sm font-semibold text-text-muted block mb-2">Description</label>
+                  <textarea
+                    placeholder="What is this tool best for? E.g. Great for conversational research and citation..."
+                    value={toolDesc}
+                    onChange={(e) => setToolDesc(e.target.value)}
+                    className="w-full h-20 bg-background border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary transition-all text-text-main placeholder:text-text-subtle resize-none"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-label-sm font-semibold text-text-muted block mb-2">Category Phase</label>
+                    <select
+                      value={toolCategory}
+                      onChange={(e) => setToolCategory(e.target.value as any)}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary transition-all text-text-main cursor-pointer font-medium"
+                    >
+                      <option value="prep">Preparation (Text)</option>
+                      <option value="teach">Visuals & Slides</option>
+                      <option value="support">Differentiation</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="text-label-sm font-semibold text-text-muted block mb-2">Pricing Tier</label>
+                    <select
+                      value={toolIsFree ? 'free' : 'pro'}
+                      onChange={(e) => setToolIsFree(e.target.value === 'free')}
+                      className="w-full bg-background border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary transition-all text-text-main cursor-pointer font-medium"
+                    >
+                      <option value="free">Free Tier</option>
+                      <option value="pro">Pro / Paid</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-8 flex justify-end gap-3">
+                <button
+                  onClick={() => setShowAddModal(false)}
+                  className="px-5 py-2.5 rounded-xl font-semibold text-label-md text-text-muted hover:bg-background transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleAddCustomTool}
+                  className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl font-semibold text-label-md transition-colors shadow-md shadow-primary/20"
+                >
+                  Save Integration
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

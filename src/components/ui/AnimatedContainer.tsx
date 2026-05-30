@@ -18,7 +18,7 @@ export default function AnimatedContainer({
   direction = 'up',
 }: AnimatedContainerProps) {
   const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-100px' });
+  const isInView = useInView(ref, { once: true, margin: '0px' });
 
   const directionVariants = {
     up: { y: 40 },

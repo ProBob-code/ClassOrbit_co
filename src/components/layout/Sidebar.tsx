@@ -8,11 +8,12 @@ import {
   FolderOpen, 
   Bookmark, 
   Rocket, 
-  GraduationCap, 
   LifeBuoy, 
   Settings,
-  Plus
+  Plus,
+  User
 } from 'lucide-react';
+import { useUser } from '@/lib/hooks/useUser';
 
 const navItems = [
   { href: '/builder', label: 'Prompt Builder', icon: Sparkles },
@@ -23,18 +24,17 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const { profile, loading } = useUser();
 
   return (
     <aside className="fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] flex-col p-6 z-40 bg-surface border-r border-border hidden md:flex shadow-soft">
       {/* Teacher Workspace Header */}
-      <div className="flex items-center gap-3.5 mb-8 pb-5">
-        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-sm border border-primary/20">
-          <GraduationCap size={24} strokeWidth={2.5} />
-        </div>
-        <div className="text-left">
-          <p className="font-display text-label-md text-text-main font-bold leading-tight">ClassOrbit</p>
-          <p className="text-label-sm text-text-muted mt-0.5">Educator Studio</p>
-        </div>
+      <div className="flex justify-center mb-8 pb-5 border-b border-border">
+        <img 
+          src="/logo_transparent.png" 
+          alt="ClassOrbit Logo" 
+          className="w-32 h-auto object-contain drop-shadow-[0_0_10px_rgba(245,158,11,0.4)]" 
+        />
       </div>
 
       {/* Navigation dividers */}
@@ -46,10 +46,10 @@ export default function Sidebar() {
             <Link
               key={item.href}
               href={item.href}
-              className={`relative flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-200 ${
+              className={`relative flex items-center gap-3 px-4 py-3.5 rounded-xl transition-all duration-300 ${
                 isActive
-                  ? 'text-primary font-semibold shadow-sm border border-border bg-white'
-                  : 'text-text-muted hover:bg-background hover:text-text-main font-medium'
+                  ? 'text-primary font-bold shadow-soft border border-primary/20 bg-primary/10 backdrop-blur-md'
+                  : 'text-text-muted hover:bg-background hover:text-text-main font-medium border border-transparent'
               }`}
             >
               {isActive && (
@@ -75,18 +75,51 @@ export default function Sidebar() {
         New Prompt
       </Link>
 
-      {/* Help link at bottom */}
+      {/* User card + links at bottom */}
       <div className="pt-4 border-t border-border flex flex-col gap-1 text-left">
+        {/* User card */}
+        {!loading && profile && (
+          <Link
+            href="/profile"
+            className="flex items-center gap-3 px-3 py-3 mb-2 rounded-xl hover:bg-background transition-all group"
+          >
+            {profile.avatar_url ? (
+              <img 
+                src={profile.avatar_url} 
+                alt={profile.name || 'User'} 
+                className="w-9 h-9 rounded-full border-2 border-primary/30 object-cover group-hover:border-primary transition-colors"
+                referrerPolicy="no-referrer"
+              />
+            ) : (
+              <div className="w-9 h-9 rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center text-primary font-bold text-sm">
+                {(profile.name || profile.email || 'U').charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div className="flex-1 min-w-0">
+              <p className="text-label-md font-semibold text-text-main truncate">
+                {profile.name || 'Teacher'}
+              </p>
+              <p className="text-[11px] text-text-muted truncate">
+                {profile.email}
+              </p>
+            </div>
+          </Link>
+        )}
+
         <Link
-          href="#"
-          className="flex items-center gap-3 text-text-muted px-4 py-2.5 hover:bg-background rounded-lg transition-all font-medium"
+          href="/help"
+          className={`flex items-center gap-3 text-text-muted px-4 py-2.5 hover:bg-background rounded-lg transition-all font-medium ${
+            pathname === '/help' ? 'text-primary bg-primary/5' : ''
+          }`}
         >
           <LifeBuoy size={18} />
           <span className="text-label-sm">Help Center</span>
         </Link>
         <Link
-          href="#"
-          className="flex items-center gap-3 text-text-muted px-4 py-2.5 hover:bg-background rounded-lg transition-all font-medium"
+          href="/settings"
+          className={`flex items-center gap-3 text-text-muted px-4 py-2.5 hover:bg-background rounded-lg transition-all font-medium ${
+            pathname === '/settings' ? 'text-primary bg-primary/5' : ''
+          }`}
         >
           <Settings size={18} />
           <span className="text-label-sm">Settings</span>
