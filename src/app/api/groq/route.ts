@@ -19,19 +19,39 @@ export async function POST(req: Request) {
       teachingStyles = [],
       studentLevel,
       platformRequirements,
+      hasAttachment = false,
+      attachedFiles = [],
     } = formData;
 
     const systemPrompt = `You are an expert curriculum designer and prompt engineer. Your job is to generate a highly optimized LLM prompt that a teacher can copy and paste into an AI (like ChatGPT or Claude) to create their lesson material.`;
     
-    const userPrompt = `
+    let userPrompt = `
 Please generate a highly detailed, professional prompt to create a ${contentType}.
 Subject: ${subject}
 Grade: ${grade}
 Topic/Objective: ${topic}
 Teaching Styles: ${teachingStyles.join(', ') || 'Standard'}
-Student Level: ${studentLevel}
+Student Level (Target Audience): ${studentLevel}
 Platform & Formatting Requirements: ${platformRequirements || 'Standard'}
+`;
 
+    if (hasAttachment) {
+      userPrompt += `
+Reference Files Attached: ${attachedFiles.join(', ')}
+
+CRITICAL REQUIREMENT (RAG & Grounding):
+The teacher has attached the reference documents/materials listed above. 
+The prompt you generate MUST explicitly instruct the target AI (ChatGPT/Claude) to:
+1. Act as a strict RAG (Retrieval-Augmented Generation) assistant, grounding all generated content and explanations directly in the reference document content provided at the bottom of the prompt (which the user will paste).
+2. Mimic the layout, style, and structure of the reference papers, but apply them to the target grade and subject.
+3. If this is a question paper/exam:
+   - Carefully analyze the question formats, pattern, marks allocation, and rigor of the attached previous question papers.
+   - Adjust the cognitive complexity of the new questions to match the targeted level: "${studentLevel}" (e.g., Weak Students: simplified questions and guiding hints; Average: standard exam rigor; Advanced: high-order critical thinking and complex problem solving; Mixed: balanced distribution of easy, medium, and difficult questions).
+   - **CRITICAL NON-REPETITION CONSTRAINT:** Under no circumstances should the target AI repeat any questions verbatim from the attached papers. All questions in the generated ${contentType} must be brand-new, unique, and fresh creations that assess the same skills and topics.
+`;
+    }
+
+    userPrompt += `
 The prompt you generate should instruct the target AI to act as an expert teacher, use the specified teaching styles, and perfectly format the output for the requested platform.
 Output ONLY the optimized prompt text. Do not include conversational filler like "Here is the prompt". Just output the raw prompt.
     `;

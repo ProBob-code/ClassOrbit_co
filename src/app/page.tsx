@@ -22,16 +22,107 @@ export default function LandingPage() {
     <>
       <Topbar />
       <main className="pt-20 bg-mesh-gradient min-h-screen relative overflow-hidden font-body text-text-main">
-        {/* Galaxy / Orbit Stars Background Overlay */}
+        {/* Premium Interactive 3D Cosmic Orbit Background */}
         <div className="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+          {/* Ambient space dust / stars */}
           <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MDAiIGhlaWdodD0iNDAwIj48Zz48Y2lyY2xlIGN4PSI1MCIgY3k9IjUwIiByPSIwLjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuOCIvPjxjaXJjbGUgY3g9IjI1MCIgY3k9IjE1MCIgcj0iMSIgZmlsbD0iI2ZmZiIgb3BhY2l0eT0iMC41Ii8+PGNpcmNsZSBjeD0iMzUwIiBjeT0iMzAwIiByPSIwLjUiIGZpbGw9IiNmZmYiIG9wYWNpdHk9IjAuNiIvPjxjaXJjbGUgY3g9IjE1MCIgY3k9IjM1MCIgcj0iMS41IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIwLjMiLz48L2c+PC9zdmc+')] opacity-40 mix-blend-screen" />
-          <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-secondary/20 blur-[150px] rounded-full mix-blend-screen animate-pulse-glow" />
-          <div className="absolute bottom-[20%] right-[-10%] w-[600px] h-[600px] bg-primary/10 blur-[180px] rounded-full mix-blend-screen animate-pulse" />
-          <div className="absolute top-[40%] left-[30%] w-[300px] h-[300px] bg-pink-500/10 blur-[120px] rounded-full mix-blend-screen animate-float" />
           
-          {/* Orbital Rings Effect */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[120vw] max-w-[1400px] aspect-square rounded-full border border-white/5 opacity-50 shadow-[0_0_100px_rgba(139,92,246,0.1)_inset] animate-spin-slow" />
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[100vw] max-w-[1100px] aspect-square rounded-full border border-white/5 opacity-30 shadow-[0_0_80px_rgba(245,158,11,0.05)_inset] animate-spin-reverse-slow" />
+          {/* Deep celestial gas nebulas - toned down for minimalism */}
+          <div className="absolute top-[-10%] left-[-10%] w-[600px] h-[600px] bg-secondary/5 blur-[160px] rounded-full mix-blend-screen animate-pulse-glow" />
+          <div className="absolute bottom-[10%] right-[-10%] w-[700px] h-[700px] bg-primary/5 blur-[180px] rounded-full mix-blend-screen animate-pulse" />
+          <div className="absolute top-[30%] left-[20%] w-[400px] h-[400px] bg-white/3 blur-[130px] rounded-full mix-blend-screen animate-float" />
+          
+          {/* 3D Tilted Orbit Arena */}
+          <div 
+            className="absolute top-[380px] sm:top-[420px] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[1000px] flex items-center justify-center scale-[0.8] sm:scale-100"
+            style={{
+              transform: 'perspective(1200px) rotateX(55deg) rotateY(-10deg)',
+              transformStyle: 'preserve-3d',
+            }}
+          >
+            {/* Concentric Orbit Paths */}
+            {/* Orbit 1: ChatGPT */}
+            <div className="absolute w-[300px] h-[300px] rounded-full border-[0.5px] border-white/20 shadow-[0_0_15px_rgba(255,255,255,0.05)]" style={{ transformStyle: 'preserve-3d' }} />
+            
+            {/* Orbit 2: Claude */}
+            <div className="absolute w-[460px] h-[460px] rounded-full border-[0.5px] border-white/10 shadow-[0_0_15px_rgba(255,255,255,0.05)]" style={{ transformStyle: 'preserve-3d' }} />
+            
+            {/* Orbit 3: Canva */}
+            <div className="absolute w-[600px] h-[600px] rounded-full border-[0.5px] border-white/5" style={{ transformStyle: 'preserve-3d' }} />
+            
+            {/* Orbit 4: Gamma */}
+            <div className="absolute w-[720px] h-[720px] rounded-full border-[0.5px] border-white/5" style={{ transformStyle: 'preserve-3d' }} />
+            
+            {/* Orbit 5: NotebookLM */}
+            <div className="absolute w-[840px] h-[840px] rounded-full border-[0.5px] border-white/5" style={{ transformStyle: 'preserve-3d' }} />
+
+            {/* Orbiting Planet Badges - Nested elements that counteract the 3D tilt so they remain flat facing the viewer */}
+            {/* ChatGPT Planet */}
+            <div className="absolute w-0 h-0 flex items-center justify-center animate-orbit-chatgpt" style={{ transformStyle: 'preserve-3d' }}>
+              <div 
+                className="w-12 h-12 rounded-full glass-card border border-white/10 shadow-2xl flex items-center justify-center p-2.5 transition-all hover:scale-125 hover:border-white/30 duration-300 pointer-events-auto cursor-pointer backdrop-blur-md group"
+                style={{ transform: 'rotateY(10deg) rotateX(-55deg)' }}
+                title="ChatGPT"
+              >
+                <img src="https://www.google.com/s2/favicons?sz=128&domain=chat.openai.com" className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" alt="ChatGPT" />
+              </div>
+            </div>
+
+            {/* Claude Planet */}
+            <div className="absolute w-0 h-0 flex items-center justify-center animate-orbit-claude" style={{ transformStyle: 'preserve-3d' }}>
+              <div 
+                className="w-12 h-12 rounded-full glass-card border border-white/10 shadow-2xl flex items-center justify-center p-2.5 transition-all hover:scale-125 hover:border-white/30 duration-300 pointer-events-auto cursor-pointer backdrop-blur-md group"
+                style={{ transform: 'rotateY(10deg) rotateX(-55deg)' }}
+                title="Claude AI"
+              >
+                <img src="https://www.google.com/s2/favicons?sz=128&domain=claude.ai" className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" alt="Claude" />
+              </div>
+            </div>
+
+            {/* Canva Planet */}
+            <div className="absolute w-0 h-0 flex items-center justify-center animate-orbit-canva" style={{ transformStyle: 'preserve-3d' }}>
+              <div 
+                className="w-12 h-12 rounded-full glass-card border border-white/10 shadow-2xl flex items-center justify-center p-2.5 transition-all hover:scale-125 hover:border-white/30 duration-300 pointer-events-auto cursor-pointer backdrop-blur-md group"
+                style={{ transform: 'rotateY(10deg) rotateX(-55deg)' }}
+                title="Canva"
+              >
+                <img src="https://www.google.com/s2/favicons?sz=128&domain=canva.com" className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" alt="Canva" />
+              </div>
+            </div>
+
+            {/* Gamma Planet */}
+            <div className="absolute w-0 h-0 flex items-center justify-center animate-orbit-gamma" style={{ transformStyle: 'preserve-3d' }}>
+              <div 
+                className="w-12 h-12 rounded-full glass-card border border-white/10 shadow-2xl flex items-center justify-center p-2.5 transition-all hover:scale-125 hover:border-white/30 duration-300 pointer-events-auto cursor-pointer backdrop-blur-md group"
+                style={{ transform: 'rotateY(10deg) rotateX(-55deg)' }}
+                title="Gamma Presentations"
+              >
+                <img src="https://www.google.com/s2/favicons?sz=128&domain=gamma.app" className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" alt="Gamma" />
+              </div>
+            </div>
+
+            {/* NotebookLM Planet */}
+            <div className="absolute w-0 h-0 flex items-center justify-center animate-orbit-notebooklm" style={{ transformStyle: 'preserve-3d' }}>
+              <div 
+                className="w-12 h-12 rounded-full glass-card border border-white/10 shadow-2xl flex items-center justify-center p-2.5 transition-all hover:scale-125 hover:border-white/30 duration-300 pointer-events-auto cursor-pointer backdrop-blur-md group"
+                style={{ transform: 'rotateY(10deg) rotateX(-55deg)' }}
+                title="Google NotebookLM"
+              >
+                <img src="https://www.google.com/s2/favicons?sz=128&domain=notebooklm.google.com" className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" alt="NotebookLM" />
+              </div>
+            </div>
+
+            {/* Glowing Central Solar Nucleus (ClassOrbit Logo) */}
+            <div 
+              className="absolute w-32 h-32 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(245,158,11,0.15)] animate-pulse-glow border border-primary/20 backdrop-blur-sm"
+              style={{ transform: 'rotateY(10deg) rotateX(-55deg) translateZ(10px)' }}
+            >
+              <div className="w-20 h-20 rounded-full glass-card flex items-center justify-center p-3.5 border border-white/10 animate-float shadow-2xl backdrop-blur-xl">
+                <img src="/logo_transparent.png" className="w-full h-full object-contain opacity-90 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" alt="ClassOrbit Center" />
+              </div>
+            </div>
+
+          </div>
         </div>
 
         {/* ===== HERO SECTION ===== */}

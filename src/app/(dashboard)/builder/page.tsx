@@ -12,6 +12,7 @@ import { defaultTools } from '@/data/default-tools';
 import { launchTool } from '@/lib/tools/router';
 import { TeacherInput, ToolPrompts } from '@/types';
 import toast from 'react-hot-toast';
+import JSZip from 'jszip';
 import { 
   Sparkles, CheckCircle2, ChevronDown, Rocket, Copy, ExternalLink, PenTool, Presentation, 
   BookOpen, FileText, ClipboardList, Book, Home, Layers, Users, MessageSquare, Gamepad2, 
@@ -19,6 +20,92 @@ import {
   Palette, History, Music, Binary, PenLine, SlidersHorizontal, ArrowLeft, 
   Send, PartyPopper, Bookmark, RotateCcw, X, Plus
 } from 'lucide-react';
+
+interface AttachedFile {
+  name: string;
+  size: number;
+  content: string;
+  type: string;
+}
+
+const getToolLogoUrl = (url: string, logo?: string) => {
+  if (logo) return logo;
+  try {
+    const parsedUrl = new URL(url);
+    return `https://www.google.com/s2/favicons?sz=128&domain=${parsedUrl.hostname}`;
+  } catch (e) {
+    return `https://www.google.com/s2/favicons?sz=128&domain=${url}`;
+  }
+};
+
+const extractTxtText = (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(reader.result as string);
+    reader.onerror = () => reject(reader.error);
+    reader.readAsText(file);
+  });
+};
+
+const extractDocxText = async (file: File): Promise<string> => {
+  try {
+    const arrayBuffer = await file.arrayBuffer();
+    const zip = await JSZip.loadAsync(arrayBuffer);
+    const documentXml = await zip.file('word/document.xml')?.async('text');
+    if (!documentXml) return '';
+    
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(documentXml, 'text/xml');
+    const paragraphs = xmlDoc.getElementsByTagName('w:t');
+    let text = '';
+    for (let i = 0; i < paragraphs.length; i++) {
+      text += paragraphs[i].textContent + ' ';
+    }
+    return text.trim();
+  } catch (err) {
+    console.error('Error parsing docx:', err);
+    throw new Error('Failed to parse Word document. Please ensure it is not corrupted.');
+  }
+};
+
+const extractPdfText = async (file: File): Promise<string> => {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = async () => {
+      try {
+        const typedarray = new Uint8Array(reader.result as ArrayBuffer);
+        
+        // Load PDFJS dynamically if not available
+        if (!(window as any).pdfjsLib) {
+          const script = document.createElement('script');
+          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
+          document.head.appendChild(script);
+          await new Promise((resolveScript, rejectScript) => {
+            script.onload = resolveScript;
+            script.onerror = rejectScript;
+          });
+          (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
+        }
+        
+        const pdfjsLib = (window as any).pdfjsLib;
+        const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
+        let text = '';
+        for (let i = 1; i <= pdf.numPages; i++) {
+          const page = await pdf.getPage(i);
+          const content = await page.getTextContent();
+          const strings = content.items.map((item: any) => item.str);
+          text += strings.join(' ') + '\n';
+        }
+        resolve(text);
+      } catch (err) {
+        console.error('Error parsing pdf:', err);
+        reject(new Error('Failed to parse PDF document. It may be a scanned PDF or corrupted.'));
+      }
+    };
+    reader.onerror = () => reject(reader.error);
+    reader.readAsArrayBuffer(file);
+  });
+};
 
 const iconMap: Record<string, any> = {
   'quiz': PenTool, 'slideshow': Presentation, 'menu_book': BookOpen, 'description': FileText,
@@ -61,6 +148,60 @@ function BuilderContent() {
   // Free type state
   const [freePrompt, setFreePrompt] = useState('');
   const [freeTools, setFreeTools] = useState<string[]>(['chatgpt', 'claude']);
+
+  // Attachments State
+  const [attachments, setAttachments] = useState<AttachedFile[]>([]);
+  const [isParsing, setIsParsing] = useState(false);
+
+  const removeAttachment = (idx: number) => {
+    setAttachments(prev => prev.filter((_, i) => i !== idx));
+    toast.success('Attachment removed');
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    
+    setIsParsing(true);
+    const loader = toast.loading('Reading attached document...', {
+      style: {
+        borderRadius: '1rem',
+        background: 'rgba(255,255,255,0.9)',
+        backdropFilter: 'blur(10px)',
+      }
+    });
+    try {
+      const newAttachments: AttachedFile[] = [...attachments];
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        const ext = file.name.split('.').pop()?.toLowerCase();
+        let content = '';
+        
+        if (ext === 'txt') {
+          content = await extractTxtText(file);
+        } else if (ext === 'docx') {
+          content = await extractDocxText(file);
+        } else if (ext === 'pdf') {
+          content = await extractPdfText(file);
+        } else {
+          content = `[Non-text binary file: ${file.name}]`;
+        }
+        
+        newAttachments.push({
+          name: file.name,
+          size: file.size,
+          content: content,
+          type: file.type || ext || 'unknown'
+        });
+      }
+      setAttachments(newAttachments);
+      toast.success('Attached successfully!', { id: loader });
+    } catch (err: any) {
+      toast.error(err.message || 'Error parsing document', { id: loader });
+    } finally {
+      setIsParsing(false);
+    }
+  };
 
   // Guided builder state
   const [formData, setFormData] = useState<TeacherInput>({
@@ -265,8 +406,22 @@ function BuilderContent() {
 
     try {
       const bodyData = mode === 'free' 
-        ? { formData: { ...formData, topic: freePrompt, selectedTools: freeTools } }
-        : { formData };
+        ? { 
+            formData: { 
+              ...formData, 
+              topic: freePrompt, 
+              selectedTools: freeTools,
+              hasAttachment: attachments.length > 0,
+              attachedFiles: attachments.map(a => a.name)
+            } 
+          }
+        : { 
+            formData: {
+              ...formData,
+              hasAttachment: attachments.length > 0,
+              attachedFiles: attachments.map(a => a.name)
+            }
+          };
 
       const res = await fetch('/api/groq', {
         method: 'POST',
@@ -277,6 +432,19 @@ function BuilderContent() {
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       
+      // Assemble combined prompt with delimiters if attachments exist
+      let combinedPrompt = data.prompt;
+      if (attachments.length > 0) {
+        combinedPrompt += `\n\n==================================================\n`;
+        combinedPrompt += `ATTACHED REFERENCE DOCUMENTS FOR RAG:\n`;
+        for (const att of attachments) {
+          combinedPrompt += `\n--- START OF FILE: ${att.name} ---\n`;
+          combinedPrompt += att.content;
+          combinedPrompt += `\n--- END OF FILE: ${att.name} ---\n`;
+        }
+        combinedPrompt += `==================================================\n`;
+      }
+
       const tools = mode === 'free' ? freeTools : formData.selectedTools;
       const selectedToolData = defaultTools.filter(t => tools.includes(t.id));
       const prompts: ToolPrompts = {};
@@ -284,8 +452,8 @@ function BuilderContent() {
         prompts[tool.id] = {
           toolName: tool.tool_name,
           toolUrl: tool.tool_url,
-          toolLogo: tool.tool_logo,
-          prompt: data.prompt,
+          toolLogo: getToolLogoUrl(tool.tool_url, tool.tool_logo),
+          prompt: combinedPrompt,
           category: tool.category,
         };
       }
@@ -634,6 +802,75 @@ function BuilderContent() {
                 className="w-full h-[240px] bg-surface border border-border rounded-2xl p-5 text-body-md leading-relaxed resize-none focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm placeholder:text-text-subtle"
               />
 
+              {/* Reference Document Attachments (RAG) */}
+              <div className="space-y-3 pt-2 text-left">
+                <div className="flex items-center justify-between">
+                  <label className="text-label-sm font-semibold text-text-muted ml-1 flex items-center gap-1.5 cursor-pointer">
+                    <FileText size={16} className="text-primary" />
+                    Reference Documents / Material (Optional)
+                  </label>
+                  {attachments.length > 0 && (
+                    <span className="text-[12px] text-primary font-bold animate-pulse">
+                      {attachments.length} file(s) attached
+                    </span>
+                  )}
+                </div>
+                
+                {/* Drag / Upload Zone */}
+                <div className="relative border border-dashed border-border hover:border-primary/50 transition-colors rounded-2xl p-5 text-center bg-surface/30 group">
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.docx,.txt"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    disabled={isParsing}
+                  />
+                  <div className="flex flex-col items-center justify-center gap-2 pointer-events-none">
+                    <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center text-text-subtle group-hover:text-primary group-hover:border-primary/20 transition-all">
+                      {isParsing ? <Loader2 size={20} className="animate-spin text-primary" /> : <Plus size={20} />}
+                    </div>
+                    <div>
+                      <p className="text-label-md font-bold text-text-main">
+                        {isParsing ? 'Parsing attachments...' : 'Click or Drag files to attach'}
+                      </p>
+                      <p className="text-[11px] text-text-muted mt-1">
+                        Supports PDF, Word (.docx), or Text (.txt)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* List of attachments */}
+                {attachments.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                    {attachments.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-surface border border-border rounded-xl p-3 shadow-sm text-left">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold text-[10px]">
+                            {file.name.split('.').pop()?.toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-label-sm font-bold text-text-main truncate">{file.name}</p>
+                            <p className="text-[10px] text-text-muted">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="p-1 hover:bg-red-500/10 text-text-subtle hover:text-red-400 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+                          title="Remove file"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Tools selection */}
               <div className="space-y-3 pt-2">
                 <label className="text-label-sm font-semibold text-text-muted ml-1">Send to AI Platforms</label>
@@ -648,9 +885,7 @@ function BuilderContent() {
                         : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
                       }`}
                     >
-                      {tool.tool_logo && (
-                        <img src={tool.tool_logo} alt={tool.tool_name} className="w-5 h-5 rounded-sm object-cover" />
-                      )}
+                      <img src={getToolLogoUrl(tool.tool_url, tool.tool_logo)} alt={tool.tool_name} className="w-5 h-5 rounded-sm object-contain" />
                       {tool.tool_name}
                     </button>
                   ))}
@@ -813,69 +1048,179 @@ function BuilderContent() {
               </div>
 
               {/* Step 4: Refinements */}
-              <div className="space-y-4">
-                <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">4</span>
-                  Refinements
-                </h3>
-                
-                <div className="space-y-3">
-                  <label className="text-label-sm font-semibold text-text-muted ml-1">Scaffolding Level</label>
-                  <div className="flex flex-wrap gap-2">
-                    {studentLevels.map(l => (
-                      <button
-                        key={l.id}
-                        onClick={() => updateField('studentLevel', l.id)}
-                        className={`px-5 py-2.5 rounded-full text-label-sm font-semibold transition-all border shadow-sm ${
-                          formData.studentLevel === l.id 
-                          ? 'bg-secondary text-white border-secondary' 
-                          : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
-                        }`}
-                      >
-                        {l.label}
-                      </button>
-                    ))}
+              {formData.contentType === 'question_paper' ? (
+                <div className="space-y-4 text-left">
+                  <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">4</span>
+                    Difficulty Level
+                  </h3>
+                  <div className="space-y-3">
+                    <p className="text-body-md text-text-muted">
+                      Select the cognitive difficulty target for this exam paper.
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {[
+                        { id: 'weak', label: 'Easy / Foundational' },
+                        { id: 'average', label: 'Standard / Average' },
+                        { id: 'advanced', label: 'Advanced / High-Order' },
+                        { id: 'mixed', label: 'Mixed / Balanced Rigor' },
+                      ].map(l => (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => updateField('studentLevel', l.id)}
+                          className={`px-5 py-2.5 rounded-full text-label-sm font-semibold transition-all border shadow-sm ${
+                            formData.studentLevel === l.id 
+                            ? 'bg-secondary text-white border-secondary' 
+                            : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
+                          }`}
+                        >
+                          {l.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
+              ) : (
+                <div className="space-y-4 text-left">
+                  <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">4</span>
+                    Refinements
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <label className="text-label-sm font-semibold text-text-muted ml-1">Scaffolding Level</label>
+                    <div className="flex flex-wrap gap-2">
+                      {studentLevels.map(l => (
+                        <button
+                          key={l.id}
+                          type="button"
+                          onClick={() => updateField('studentLevel', l.id)}
+                          className={`px-5 py-2.5 rounded-full text-label-sm font-semibold transition-all border shadow-sm ${
+                            formData.studentLevel === l.id 
+                            ? 'bg-secondary text-white border-secondary' 
+                            : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
+                          }`}
+                        >
+                          {l.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
-                <div className="space-y-3 pt-2">
-                  <label className="text-label-sm font-semibold text-text-muted ml-1">Teaching Styles (Optional)</label>
-                  <div className="flex flex-wrap gap-2">
-                    {teachingStyles.slice(0, 5).map(s => (
-                      <button
-                        key={s.id}
-                        onClick={() => toggleStyle(s.id)}
-                        className={`px-4 py-2.5 rounded-full text-label-sm font-medium transition-all border flex items-center gap-1.5 shadow-sm ${
-                          formData.teachingStyles.includes(s.id)
-                          ? 'bg-primary/10 text-primary border-primary/30'
-                          : 'bg-surface border-border hover:border-text-subtle text-text-muted'
-                        }`}
-                      >
-                        {formData.teachingStyles.includes(s.id) && <CheckCircle2 size={16} />}
-                        {s.label}
-                      </button>
-                    ))}
+                  <div className="space-y-3 pt-2">
+                    <label className="text-label-sm font-semibold text-text-muted ml-1">Teaching Styles (Optional)</label>
+                    <div className="flex flex-wrap gap-2">
+                      {teachingStyles.slice(0, 5).map(s => (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => toggleStyle(s.id)}
+                          className={`px-4 py-2.5 rounded-full text-label-sm font-medium transition-all border flex items-center gap-1.5 shadow-sm ${
+                            formData.teachingStyles.includes(s.id)
+                            ? 'bg-primary/10 text-primary border-primary/30'
+                            : 'bg-surface border-border hover:border-text-subtle text-text-muted'
+                          }`}
+                        >
+                          {formData.teachingStyles.includes(s.id) && <CheckCircle2 size={16} />}
+                          {s.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
+              )}
 
-              {/* Step 5: Platform Requirements */}
-              <div className="space-y-4 pt-4 border-t border-border">
-                <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">5</span>
-                  Platform Specific Requirements
-                </h3>
-                <div className="space-y-2">
-                  <label className="text-label-sm font-semibold text-text-muted ml-1">E.g., Canvas LMS format, Google Classroom, generic PDF</label>
-                  <input
-                    type="text"
-                    value={formData.platformRequirements || ''}
-                    onChange={(e) => updateField('platformRequirements', e.target.value)}
-                    placeholder="Type any specific platform formatting..."
-                    className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
-                  />
+              {/* Step 5: Platform Requirements / Document Attachment */}
+              {formData.contentType === 'question_paper' ? (
+                <div className="space-y-4 pt-4 border-t border-border text-left">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
+                      <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">5</span>
+                      Reference Materials & Question Papers (Optional)
+                    </h3>
+                    {attachments.length > 0 && (
+                      <span className="text-[12px] text-primary font-bold animate-pulse">
+                        {attachments.length} file(s) attached
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-body-sm text-text-muted leading-relaxed">
+                    Attach previous years' question papers, syllabus outlines, or reference exams. The AI will design a fresh, new paper matching this style and format, with **no questions repeated**.
+                  </p>
+                  
+                  {/* Upload Zone */}
+                  <div className="relative border border-dashed border-border hover:border-primary/50 transition-colors rounded-2xl p-5 text-center bg-surface/30 group">
+                    <input
+                      type="file"
+                      multiple
+                      accept=".pdf,.docx,.txt"
+                      onChange={handleFileChange}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                      disabled={isParsing}
+                    />
+                    <div className="flex flex-col items-center justify-center gap-2 pointer-events-none">
+                      <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center text-text-subtle group-hover:text-primary group-hover:border-primary/20 transition-all">
+                        {isParsing ? <Loader2 size={20} className="animate-spin text-primary" /> : <Plus size={20} />}
+                      </div>
+                      <div>
+                        <p className="text-label-md font-bold text-text-main">
+                          {isParsing ? 'Parsing attachments...' : 'Click or Drag files to attach'}
+                        </p>
+                        <p className="text-[11px] text-text-muted mt-1">
+                          Supports PDF, Word (.docx), or Text (.txt)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* List of attachments */}
+                  {attachments.length > 0 && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                      {attachments.map((file, idx) => (
+                        <div key={idx} className="flex items-center justify-between bg-surface border border-border rounded-xl p-3 shadow-sm text-left">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold text-[10px]">
+                              {file.name.split('.').pop()?.toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-label-sm font-bold text-text-main truncate">{file.name}</p>
+                              <p className="text-[10px] text-text-muted">
+                                {(file.size / 1024).toFixed(1)} KB
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => removeAttachment(idx)}
+                            className="p-1 hover:bg-red-500/10 text-text-subtle hover:text-red-400 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+                            title="Remove file"
+                          >
+                            <X size={14} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-4 pt-4 border-t border-border text-left">
+                  <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">5</span>
+                    Platform Specific Requirements
+                  </h3>
+                  <div className="space-y-2">
+                    <label className="text-label-sm font-semibold text-text-muted ml-1">E.g., Canvas LMS format, Google Classroom, generic PDF</label>
+                    <input
+                      type="text"
+                      value={formData.platformRequirements || ''}
+                      onChange={(e) => updateField('platformRequirements', e.target.value)}
+                      placeholder="Type any specific platform formatting..."
+                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm text-text-main placeholder:text-text-subtle"
+                    />
+                  </div>
+                </div>
+              )}
 
               {/* Step 6: Tools & Submit */}
               <div className="space-y-6 pt-4 border-t border-border">
@@ -892,9 +1237,7 @@ function BuilderContent() {
                           : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
                         }`}
                       >
-                        {tool.tool_logo && (
-                          <img src={tool.tool_logo} alt={tool.tool_name} className="w-5 h-5 rounded-sm object-cover" />
-                        )}
+                        <img src={getToolLogoUrl(tool.tool_url, tool.tool_logo)} alt={tool.tool_name} className="w-5 h-5 rounded-sm object-contain" />
                         {tool.tool_name}
                       </button>
                     ))}

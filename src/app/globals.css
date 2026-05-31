@@ -137,6 +137,28 @@ h1, h2, h3, h4, h5, h6 {
   50% { opacity: 0.8; }
 }
 
+/* Upright circular planetary orbits */
+@keyframes orbit-chatgpt {
+  0% { transform: rotate(0deg) translateX(150px) rotate(0deg); }
+  100% { transform: rotate(360deg) translateX(150px) rotate(-360deg); }
+}
+@keyframes orbit-claude {
+  0% { transform: rotate(120deg) translateX(230px) rotate(-120deg); }
+  100% { transform: rotate(480deg) translateX(230px) rotate(-480deg); }
+}
+@keyframes orbit-canva {
+  0% { transform: rotate(240deg) translateX(300px) rotate(-240deg); }
+  100% { transform: rotate(600deg) translateX(300px) rotate(-600deg); }
+}
+@keyframes orbit-gamma {
+  0% { transform: rotate(60deg) translateX(360px) rotate(-60deg); }
+  100% { transform: rotate(420deg) translateX(360px) rotate(-420deg); }
+}
+@keyframes orbit-notebooklm {
+  0% { transform: rotate(180deg) translateX(420px) rotate(-180deg); }
+  100% { transform: rotate(540deg) translateX(420px) rotate(-540deg); }
+}
+
 .animate-spin-slow {
   animation: spin-slow 40s linear infinite;
 }
@@ -157,6 +179,26 @@ h1, h2, h3, h4, h5, h6 {
   animation: breathe 4s ease-in-out infinite;
 }
 
+.animate-orbit-chatgpt {
+  animation: orbit-chatgpt 22s linear infinite;
+}
+
+.animate-orbit-claude {
+  animation: orbit-claude 28s linear infinite;
+}
+
+.animate-orbit-canva {
+  animation: orbit-canva 36s linear infinite;
+}
+
+.animate-orbit-gamma {
+  animation: orbit-gamma 42s linear infinite;
+}
+
+.animate-orbit-notebooklm {
+  animation: orbit-notebooklm 50s linear infinite;
+}
+
 /* Custom Scrollbar for clean look */
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
@@ -175,4 +217,5 @@ h1, h2, h3, h4, h5, h6 {
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.2);
 }
+
 
