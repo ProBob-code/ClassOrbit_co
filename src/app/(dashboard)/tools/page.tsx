@@ -167,11 +167,29 @@ export default function LaunchpadPage() {
       t.description.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
+  const getGoogleSsoUrl = (toolId: string, defaultUrl: string): string => {
+    const ssoUrls: Record<string, string> = {
+      chatgpt: 'https://chatgpt.com',
+      claude: 'https://claude.ai',
+      canva: 'https://www.canva.com',
+      gamma: 'https://gamma.app',
+      notebooklm: 'https://notebooklm.google.com',
+      elevenlabs: 'https://elevenlabs.io',
+      suno: 'https://suno.com',
+      ideogram: 'https://ideogram.ai',
+      diffit: 'https://app.diffit.me',
+    };
+    const cleanId = toolId.toLowerCase().replace(/[^a-z0-9]/g, '');
+    return ssoUrls[cleanId] || defaultUrl;
+  };
+
+
   const handleLaunch = (id: string, name: string, url: string) => {
     setLaunchingId(id);
     toast.success(`Opening ${name} integration...`);
     setTimeout(() => {
-      window.open(url, '_blank');
+      const targetUrl = getGoogleSsoUrl(id, url);
+      window.open(targetUrl, '_blank');
       setLaunchingId(null);
     }, 700);
   };
@@ -319,9 +337,9 @@ export default function LaunchpadPage() {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  className="glass-card rounded-[24px] p-6 flex flex-col justify-between h-[280px] group hover:border-primary/50 text-left"
+                  className="glass-card rounded-[24px] p-6 flex flex-col h-[310px] group hover:border-primary/50 text-left"
                 >
-                  <div>
+                  <div className="flex-grow">
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-14 h-14 rounded-2xl bg-white border border-border shadow-sm overflow-hidden flex items-center justify-center p-2 shrink-0">
                         <img 
@@ -355,7 +373,7 @@ export default function LaunchpadPage() {
                     <h3 className="font-display font-bold text-[20px] text-text-main mb-2">
                       {tool.tool_name}
                     </h3>
-                    <p className="text-label-sm text-text-muted leading-relaxed line-clamp-3">
+                    <p className="text-label-sm text-text-muted leading-relaxed line-clamp-2 h-[48px] overflow-hidden">
                       {tool.description}
                     </p>
                   </div>

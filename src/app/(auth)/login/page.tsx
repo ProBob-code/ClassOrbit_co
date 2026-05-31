@@ -110,9 +110,9 @@ function LoginContent() {
 
           <p className="mt-8 text-label-sm text-text-muted">
             By signing in, you agree to our{' '}
-            <Link href="#" className="text-primary font-medium hover:underline">Terms of Service</Link>
+            <Link href="/terms" className="text-primary font-medium hover:underline">Terms of Service</Link>
             {' '}and{' '}
-            <Link href="#" className="text-primary font-medium hover:underline">Privacy Policy</Link>
+            <Link href="/privacy" className="text-primary font-medium hover:underline">Privacy Policy</Link>
           </p>
         </div>
 

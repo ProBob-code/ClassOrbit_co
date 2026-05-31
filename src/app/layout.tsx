@@ -14,8 +14,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth h-full antialiased" data-scroll-behavior="smooth">
-      <body className="min-h-full flex flex-col bg-background text-on-surface font-body overflow-x-hidden">
+    <html lang="en" className="scroll-smooth h-full antialiased" data-scroll-behavior="smooth" suppressHydrationWarning>
+      <body className="min-h-full flex flex-col bg-background text-on-surface font-body overflow-x-hidden" suppressHydrationWarning>
         {children}
         <ToastProvider />
       </body>

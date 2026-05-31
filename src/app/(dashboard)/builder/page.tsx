@@ -107,6 +107,45 @@ const extractPdfText = async (file: File): Promise<string> => {
   });
 };
 
+const enforcePlatformLimits = (prompt: string, toolId: string, formData: TeacherInput, mode: BuilderMode, freePrompt: string): string => {
+  const topicText = mode === 'free' ? freePrompt.split('\n')[0] : formData.topic;
+  
+  if (toolId === 'canva') {
+    return `Create a clean, visually stunning and professional educational presentation template about "${topicText}" for a Grade ${formData.grade} ${formData.subject} class, tailored at the ${formData.studentLevel} level.`;
+  }
+  
+  if (toolId === 'suno') {
+    return `[Style: Upbeat educational children's pop, acoustic guitar, catchy clear vocals]
+
+[Lyrics about ${topicText}]:
+(Verse 1)
+Let's learn about ${topicText} today!
+It guides us in a simple way.
+(Chorus)
+Oh ${topicText}, so bright and clear,
+Helping students far and near!`;
+  }
+  
+  if (toolId === 'ideogram') {
+    return `A modern, clean educational poster and visual diagram illustrating "${topicText}". Ideal for Grade ${formData.grade} ${formData.subject} classroom wall, flat vector art style, colorful high-resolution educational graphic, highly detailed.`;
+  }
+  
+  if (toolId === 'elevenlabs') {
+    let cleanScript = prompt
+      .replace(/Slide \d+:?/gi, '')
+      .replace(/###/g, '')
+      .replace(/\*\*/g, '')
+      .replace(/Optimized for ElevenLabs:?/gi, '')
+      .trim();
+    if (cleanScript.length > 800) {
+      cleanScript = cleanScript.substring(0, 800) + '...';
+    }
+    return `Read the following educational overview about "${topicText}" in a warm, clear, professional voice:\n\n${cleanScript}`;
+  }
+  
+  return prompt;
+};
+
 const iconMap: Record<string, any> = {
   'quiz': PenTool, 'slideshow': Presentation, 'menu_book': BookOpen, 'description': FileText,
   'assignment': ClipboardList, 'auto_stories': Book, 'home_work': Home, 'style': Layers,
@@ -213,6 +252,8 @@ function BuilderContent() {
     duration: '40 mins',
     studentLevel: 'average',
     selectedTools: ['chatgpt', 'claude'],
+    curriculum: '',
+    institution: '',
   });
 
   const [generatedPrompts, setGeneratedPrompts] = useState<ToolPrompts | null>(null);
@@ -325,6 +366,23 @@ function BuilderContent() {
     localStorage.setItem('classorbit_folders', JSON.stringify(updatedFolders));
     localStorage.setItem('classorbit_files', JSON.stringify([newFile, ...filesList]));
 
+    // Synchronize to the "Saved Prompts" history database
+    const localSavedPrompts = localStorage.getItem('classorbit_prompts');
+    const savedPromptsList = localSavedPrompts ? JSON.parse(localSavedPrompts) : [];
+    const newSavedPrompt = {
+      id: Math.random().toString(36).substring(7),
+      contentType: mode === 'free' ? 'Free Type' : (contentTypes.find(c => c.id === formData.contentType)?.label || 'Prompt'),
+      grade: mode === 'free' ? 'General' : formData.grade,
+      subject: mode === 'free' ? 'General' : formData.subject,
+      topic: topicText.length > 40 ? topicText.substring(0, 40) + '...' : topicText,
+      teachingStyles: [],
+      tools: [activePromptData.toolName],
+      isFavorite: false,
+      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
+      promptText: activePromptData.prompt
+    };
+    localStorage.setItem('classorbit_prompts', JSON.stringify([newSavedPrompt, ...savedPromptsList]));
+
     setShowSaveModal(false);
     setIsCreatingNewFolder(false);
     setNewFolderName('');
@@ -432,23 +490,37 @@ function BuilderContent() {
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       
-      // Assemble combined prompt with delimiters if attachments exist
-      let combinedPrompt = data.prompt;
-      if (attachments.length > 0) {
-        combinedPrompt += `\n\n==================================================\n`;
-        combinedPrompt += `ATTACHED REFERENCE DOCUMENTS FOR RAG:\n`;
-        for (const att of attachments) {
-          combinedPrompt += `\n--- START OF FILE: ${att.name} ---\n`;
-          combinedPrompt += att.content;
-          combinedPrompt += `\n--- END OF FILE: ${att.name} ---\n`;
-        }
-        combinedPrompt += `==================================================\n`;
-      }
-
       const tools = mode === 'free' ? freeTools : formData.selectedTools;
       const selectedToolData = defaultTools.filter(t => tools.includes(t.id));
       const prompts: ToolPrompts = {};
+      
       for (const tool of selectedToolData) {
+        let toolPrompt = '';
+        if (data.prompts && data.prompts[tool.id]) {
+          toolPrompt = data.prompts[tool.id];
+        } else if (data.prompt) {
+          toolPrompt = data.prompt;
+        } else {
+          // Fallback context in case of parsing deviations
+          toolPrompt = `Act as an expert Grade ${formData.grade} ${formData.subject} teacher. Topic: ${formData.topic}`;
+        }
+
+        // Enforce strict platform constraints (e.g. Canva, Suno, Ideogram limits)
+        toolPrompt = enforcePlatformLimits(toolPrompt, tool.id, formData, mode, freePrompt);
+
+        // Assemble combined prompt with delimiters if attachments exist
+        let combinedPrompt = toolPrompt;
+        if (attachments.length > 0) {
+          combinedPrompt += `\n\n==================================================\n`;
+          combinedPrompt += `ATTACHED REFERENCE DOCUMENTS FOR RAG:\n`;
+          for (const att of attachments) {
+            combinedPrompt += `\n--- START OF FILE: ${att.name} ---\n`;
+            combinedPrompt += att.content;
+            combinedPrompt += `\n--- END OF FILE: ${att.name} ---\n`;
+          }
+          combinedPrompt += `==================================================\n`;
+        }
+
         prompts[tool.id] = {
           toolName: tool.tool_name,
           toolUrl: tool.tool_url,
@@ -546,9 +618,12 @@ function BuilderContent() {
               return (
                 <div key={toolId}>
                   <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <CheckCircle2 size={18} className="text-emerald-400" />
                       <span className="text-label-md font-bold text-text-main">Optimized for {data.toolName}</span>
+                      <span className="text-[11px] bg-white/5 border border-border px-2.5 py-0.5 rounded-full text-text-muted font-mono ml-1.5 shrink-0">
+                        {data.prompt.trim().split(/\s+/).filter(Boolean).length} words
+                      </span>
                     </div>
                     <button
                       onClick={() => {
@@ -1047,180 +1122,133 @@ function BuilderContent() {
                 />
               </div>
 
-              {/* Step 4: Refinements */}
-              {formData.contentType === 'question_paper' ? (
-                <div className="space-y-4 text-left">
-                  <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">4</span>
-                    Difficulty Level
-                  </h3>
-                  <div className="space-y-3">
-                    <p className="text-body-md text-text-muted">
-                      Select the cognitive difficulty target for this exam paper.
-                    </p>
-                    <div className="flex flex-wrap gap-2">
-                      {[
-                        { id: 'weak', label: 'Easy / Foundational' },
-                        { id: 'average', label: 'Standard / Average' },
-                        { id: 'advanced', label: 'Advanced / High-Order' },
-                        { id: 'mixed', label: 'Mixed / Balanced Rigor' },
-                      ].map(l => (
-                        <button
-                          key={l.id}
-                          type="button"
-                          onClick={() => updateField('studentLevel', l.id)}
-                          className={`px-5 py-2.5 rounded-full text-label-sm font-semibold transition-all border shadow-sm ${
-                            formData.studentLevel === l.id 
-                            ? 'bg-secondary text-white border-secondary' 
-                            : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
-                          }`}
-                        >
-                          {l.label}
-                        </button>
-                      ))}
-                    </div>
+              {/* Step 4: Refinements & Curriculum Context */}
+              <div className="space-y-6 text-left">
+                <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">4</span>
+                  Refinements & Context
+                </h3>
+                
+                <div className="space-y-3">
+                  <label className="text-label-sm font-semibold text-text-muted ml-1">Target Difficulty / Scaffolding Level</label>
+                  <div className="flex flex-wrap gap-2">
+                    {[
+                      { id: 'weak', label: 'Easy / Foundational' },
+                      { id: 'average', label: 'Standard / Average' },
+                      { id: 'advanced', label: 'Advanced / High-Order' },
+                      { id: 'mixed', label: 'Mixed / Balanced Rigor' },
+                    ].map(l => (
+                      <button
+                        key={l.id}
+                        type="button"
+                        onClick={() => updateField('studentLevel', l.id)}
+                        className={`px-5 py-2.5 rounded-full text-label-sm font-semibold transition-all border shadow-sm ${
+                          formData.studentLevel === l.id 
+                          ? 'bg-secondary text-white border-secondary' 
+                          : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
+                        }`}
+                      >
+                        {l.label}
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ) : (
-                <div className="space-y-4 text-left">
-                  <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">4</span>
-                    Refinements
-                  </h3>
-                  
-                  <div className="space-y-3">
-                    <label className="text-label-sm font-semibold text-text-muted ml-1">Scaffolding Level</label>
-                    <div className="flex flex-wrap gap-2">
-                      {studentLevels.map(l => (
-                        <button
-                          key={l.id}
-                          type="button"
-                          onClick={() => updateField('studentLevel', l.id)}
-                          className={`px-5 py-2.5 rounded-full text-label-sm font-semibold transition-all border shadow-sm ${
-                            formData.studentLevel === l.id 
-                            ? 'bg-secondary text-white border-secondary' 
-                            : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
-                          }`}
-                        >
-                          {l.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
-                  <div className="space-y-3 pt-2">
-                    <label className="text-label-sm font-semibold text-text-muted ml-1">Teaching Styles (Optional)</label>
-                    <div className="flex flex-wrap gap-2">
-                      {teachingStyles.slice(0, 5).map(s => (
-                        <button
-                          key={s.id}
-                          type="button"
-                          onClick={() => toggleStyle(s.id)}
-                          className={`px-4 py-2.5 rounded-full text-label-sm font-medium transition-all border flex items-center gap-1.5 shadow-sm ${
-                            formData.teachingStyles.includes(s.id)
-                            ? 'bg-primary/10 text-primary border-primary/30'
-                            : 'bg-surface border-border hover:border-text-subtle text-text-muted'
-                          }`}
-                        >
-                          {formData.teachingStyles.includes(s.id) && <CheckCircle2 size={16} />}
-                          {s.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Step 5: Platform Requirements / Document Attachment */}
-              {formData.contentType === 'question_paper' ? (
-                <div className="space-y-4 pt-4 border-t border-border text-left">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
-                      <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">5</span>
-                      Reference Materials & Question Papers (Optional)
-                    </h3>
-                    {attachments.length > 0 && (
-                      <span className="text-[12px] text-primary font-bold animate-pulse">
-                        {attachments.length} file(s) attached
-                      </span>
-                    )}
-                  </div>
-                  <p className="text-body-sm text-text-muted leading-relaxed">
-                    Attach previous years' question papers, syllabus outlines, or reference exams. The AI will design a fresh, new paper matching this style and format, with **no questions repeated**.
-                  </p>
-                  
-                  {/* Upload Zone */}
-                  <div className="relative border border-dashed border-border hover:border-primary/50 transition-colors rounded-2xl p-5 text-center bg-surface/30 group">
-                    <input
-                      type="file"
-                      multiple
-                      accept=".pdf,.docx,.txt"
-                      onChange={handleFileChange}
-                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
-                      disabled={isParsing}
-                    />
-                    <div className="flex flex-col items-center justify-center gap-2 pointer-events-none">
-                      <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center text-text-subtle group-hover:text-primary group-hover:border-primary/20 transition-all">
-                        {isParsing ? <Loader2 size={20} className="animate-spin text-primary" /> : <Plus size={20} />}
-                      </div>
-                      <div>
-                        <p className="text-label-md font-bold text-text-main">
-                          {isParsing ? 'Parsing attachments...' : 'Click or Drag files to attach'}
-                        </p>
-                        <p className="text-[11px] text-text-muted mt-1">
-                          Supports PDF, Word (.docx), or Text (.txt)
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* List of attachments */}
-                  {attachments.length > 0 && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
-                      {attachments.map((file, idx) => (
-                        <div key={idx} className="flex items-center justify-between bg-surface border border-border rounded-xl p-3 shadow-sm text-left">
-                          <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold text-[10px]">
-                              {file.name.split('.').pop()?.toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                              <p className="text-label-sm font-bold text-text-main truncate">{file.name}</p>
-                              <p className="text-[10px] text-text-muted">
-                                {(file.size / 1024).toFixed(1)} KB
-                              </p>
-                            </div>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => removeAttachment(idx)}
-                            className="p-1 hover:bg-red-500/10 text-text-subtle hover:text-red-400 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
-                            title="Remove file"
-                          >
-                            <X size={14} />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="space-y-4 pt-4 border-t border-border text-left">
-                  <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">5</span>
-                    Platform Specific Requirements
-                  </h3>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                   <div className="space-y-2">
-                    <label className="text-label-sm font-semibold text-text-muted ml-1">E.g., Canvas LMS format, Google Classroom, generic PDF</label>
+                    <label className="text-label-sm font-semibold text-text-muted ml-1">Curriculum / Board</label>
                     <input
                       type="text"
-                      value={formData.platformRequirements || ''}
-                      onChange={(e) => updateField('platformRequirements', e.target.value)}
-                      placeholder="Type any specific platform formatting..."
+                      value={formData.curriculum || ''}
+                      onChange={(e) => updateField('curriculum', e.target.value)}
+                      placeholder="E.g., Cambridge, CBSE, IGCSE, IB, State Board..."
+                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm text-text-main placeholder:text-text-subtle"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <label className="text-label-sm font-semibold text-text-muted ml-1">Institution / University / City</label>
+                    <input
+                      type="text"
+                      value={formData.institution || ''}
+                      onChange={(e) => updateField('institution', e.target.value)}
+                      placeholder="E.g., Stanford University, San Francisco, or school name..."
                       className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm text-text-main placeholder:text-text-subtle"
                     />
                   </div>
                 </div>
-              )}
+              </div>
+
+              {/* Step 5: Reference Materials & Documents (RAG) */}
+              <div className="space-y-4 pt-4 border-t border-border text-left">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
+                    <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">5</span>
+                    Reference Materials & Documents (Optional)
+                  </h3>
+                  {attachments.length > 0 && (
+                    <span className="text-[12px] text-primary font-bold animate-pulse">
+                      {attachments.length} file(s) attached
+                    </span>
+                  )}
+                </div>
+                <p className="text-body-sm text-text-muted leading-relaxed">
+                  Attach syllabus outlines, reference papers, lesson notes, or textbooks. The AI will ground all generated content directly in these files.
+                </p>
+                
+                {/* Upload Zone */}
+                <div className="relative border border-dashed border-border hover:border-primary/50 transition-colors rounded-2xl p-5 text-center bg-surface/30 group">
+                  <input
+                    type="file"
+                    multiple
+                    accept=".pdf,.docx,.txt"
+                    onChange={handleFileChange}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                    disabled={isParsing}
+                  />
+                  <div className="flex flex-col items-center justify-center gap-2 pointer-events-none">
+                    <div className="w-10 h-10 rounded-xl bg-background border border-border flex items-center justify-center text-text-subtle group-hover:text-primary group-hover:border-primary/20 transition-all">
+                      {isParsing ? <Loader2 size={20} className="animate-spin text-primary" /> : <Plus size={20} />}
+                    </div>
+                    <div>
+                      <p className="text-label-md font-bold text-text-main">
+                        {isParsing ? 'Parsing attachments...' : 'Click or Drag files to attach'}
+                      </p>
+                      <p className="text-[11px] text-text-muted mt-1">
+                        Supports PDF, Word (.docx), or Text (.txt)
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* List of attachments */}
+                {attachments.length > 0 && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 mt-3">
+                    {attachments.map((file, idx) => (
+                      <div key={idx} className="flex items-center justify-between bg-surface border border-border rounded-xl p-3 shadow-sm text-left">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary shrink-0 font-bold text-[10px]">
+                            {file.name.split('.').pop()?.toUpperCase()}
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-label-sm font-bold text-text-main truncate">{file.name}</p>
+                            <p className="text-[10px] text-text-muted">
+                              {(file.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeAttachment(idx)}
+                          className="p-1 hover:bg-red-500/10 text-text-subtle hover:text-red-400 rounded-lg transition-colors border border-transparent hover:border-red-500/20"
+                          title="Remove file"
+                        >
+                          <X size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
 
               {/* Step 6: Tools & Submit */}
               <div className="space-y-6 pt-4 border-t border-border">

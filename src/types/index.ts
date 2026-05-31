@@ -10,6 +10,8 @@ export interface TeacherInput {
   studentLevel: string;
   selectedTools: string[];
   platformRequirements?: string;
+  curriculum?: string;
+  institution?: string;
 }
 
 export interface AITool {

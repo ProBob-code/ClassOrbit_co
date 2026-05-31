@@ -1,23 +1,26 @@
 'use client';
-
+ 
 import Link from 'next/link';
 import { useState } from 'react';
 import AnimatedContainer from '@/components/ui/AnimatedContainer';
 import Topbar from '@/components/layout/Topbar';
-
+import { useUser } from '@/lib/hooks/useUser';
+ 
 // Suggestion topics for interactive sandbox
 const presets = [
   { topic: '🍎 Photosynthesis & Plant Cells', subject: 'Science', grade: 'Grade 5', type: 'quiz' },
   { topic: '📐 Pythagorean Theorem Calculations', subject: 'Math', grade: 'Grade 8', type: 'lesson_plan' },
   { topic: '📜 Catalysts of Industrial Revolution', subject: 'History', grade: 'Grade 10', type: 'ppt' }
 ];
-
+ 
 export default function LandingPage() {
   const [sandboxTopic, setSandboxTopic] = useState('🍎 Photosynthesis & Plant Cells');
   const [sandboxSubject, setSandboxSubject] = useState('Science');
   const [sandboxGrade, setSandboxGrade] = useState('Grade 5');
   const [sandboxType, setSandboxType] = useState('quiz');
-
+  
+  const { user } = useUser();
+ 
   return (
     <>
       <Topbar />
@@ -148,7 +151,7 @@ export default function LandingPage() {
             
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 w-full sm:w-auto">
               <Link
-                href="/login?next=/builder"
+                href={user ? '/builder' : '/login?next=/builder'}
                 className="w-full sm:w-auto relative inline-flex h-14 overflow-hidden rounded-full p-[2px] focus:outline-none focus:ring-2 focus:ring-primary active:scale-95 transition-all shadow-glow hover:shadow-[0_0_60px_-10px_rgba(245,158,11,0.6)] group"
               >
                 <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#F59E0B_0%,#F97316_50%,#F59E0B_100%)]" />
@@ -239,7 +242,9 @@ export default function LandingPage() {
 
                   <div className="mt-16 pt-6 flex justify-end">
                     <Link
-                      href={`/login?next=${encodeURIComponent(`/builder?topic=${sandboxTopic}&subject=${sandboxSubject}&grade=${sandboxGrade}&type=${sandboxType}`)}`}
+                      href={user 
+                        ? `/builder?topic=${sandboxTopic}&subject=${sandboxSubject}&grade=${sandboxGrade}&type=${sandboxType}`
+                        : `/login?next=${encodeURIComponent(`/builder?topic=${sandboxTopic}&subject=${sandboxSubject}&grade=${sandboxGrade}&type=${sandboxType}`)}`}
                       className="group relative inline-flex items-center justify-center gap-3 bg-[#111] text-white px-8 py-4 rounded-xl font-bold text-[16px] hover:bg-[#333] transition-all cursor-pointer shadow-xl hover:shadow-2xl hover:-translate-y-1 active:translate-y-0"
                     >
                       <span className="relative z-10 flex items-center gap-2">
