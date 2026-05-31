@@ -41,7 +41,7 @@ export default function Topbar() {
           : 'h-20 bg-transparent border-b border-transparent'
       }`}
     >
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 ml-12 md:ml-0">
         <Link href="/" className="text-headline-md font-display font-bold text-text-main flex items-center gap-3 group">
           <span className={`transition-all duration-500 font-extrabold tracking-tight ${scrolled ? 'text-2xl' : 'text-3xl group-hover:scale-105'}`}>
             Class<span className="text-primary">Orbit</span>
