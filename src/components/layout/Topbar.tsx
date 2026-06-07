@@ -3,8 +3,9 @@
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { LifeBuoy, Settings, LogOut, User, ChevronDown, Menu, X } from 'lucide-react';
+import { LifeBuoy, Settings, LogOut, User, ChevronDown, Menu, X, Zap } from 'lucide-react';
 import { useUser } from '@/lib/hooks/useUser';
+import { usePlan } from '@/lib/hooks/usePlan';
 
 export default function Topbar() {
   const [scrolled, setScrolled] = useState(false);
@@ -13,6 +14,7 @@ export default function Topbar() {
   const { profile, loading, signOut } = useUser();
   const pathname = usePathname();
   const isLanding = pathname === '/';
+  const plan = usePlan();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -50,16 +52,23 @@ export default function Topbar() {
       </div>
 
       <nav className="hidden md:flex items-center gap-8">
-        {[
-          { name: 'Prompt Builder', href: '/builder' },
-          { name: 'Workspace', href: '/workspace' },
-          { name: 'Launchpad', href: '/tools' }
-        ].map((link) => {
+        {(isLanding
+          ? [
+              { name: 'Features', href: '#how-it-works' },
+              { name: 'Pricing', href: '/pricing' },
+              { name: 'Blog', href: '/blog' },
+            ]
+          : [
+              { name: 'Prompt Builder', href: '/builder' },
+              { name: 'Workspace', href: '/workspace' },
+              { name: 'Launchpad', href: '/tools' },
+            ]
+        ).map((link) => {
           const isActive = pathname === link.href;
           return (
-            <Link 
-              key={link.name} 
-              href={link.href} 
+            <Link
+              key={link.name}
+              href={link.href}
               className={`group relative text-label-md font-medium transition-colors py-2 ${
                 isActive ? 'text-primary' : 'text-text-muted hover:text-white'
               }`}
@@ -79,6 +88,16 @@ export default function Topbar() {
         ) : profile ? (
           /* ===== LOGGED IN STATE ===== */
           <div className="flex items-center gap-3" ref={dropdownRef}>
+            {/* Go Pro button — only for free users, not on landing */}
+            {!isLanding && !plan.loading && !plan.is_pro && (
+              <Link
+                href="/upgrade"
+                className="hidden md:flex items-center gap-1.5 bg-primary/10 hover:bg-primary/20 border border-primary/30 hover:border-primary/60 text-primary px-4 py-2 rounded-full text-[13px] font-bold transition-all"
+              >
+                <Zap size={13} fill="currentColor" strokeWidth={0} />
+                Go Pro · ₹199/mo
+              </Link>
+            )}
             {/* Desktop helper icons */}
             <div className="hidden md:flex items-center gap-1">
               <Link 

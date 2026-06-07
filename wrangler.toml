@@ -3,3 +3,13 @@ pages_build_output_dir = ".vercel/output/static"
 
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
+
+# Run: wrangler d1 create classorbit-db
+# Then replace PLACEHOLDER below with the returned database_id
+[vars]
+ADMIN_EMAILS = "probob.in.git@gmail.com,bobinjacob46@gmail.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "classorbit-db"
+database_id = "f2885e0a-53d0-4a1f-ad38-b50cd89b4948"

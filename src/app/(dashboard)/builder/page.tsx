@@ -8,18 +8,19 @@ import { contentTypes } from '@/data/content-types';
 import { subjects } from '@/data/subjects';
 import { grades, studentLevels } from '@/data/grades';
 import { teachingStyles } from '@/data/teaching-styles';
-import { defaultTools } from '@/data/default-tools';
-import { launchTool } from '@/lib/tools/router';
+import { launchTool, supportsAutoFill } from '@/lib/tools/router';
+import { useTools } from '@/context/ToolsContext';
 import { TeacherInput, ToolPrompts } from '@/types';
 import toast from 'react-hot-toast';
 import JSZip from 'jszip';
-import { 
-  Sparkles, CheckCircle2, ChevronDown, Rocket, Copy, ExternalLink, PenTool, Presentation, 
-  BookOpen, FileText, ClipboardList, Book, Home, Layers, Users, MessageSquare, Gamepad2, 
-  Video, CheckSquare, File, Loader2, FlaskConical, Calculator, BookA, Globe, 
-  Palette, History, Music, Binary, PenLine, SlidersHorizontal, ArrowLeft, 
-  Send, PartyPopper, Bookmark, RotateCcw, X, Plus
+import {
+  Sparkles, CheckCircle2, ChevronDown, Rocket, Copy, ExternalLink, PenTool, Presentation,
+  BookOpen, FileText, ClipboardList, Book, Home, Layers, Users, MessageSquare, Gamepad2,
+  Video, CheckSquare, File, Loader2, FlaskConical, Calculator, BookA, Globe,
+  Palette, History, Music, Binary, PenLine, SlidersHorizontal, ArrowLeft,
+  Send, PartyPopper, Bookmark, RotateCcw, X, Plus, Share2, Lock
 } from 'lucide-react';
+import UpgradeModal from '@/components/ui/UpgradeModal';
 
 interface AttachedFile {
   name: string;
@@ -68,26 +69,26 @@ const extractDocxText = async (file: File): Promise<string> => {
   }
 };
 
+const loadPdfJs = async (): Promise<any> => {
+  if ((window as any).pdfjsLib) return (window as any).pdfjsLib;
+  await new Promise<void>((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = '/pdf.min.js';
+    script.onload = () => resolve();
+    script.onerror = () => reject(new Error('Failed to load PDF parser.'));
+    document.head.appendChild(script);
+  });
+  (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdf.worker.min.js';
+  return (window as any).pdfjsLib;
+};
+
 const extractPdfText = async (file: File): Promise<string> => {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = async () => {
       try {
         const typedarray = new Uint8Array(reader.result as ArrayBuffer);
-        
-        // Load PDFJS dynamically if not available
-        if (!(window as any).pdfjsLib) {
-          const script = document.createElement('script');
-          script.src = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js';
-          document.head.appendChild(script);
-          await new Promise((resolveScript, rejectScript) => {
-            script.onload = resolveScript;
-            script.onerror = rejectScript;
-          });
-          (window as any).pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
-        }
-        
-        const pdfjsLib = (window as any).pdfjsLib;
+        const pdfjsLib = await loadPdfJs();
         const pdf = await pdfjsLib.getDocument({ data: typedarray }).promise;
         let text = '';
         for (let i = 1; i <= pdf.numPages; i++) {
@@ -99,7 +100,7 @@ const extractPdfText = async (file: File): Promise<string> => {
         resolve(text);
       } catch (err) {
         console.error('Error parsing pdf:', err);
-        reject(new Error('Failed to parse PDF document. It may be a scanned PDF or corrupted.'));
+        reject(new Error('Failed to parse PDF. It may be a scanned or corrupted file.'));
       }
     };
     reader.onerror = () => reject(reader.error);
@@ -169,6 +170,28 @@ const getSubjectIcon = (label: string) => {
 type BuilderMode = 'free' | 'guided';
 type ViewState = 'building' | 'ready';
 
+const curriculumOptions = [
+  { value: '', label: 'Select Curriculum (Optional)' },
+  { value: 'CBSE', label: 'CBSE' },
+  { value: 'ICSE / ISC', label: 'ICSE / ISC' },
+  { value: 'State Board', label: 'State Board' },
+  { value: 'NIOS', label: 'NIOS (National Institute of Open Schooling)' },
+  { value: 'IB Board', label: 'IB (International Baccalaureate)' },
+  { value: 'IGCSE', label: 'IGCSE / Cambridge' },
+  { value: 'Other', label: 'Other (Type Custom)' }
+];
+
+const institutionOptions = [
+  { value: '', label: 'Select Institution (Optional)' },
+  { value: 'Public School', label: 'Public School' },
+  { value: 'Private School', label: 'Private School' },
+  { value: 'International School', label: 'International School' },
+  { value: 'College', label: 'College' },
+  { value: 'University', label: 'University' },
+  { value: 'Online/Homeschool', label: 'Online/Homeschool' },
+  { value: 'Other', label: 'Other (Type Custom)' }
+];
+
 export default function BuilderPage() {
   return (
     <Suspense fallback={
@@ -181,6 +204,7 @@ export default function BuilderPage() {
 
 function BuilderContent() {
   const searchParams = useSearchParams();
+  const { tools: systemTools } = useTools();
   const [mode, setMode] = useState<BuilderMode>('guided');
   const [viewState, setViewState] = useState<ViewState>('building');
 
@@ -260,6 +284,29 @@ function BuilderContent() {
   const [isGenerating, setIsGenerating] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('');
 
+  const [customCurriculumMode, setCustomCurriculumMode] = useState(false);
+  const [customInstitutionMode, setCustomInstitutionMode] = useState(false);
+
+  // Upgrade modal state
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [usageInfo, setUsageInfo] = useState({ used: 0, limit: 15 });
+  const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'school'>('free');
+
+  useEffect(() => {
+    const fetchPlan = async () => {
+      try {
+        const res = await fetch('/api/me/plan');
+        if (res.ok) {
+          const data = await res.json();
+          setUserPlan(data.plan_type || 'free');
+        }
+      } catch (err) {
+        console.error('Failed to fetch plan', err);
+      }
+    };
+    fetchPlan();
+  }, []);
+
   useEffect(() => {
     if (generatedPrompts) {
       const keys = Object.keys(generatedPrompts);
@@ -275,131 +322,123 @@ function BuilderContent() {
   const [saveFolderId, setSaveFolderId] = useState('');
   const [isCreatingNewFolder, setIsCreatingNewFolder] = useState(false);
   const [newFolderName, setNewFolderName] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
 
-  const handleOpenSaveModal = () => {
-    const localFolders = localStorage.getItem('classorbit_folders');
-    let foldersList = [];
-    if (localFolders) {
-      foldersList = JSON.parse(localFolders);
-    } else {
-      const defaultFolders = [
-        { id: 'my-lessons', name: 'My Lessons', sticker: '📚', fileCount: 4, color: 'bg-primary' },
-        { id: 'science', name: 'Science Lab', sticker: '🔬', fileCount: 3, color: 'bg-emerald-500' },
-        { id: 'english', name: 'English Lit', sticker: '📝', fileCount: 2, color: 'bg-blue-500' },
-        { id: 'math', name: 'Math Class', sticker: '📐', fileCount: 1, color: 'bg-purple-500' },
-      ];
-      foldersList = defaultFolders;
-      localStorage.setItem('classorbit_folders', JSON.stringify(defaultFolders));
-    }
-    setWorkspaceFolders(foldersList);
-    if (foldersList.length > 0) {
-      setSaveFolderId(foldersList[0].id);
-    }
+  // Share state
+  const [shareUrl, setShareUrl] = useState<string | null>(null);
+  const [isSharing, setIsSharing] = useState(false);
+
+  const handleOpenSaveModal = async () => {
+    try {
+      const res = await fetch('/api/workspace');
+      if (res.ok) {
+        const data = await res.json();
+        const folders = data.folders ?? [];
+        setWorkspaceFolders(folders);
+        if (folders.length > 0) setSaveFolderId(folders[0].id);
+        setShowSaveModal(true);
+        return;
+      }
+    } catch { /* fall through to localStorage */ }
+    // localStorage fallback
+    const lf = localStorage.getItem('classorbit_folders');
+    const folders = lf ? JSON.parse(lf) : [
+      { id: 'my-lessons', name: 'My Lessons', sticker: '📚', color: 'bg-primary' },
+    ];
+    if (!lf) localStorage.setItem('classorbit_folders', JSON.stringify(folders));
+    setWorkspaceFolders(folders);
+    if (folders.length > 0) setSaveFolderId(folders[0].id);
     setShowSaveModal(true);
   };
 
-  const handleSavePrompt = () => {
+  const handleSavePrompt = async () => {
     if (!generatedPrompts || !activeTab) return;
     const activePromptData = generatedPrompts[activeTab];
+    setIsSaving(true);
 
-    let targetFolderId = saveFolderId;
-    let targetFolderName = '';
-
-    const localFolders = localStorage.getItem('classorbit_folders');
-    let foldersList = localFolders ? JSON.parse(localFolders) : [];
-
-    if (isCreatingNewFolder) {
-      if (!newFolderName.trim()) {
-        toast.error('Please enter a folder name!');
-        return;
-      }
-      const newId = newFolderName.toLowerCase().replace(/[^a-z0-9]/g, '-');
-      const exists = foldersList.some((f: any) => f.id === newId);
-      if (exists) {
-        targetFolderId = newId;
-        targetFolderName = foldersList.find((f: any) => f.id === newId).name;
-      } else {
-        const stickers = ['📚', '📝', '🔬', '📐', '🎨', '🚀', '⭐', '🦖', '🧩', '📋'];
-        const colors = ['bg-primary', 'bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-rose-500'];
-        const randomSticker = stickers[Math.floor(Math.random() * stickers.length)];
-        const randomColor = colors[Math.floor(Math.random() * colors.length)];
-        const newFolder = {
-          id: newId,
-          name: newFolderName.trim(),
-          sticker: randomSticker,
-          fileCount: 0,
-          color: randomColor,
-        };
-        foldersList.push(newFolder);
-        localStorage.setItem('classorbit_folders', JSON.stringify(foldersList));
-        targetFolderId = newId;
-        targetFolderName = newFolderName.trim();
-      }
-    } else {
-      const folderObj = foldersList.find((f: any) => f.id === saveFolderId);
-      targetFolderName = folderObj ? folderObj.name : 'Workspace';
-    }
-
-    // Save prompt file
-    const localFiles = localStorage.getItem('classorbit_files');
-    const filesList = localFiles ? JSON.parse(localFiles) : [];
-
-    // Construct file name based on topic and active tool
     const topicText = mode === 'free' ? freePrompt.split('\n')[0] : formData.topic;
     const truncatedTopic = topicText.length > 25 ? topicText.substring(0, 25) + '...' : topicText;
     const contentTypeName = contentTypes.find(c => c.id === (mode === 'free' ? 'lesson_plan' : formData.contentType))?.label || 'Prompt';
     const fileName = `${truncatedTopic} (${contentTypeName} - ${activePromptData.toolName}).prompt`;
 
-    const newFile = {
-      id: Math.random().toString(36).substring(7),
-      name: fileName,
-      type: 'prompt',
-      date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-      folderId: targetFolderId,
-      content: activePromptData.prompt,
-    };
+    let targetFolderId = saveFolderId;
+    let targetFolderName = '';
 
-    // Increment folder count
-    const updatedFolders = foldersList.map((f: any) => 
-      f.id === targetFolderId ? { ...f, fileCount: f.fileCount + 1 } : f
-    );
-    localStorage.setItem('classorbit_folders', JSON.stringify(updatedFolders));
-    localStorage.setItem('classorbit_files', JSON.stringify([newFile, ...filesList]));
+    try {
+      // Create new folder if requested
+      if (isCreatingNewFolder) {
+        if (!newFolderName.trim()) { toast.error('Please enter a folder name!'); setIsSaving(false); return; }
+        const stickers = ['📚', '📝', '🔬', '📐', '🎨', '🚀'];
+        const colors = ['bg-primary', 'bg-emerald-500', 'bg-blue-500', 'bg-purple-500', 'bg-rose-500'];
+        const res = await fetch('/api/workspace', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ kind: 'folder', name: newFolderName.trim(), sticker: stickers[Math.floor(Math.random() * stickers.length)], color: colors[Math.floor(Math.random() * colors.length)] }),
+        });
+        if (res.ok) { const d = await res.json(); targetFolderId = d.id; targetFolderName = d.name; }
+      } else {
+        targetFolderName = workspaceFolders.find((f: any) => f.id === saveFolderId)?.name ?? 'Workspace';
+      }
 
-    // Synchronize to the "Saved Prompts" history database
-    const localSavedPrompts = localStorage.getItem('classorbit_prompts');
-    const savedPromptsList = localSavedPrompts ? JSON.parse(localSavedPrompts) : [];
-    const newSavedPrompt = {
-      id: Math.random().toString(36).substring(7),
-      contentType: mode === 'free' ? 'Free Type' : (contentTypes.find(c => c.id === formData.contentType)?.label || 'Prompt'),
-      grade: mode === 'free' ? 'General' : formData.grade,
-      subject: mode === 'free' ? 'General' : formData.subject,
-      topic: topicText.length > 40 ? topicText.substring(0, 40) + '...' : topicText,
-      teachingStyles: [],
-      tools: [activePromptData.toolName],
-      isFavorite: false,
-      createdAt: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }),
-      promptText: activePromptData.prompt
-    };
-    localStorage.setItem('classorbit_prompts', JSON.stringify([newSavedPrompt, ...savedPromptsList]));
+      // Save file to workspace
+      await fetch('/api/workspace', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ kind: 'file', folder_id: targetFolderId, name: fileName, type: 'prompt', content: activePromptData.prompt }),
+      });
+    } catch {
+      // Fallback: save to localStorage
+      const lf = localStorage.getItem('classorbit_folders');
+      const lfi = localStorage.getItem('classorbit_files');
+      const folders = lf ? JSON.parse(lf) : [];
+      const files = lfi ? JSON.parse(lfi) : [];
+      if (!targetFolderName) targetFolderName = folders.find((f: any) => f.id === targetFolderId)?.name ?? 'Workspace';
+      files.unshift({ id: Math.random().toString(36).slice(2, 9), name: fileName, type: 'prompt', date: new Date().toLocaleDateString('en-US', { month: 'short', day: '2-digit', year: 'numeric' }), folderId: targetFolderId, folder_id: targetFolderId, content: activePromptData.prompt });
+      localStorage.setItem('classorbit_files', JSON.stringify(files));
+    }
 
     setShowSaveModal(false);
     setIsCreatingNewFolder(false);
     setNewFolderName('');
+    setIsSaving(false);
 
-    // Trigger toast success with Link
     toast.success((t) => (
       <span className="flex items-center gap-1.5 flex-wrap text-[14px]">
         Saved to <strong>{targetFolderName}</strong>!
-        <Link 
-          href="/workspace" 
-          onClick={() => toast.dismiss(t.id)} 
-          className="underline text-primary font-bold hover:text-primary/80 transition-colors"
-        >
-          View Workspace
-        </Link>
+        <Link href="/workspace" onClick={() => toast.dismiss(t.id)} className="underline text-primary font-bold hover:text-primary/80 transition-colors">View Workspace</Link>
       </span>
     ), { duration: 5000 });
+  };
+
+  const handleShare = async () => {
+    if (!generatedPrompts || !activeTab) return;
+    const data = generatedPrompts[activeTab];
+    setIsSharing(true);
+    try {
+      const res = await fetch('/api/share', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          tool_name: data.toolName,
+          tool_url: data.toolUrl,
+          prompt_text: data.prompt,
+          topic: mode === 'free' ? freePrompt.split('\n')[0] : formData.topic,
+          content_type: formData.contentType,
+          grade: formData.grade,
+          subject: formData.subject,
+        }),
+      });
+      if (res.ok) {
+        const d = await res.json();
+        const fullUrl = `${window.location.origin}${d.url}`;
+        setShareUrl(fullUrl);
+        await navigator.clipboard.writeText(fullUrl);
+        toast.success('Share link copied to clipboard!');
+      } else {
+        toast.error('Sharing unavailable right now.');
+      }
+    } catch { toast.error('Sharing unavailable right now.'); }
+    finally { setIsSharing(false); }
   };
 
   const updateField = (field: keyof TeacherInput, value: any) => {
@@ -487,11 +526,23 @@ function BuilderContent() {
         body: JSON.stringify(bodyData)
       });
 
+      if (res.status === 403) {
+        const errData = await res.json();
+        if (errData.error === 'LIMIT_REACHED') {
+          toast.dismiss(loader);
+          setUsageInfo({ used: errData.prompts_used ?? 25, limit: errData.prompt_limit ?? 25 });
+          setShowUpgradeModal(true);
+          setIsGenerating(false);
+          return;
+        }
+        throw new Error('Failed to fetch');
+      }
+
       if (!res.ok) throw new Error('Failed to fetch');
       const data = await res.json();
       
       const tools = mode === 'free' ? freeTools : formData.selectedTools;
-      const selectedToolData = defaultTools.filter(t => tools.includes(t.id));
+      const selectedToolData = systemTools.filter(t => tools.includes(t.id));
       const prompts: ToolPrompts = {};
       
       for (const tool of selectedToolData) {
@@ -533,6 +584,39 @@ function BuilderContent() {
       setGeneratedPrompts(prompts);
       setViewState('ready');
       toast.success('Your prompt is ready!', { id: loader });
+
+      // Log usage for each selected tool as builder_use
+      selectedToolData.forEach(tool => {
+        fetch('/api/tools/usage', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            tool_id: tool.id,
+            tool_name: tool.tool_name,
+            is_custom: false,
+            action_type: 'builder_use',
+          }),
+        }).catch(err => console.error("Failed to log tool usage", err));
+      });
+
+      // Automatically log the generation to Saved Prompts history
+      const topicText = mode === 'free' ? freePrompt.split('\n')[0] : formData.topic;
+      const contentTypeName = contentTypes.find(c => c.id === (mode === 'free' ? 'lesson_plan' : formData.contentType))?.label || 'Prompt';
+      const firstTool = Object.keys(prompts)[0];
+      if (firstTool) {
+        fetch('/api/prompts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            content_type: mode === 'free' ? 'Free Type' : contentTypeName,
+            grade: mode === 'free' ? 'General' : formData.grade,
+            subject: mode === 'free' ? 'General' : formData.subject,
+            topic: topicText.length > 40 ? topicText.substring(0, 40) + '...' : topicText,
+            tools: selectedToolData.map(t => t.tool_name),
+            prompt_text: prompts[firstTool].prompt,
+          }),
+        }).catch(err => console.error("Failed to save history", err));
+      }
     } catch (e) {
       toast.error('Failed to generate prompt. Please check your API key.', { id: loader });
     } finally {
@@ -653,34 +737,72 @@ function BuilderContent() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
-          className="space-y-3 mb-8"
+          className="space-y-4 mb-8"
         >
-          <p className="text-label-sm font-bold text-text-muted uppercase tracking-wider mb-4 text-center">
+          <p className="text-label-sm font-bold text-text-muted uppercase tracking-wider text-center">
             Launch to Platform
           </p>
+
+          {/* Paste tip banner */}
+          <div className="flex items-start gap-3 bg-emerald-500/8 border border-emerald-500/20 rounded-2xl px-5 py-3.5">
+            <CheckCircle2 size={18} className="text-emerald-400 shrink-0 mt-0.5" />
+            <div className="text-[13px] text-emerald-300 leading-relaxed">
+              <strong className="text-emerald-200">Your prompt is already copied.</strong>{' '}
+              Platforms marked <span className="inline-flex items-center gap-1 bg-emerald-500/20 text-emerald-300 px-1.5 py-0.5 rounded-full text-[11px] font-bold">✨ Auto-paste</span> will open with the prompt pre-loaded.
+              For others, press{' '}
+              <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-[11px] font-mono">Ctrl+V</kbd>
+              {' '}or{' '}
+              <kbd className="bg-white/10 px-1.5 py-0.5 rounded text-[11px] font-mono">⌘V</kbd>
+              {' '}to paste after the platform opens.
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {Object.entries(generatedPrompts).map(([toolId, data]) => (
-              <button
-                key={toolId}
-                onClick={() => launchTool(data.toolName, data.toolUrl, data.prompt)}
-                className="group glass-card hover:border-primary/50 rounded-2xl p-5 flex items-center gap-4 transition-all hover:shadow-glow active:scale-[0.98]"
-              >
-                <div className="w-12 h-12 rounded-xl bg-white border border-border shadow-sm overflow-hidden flex items-center justify-center p-2 shrink-0">
-                  {data.toolLogo ? (
-                    <img src={data.toolLogo} alt={data.toolName} className="w-full h-full object-contain" />
-                  ) : (
-                    <Rocket size={20} className="text-primary/40" />
-                  )}
-                </div>
-                <div className="flex-1 text-left">
-                  <p className="font-display font-bold text-text-main text-[16px] group-hover:text-primary transition-colors">
-                    Open in {data.toolName}
-                  </p>
-                  <p className="text-label-sm text-text-muted">Copies prompt & opens {data.toolName}</p>
-                </div>
-                <ExternalLink size={20} className="text-text-muted group-hover:text-primary transition-colors shrink-0" />
-              </button>
-            ))}
+            {Object.entries(generatedPrompts).map(([toolId, data]) => {
+              const autoFill = supportsAutoFill(data.toolName);
+              return (
+                <button
+                  key={toolId}
+                  onClick={() => {
+                    fetch('/api/tools/usage', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ 
+                        tool_id: toolId, 
+                        tool_name: data.toolName, 
+                        is_custom: false, 
+                        action_type: 'launch' 
+                      }),
+                    }).catch(e => console.error('Error logging launch from builder', e));
+                    launchTool(data.toolName, data.toolUrl, data.prompt);
+                  }}
+                  className="group glass-card hover:border-primary/50 rounded-2xl p-5 flex items-center gap-4 transition-all hover:shadow-glow active:scale-[0.98]"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-white border border-border shadow-sm overflow-hidden flex items-center justify-center p-2 shrink-0">
+                    {data.toolLogo ? (
+                      <img src={data.toolLogo} alt={data.toolName} className="w-full h-full object-contain" />
+                    ) : (
+                      <Rocket size={20} className="text-primary/40" />
+                    )}
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="font-display font-bold text-text-main text-[15px] group-hover:text-primary transition-colors">
+                      Open in {data.toolName}
+                    </p>
+                    {autoFill ? (
+                      <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 mt-0.5">
+                        ✨ Auto-paste — prompt pre-loaded
+                      </span>
+                    ) : (
+                      <span className="text-label-sm text-text-muted">
+                        Copied — press Ctrl+V / ⌘V to paste
+                      </span>
+                    )}
+                  </div>
+                  <ExternalLink size={18} className="text-text-muted group-hover:text-primary transition-colors shrink-0" />
+                </button>
+              );
+            })}
           </div>
         </motion.div>
 
@@ -696,7 +818,16 @@ function BuilderContent() {
             className="flex items-center gap-2 px-6 py-3 rounded-xl bg-surface border border-border text-text-muted hover:text-text-main hover:border-text-subtle font-semibold transition-all active:scale-95"
           >
             <RotateCcw size={18} />
-            Build Another Prompt
+            Build Another
+          </button>
+
+          <button
+            onClick={handleShare}
+            disabled={isSharing}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-surface border border-border text-text-muted hover:text-text-main hover:border-primary font-semibold transition-all active:scale-95 disabled:opacity-60"
+          >
+            {isSharing ? <Loader2 size={18} className="animate-spin" /> : <Share2 size={18} />}
+            {shareUrl ? 'Link Copied!' : 'Share Prompt'}
           </button>
 
           <button
@@ -787,8 +918,10 @@ function BuilderContent() {
                   </button>
                   <button
                     onClick={handleSavePrompt}
-                    className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl font-semibold text-label-md transition-colors shadow-md shadow-primary/20"
+                    disabled={isSaving}
+                    className="bg-primary hover:bg-primary/90 text-white px-6 py-2.5 rounded-xl font-semibold text-label-md transition-colors shadow-md shadow-primary/20 disabled:opacity-60 flex items-center gap-2"
                   >
+                    {isSaving && <Loader2 size={16} className="animate-spin" />}
                     Confirm & Save
                   </button>
                 </div>
@@ -950,7 +1083,7 @@ function BuilderContent() {
               <div className="space-y-3 pt-2">
                 <label className="text-label-sm font-semibold text-text-muted ml-1">Send to AI Platforms</label>
                 <div className="flex flex-wrap gap-2">
-                  {defaultTools.filter(t => t.active).map(tool => (
+                  {systemTools.map(tool => (
                     <button
                       key={tool.id}
                       onClick={() => toggleFreeTool(tool.id)}
@@ -1048,15 +1181,27 @@ function BuilderContent() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {contentTypes.slice(0, 12).map((c) => {
                     const isSelected = formData.contentType === c.id;
+                    const isPremium = userPlan === 'free' && !['quiz', 'lesson_plan', 'worksheet', 'homework', 'flashcards'].includes(c.id);
                     const Icon = iconMap[c.icon] || FileText;
                     return (
                       <button
                         key={c.id}
-                        onClick={() => updateField('contentType', c.id)}
-                        className={`glass-card p-4 rounded-2xl flex flex-col items-center gap-3 text-center transition-all ${
+                        onClick={() => {
+                          if (isPremium) {
+                            setShowUpgradeModal(true);
+                          } else {
+                            updateField('contentType', c.id);
+                          }
+                        }}
+                        className={`relative glass-card p-4 rounded-2xl flex flex-col items-center gap-3 text-center transition-all ${
                           isSelected ? 'ring-2 ring-primary bg-primary/5 shadow-md border-primary' : 'hover:bg-background border-border hover:border-text-subtle'
-                        }`}
+                        } ${isPremium ? 'opacity-60 grayscale hover:grayscale-0' : ''}`}
                       >
+                        {isPremium && (
+                          <div className="absolute top-2 right-2 bg-secondary/80 backdrop-blur text-warning p-1 rounded-full shadow-sm" title="Pro Feature">
+                            <Lock size={12} strokeWidth={2.5} />
+                          </div>
+                        )}
                         <Icon size={28} className={isSelected ? 'text-primary' : 'text-text-subtle'} strokeWidth={1.5} />
                         <span className={`text-label-md font-semibold break-words whitespace-normal leading-tight ${isSelected ? 'text-primary' : 'text-text-main'}`}>
                           {c.label}
@@ -1155,25 +1300,77 @@ function BuilderContent() {
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
-                  <div className="space-y-2">
-                    <label className="text-label-sm font-semibold text-text-muted ml-1">Curriculum / Board</label>
-                    <input
-                      type="text"
-                      value={formData.curriculum || ''}
-                      onChange={(e) => updateField('curriculum', e.target.value)}
-                      placeholder="E.g., Cambridge, CBSE, IGCSE, IB, State Board..."
-                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm text-text-main placeholder:text-text-subtle"
-                    />
+                  <div className="space-y-2 relative">
+                    <label className="text-label-sm font-semibold text-text-muted ml-1 flex justify-between items-center">
+                      Curriculum / Board
+                      {customCurriculumMode && (
+                        <button type="button" onClick={() => { setCustomCurriculumMode(false); updateField('curriculum', ''); }} className="text-primary hover:underline text-[11px]">Choose from list</button>
+                      )}
+                    </label>
+                    {!customCurriculumMode ? (
+                      <div className="relative">
+                        <select
+                          value={curriculumOptions.find(o => o.value === formData.curriculum) ? formData.curriculum : ''}
+                          onChange={(e) => {
+                            if (e.target.value === 'Other') {
+                              setCustomCurriculumMode(true);
+                              updateField('curriculum', '');
+                            } else {
+                              updateField('curriculum', e.target.value);
+                            }
+                          }}
+                          className="w-full appearance-none bg-surface border border-border rounded-xl px-4 py-3 text-body-md text-text-main focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
+                        >
+                          {curriculumOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                        <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-subtle" />
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.curriculum || ''}
+                        onChange={(e) => updateField('curriculum', e.target.value)}
+                        placeholder="Type curriculum..."
+                        className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm text-text-main placeholder:text-text-subtle"
+                        autoFocus
+                      />
+                    )}
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-label-sm font-semibold text-text-muted ml-1">Institution / University / City</label>
-                    <input
-                      type="text"
-                      value={formData.institution || ''}
-                      onChange={(e) => updateField('institution', e.target.value)}
-                      placeholder="E.g., Stanford University, San Francisco, or school name..."
-                      className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm text-text-main placeholder:text-text-subtle"
-                    />
+                  <div className="space-y-2 relative">
+                    <label className="text-label-sm font-semibold text-text-muted ml-1 flex justify-between items-center">
+                      Institution / University / City
+                      {customInstitutionMode && (
+                        <button type="button" onClick={() => { setCustomInstitutionMode(false); updateField('institution', ''); }} className="text-primary hover:underline text-[11px]">Choose from list</button>
+                      )}
+                    </label>
+                    {!customInstitutionMode ? (
+                      <div className="relative">
+                        <select
+                          value={institutionOptions.find(o => o.value === formData.institution) ? formData.institution : ''}
+                          onChange={(e) => {
+                            if (e.target.value === 'Other') {
+                              setCustomInstitutionMode(true);
+                              updateField('institution', '');
+                            } else {
+                              updateField('institution', e.target.value);
+                            }
+                          }}
+                          className="w-full appearance-none bg-surface border border-border rounded-xl px-4 py-3 text-body-md text-text-main focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
+                        >
+                          {institutionOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                        </select>
+                        <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-subtle" />
+                      </div>
+                    ) : (
+                      <input
+                        type="text"
+                        value={formData.institution || ''}
+                        onChange={(e) => updateField('institution', e.target.value)}
+                        placeholder="Type institution..."
+                        className="w-full bg-surface border border-border rounded-xl px-4 py-3 text-body-md focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm text-text-main placeholder:text-text-subtle"
+                        autoFocus
+                      />
+                    )}
                   </div>
                 </div>
               </div>
@@ -1255,7 +1452,7 @@ function BuilderContent() {
                 <div className="space-y-3">
                   <label className="text-label-sm font-semibold text-text-muted ml-1">Target AI Tools</label>
                   <div className="flex flex-wrap gap-2">
-                    {defaultTools.filter(t => t.active).map(tool => (
+                    {systemTools.map(tool => (
                       <button
                         key={tool.id}
                         onClick={() => toggleTool(tool.id)}
@@ -1322,6 +1519,13 @@ function BuilderContent() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      <UpgradeModal
+        open={showUpgradeModal}
+        onClose={() => setShowUpgradeModal(false)}
+        promptsUsed={usageInfo.used}
+        promptLimit={usageInfo.limit}
+      />
     </div>
   );
 }

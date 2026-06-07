@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { defaultTools } from '@/data/default-tools';
+import { useTools } from '@/context/ToolsContext';
 import Badge from '@/components/ui/Badge';
 import toast from 'react-hot-toast';
 import { 
@@ -44,6 +44,7 @@ const classroomPhases: Launchphase[] = [
 
 export default function LaunchpadPage() {
   const { profile, loading } = useUser();
+  const { tools: systemTools, newTools } = useTools();
   const [activePhase, setActivePhase] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [launchingId, setLaunchingId] = useState<string | null>(null);
@@ -58,10 +59,32 @@ export default function LaunchpadPage() {
   const [toolIsFree, setToolIsFree] = useState(true);
 
   useEffect(() => {
-    const localCustom = localStorage.getItem('classorbit_custom_tools');
-    if (localCustom) {
-      setCustomTools(JSON.parse(localCustom));
-    }
+    (async () => {
+      try {
+        const res = await fetch('/api/tools');
+        if (res.status === 503) throw new Error('DB_UNAVAILABLE');
+        if (res.ok) {
+          const data = await res.json();
+          const mapped = (data.tools ?? []).map((t: any) => ({
+            id: t.id,
+            tool_name: t.tool_name,
+            tool_url: t.tool_url,
+            description: t.description || 'Custom AI tool.',
+            category: t.category || 'text',
+            is_free: t.is_free === 1 || t.is_free === true,
+            supported_outputs: ['notes', 'quiz', 'lesson_plan'],
+            active: true,
+            sort_order: 100,
+          }));
+          setCustomTools(mapped);
+          // Keep localStorage in sync for the builder page (which reads it)
+          localStorage.setItem('classorbit_custom_tools', JSON.stringify(mapped));
+        }
+      } catch {
+        const lc = localStorage.getItem('classorbit_custom_tools');
+        if (lc) setCustomTools(JSON.parse(lc));
+      }
+    })();
   }, []);
 
   const saveCustomTools = (updated: any[]) => {
@@ -90,49 +113,61 @@ export default function LaunchpadPage() {
     }
   };
 
-  const handleAddCustomTool = () => {
-    if (!toolUrl.trim()) {
-      toast.error('Tool URL is required');
-      return;
-    }
-    if (!toolName.trim()) {
-      toast.error('Tool Name is required');
-      return;
-    }
+  const handleAddCustomTool = async () => {
+    if (!toolUrl.trim()) { toast.error('Tool URL is required'); return; }
+    if (!toolName.trim()) { toast.error('Tool Name is required'); return; }
 
     let formattedUrl = toolUrl.trim();
     if (!formattedUrl.startsWith('http://') && !formattedUrl.startsWith('https://')) {
       formattedUrl = 'https://' + formattedUrl;
     }
 
-    const newTool = {
-      id: 'custom-' + Math.random().toString(36).substring(7),
-      tool_name: toolName.trim(),
-      tool_url: formattedUrl,
-      description: toolDesc.trim() || 'Custom AI tool integrated by teacher.',
-      category: toolCategory === 'prep' ? 'text' : toolCategory === 'teach' ? 'presentation' : 'audio',
-      is_free: toolIsFree,
-      supported_outputs: ['notes', 'quiz', 'lesson_plan'],
-      active: true,
-      sort_order: 100 + customTools.length,
-    };
+    const category = toolCategory === 'prep' ? 'text' : toolCategory === 'teach' ? 'presentation' : 'audio';
 
-    saveCustomTools([...customTools, newTool]);
-    setToolUrl('');
-    setToolName('');
-    setToolDesc('');
-    setToolCategory('prep');
-    setToolIsFree(true);
+    try {
+      const res = await fetch('/api/tools', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tool_name: toolName.trim(), tool_url: formattedUrl, description: toolDesc.trim() || 'Custom AI tool.', category, is_free: toolIsFree }),
+      });
+      const data = await res.json();
+      const newTool = {
+        id: res.status === 503 ? 'custom-' + Math.random().toString(36).slice(2, 9) : data.id,
+        tool_name: toolName.trim(),
+        tool_url: formattedUrl,
+        description: toolDesc.trim() || 'Custom AI tool.',
+        category,
+        is_free: toolIsFree,
+        supported_outputs: ['notes', 'quiz', 'lesson_plan'],
+        active: true,
+        sort_order: 100 + customTools.length,
+      };
+      saveCustomTools([...customTools, newTool]);
+    } catch {
+      const newTool = {
+        id: 'custom-' + Math.random().toString(36).slice(2, 9),
+        tool_name: toolName.trim(), tool_url: formattedUrl,
+        description: toolDesc.trim() || 'Custom AI tool.',
+        category, is_free: toolIsFree,
+        supported_outputs: ['notes', 'quiz', 'lesson_plan'],
+        active: true, sort_order: 100 + customTools.length,
+      };
+      saveCustomTools([...customTools, newTool]);
+    }
+
+    setToolUrl(''); setToolName(''); setToolDesc(''); setToolCategory('prep'); setToolIsFree(true);
     setShowAddModal(false);
     toast.success(`${toolName} saved to launcher!`);
   };
 
-  const handleDeleteCustomTool = (id: string, name: string) => {
-    if (confirm(`Are you sure you want to remove "${name}" from your launcher?`)) {
-      const updated = customTools.filter(t => t.id !== id);
-      saveCustomTools(updated);
-      toast.success(`Removed ${name} from launcher.`);
-    }
+  const handleDeleteCustomTool = async (id: string, name: string) => {
+    if (!confirm(`Remove "${name}" from your launcher?`)) return;
+    try {
+      await fetch(`/api/tools/${id}`, { method: 'DELETE' });
+    } catch { /* fallback to local removal */ }
+    const updated = customTools.filter(t => t.id !== id);
+    saveCustomTools(updated);
+    toast.success(`Removed ${name} from launcher.`);
   };
 
   const getToolPhase = (tool: any): string => {
@@ -152,7 +187,7 @@ export default function LaunchpadPage() {
   };
 
   const allToolsList = [
-    ...defaultTools.map(t => ({ ...t, isCustom: false })),
+    ...systemTools.map(t => ({ ...t, isCustom: false })),
     ...customTools.map(t => ({ ...t, active: true, isCustom: true }))
   ];
 
@@ -184,9 +219,17 @@ export default function LaunchpadPage() {
   };
 
 
-  const handleLaunch = (id: string, name: string, url: string) => {
+  const handleLaunch = (id: string, name: string, url: string, isCustom = false) => {
     setLaunchingId(id);
     toast.success(`Opening ${name} integration...`);
+    
+    // Log tool launch event asynchronously
+    fetch('/api/tools/usage', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tool_id: id, tool_name: name, is_custom: isCustom, action_type: 'launch' }),
+    }).catch(e => console.error('Error logging launch', e));
+
     setTimeout(() => {
       const targetUrl = getGoogleSsoUrl(id, url);
       window.open(targetUrl, '_blank');
@@ -217,6 +260,21 @@ export default function LaunchpadPage() {
             </p>
           </div>
         </div>
+
+        {/* New tool notification banner */}
+        {newTools.length > 0 && (
+          <div className="w-full lg:max-w-md bg-primary/10 border border-primary/30 rounded-2xl px-5 py-3 flex items-start gap-3 shrink-0">
+            <span className="text-2xl shrink-0 mt-0.5">🎉</span>
+            <div>
+              <p className="font-bold text-white text-[14px]">
+                {newTools.length === 1 ? `New tool: ${newTools[0].tool_name}!` : `${newTools.length} new tools added!`}
+              </p>
+              <p className="text-[12px] text-text-muted mt-0.5">
+                {newTools.map(t => t.tool_name).join(', ')} — scroll down to try {newTools.length === 1 ? 'it' : 'them'} out.
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Google SSO Session Bridge Card */}
         {!loading && profile && (
@@ -352,6 +410,11 @@ export default function LaunchpadPage() {
                         />
                       </div>
                       <div className="flex items-center gap-1.5">
+                        {tool.is_new && (
+                          <span className="text-[10px] font-bold bg-primary text-white px-2 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                            NEW
+                          </span>
+                        )}
                         {tool.isCustom && (
                           <button
                             onClick={(e) => {
@@ -380,7 +443,7 @@ export default function LaunchpadPage() {
 
                   <div className="mt-4 pt-4 border-t border-border">
                     <button
-                      onClick={() => handleLaunch(tool.id, tool.tool_name, tool.tool_url)}
+                      onClick={() => handleLaunch(tool.id, tool.tool_name, tool.tool_url, !!tool.isCustom)}
                       className={`w-full py-3 rounded-xl font-bold text-label-md flex items-center justify-center gap-2 transition-all shadow-sm ${
                         isLaunching
                           ? 'bg-primary/10 text-primary border border-primary/20'
