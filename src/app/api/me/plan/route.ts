@@ -18,15 +18,18 @@ export async function GET() {
 
   // Get plan
   const profile = await db.prepare(
-    'SELECT plan_type, subscription_status, plan_expires_at FROM user_profiles WHERE user_id = ?'
-  ).bind(user.id).first<{ plan_type: string; subscription_status: string; plan_expires_at: string | null }>();
+    'SELECT plan_type, subscription_status, plan_expires_at, is_blocked FROM user_profiles WHERE user_id = ?'
+  ).bind(user.id).first<{ plan_type: string; subscription_status: string; plan_expires_at: string | null; is_blocked: number }>();
 
   let plan_type = profile?.plan_type ?? 'free';
+  let subscription_status = profile?.subscription_status ?? 'active';
+  const is_blocked = (profile?.is_blocked ?? 0) === 1;
 
   // Check if pro plan has expired
   if (plan_type === 'pro' && profile?.plan_expires_at) {
     if (new Date(profile.plan_expires_at) < new Date()) {
       plan_type = 'free';
+      subscription_status = 'expired';
       // Mark as expired in DB (non-blocking)
       db.prepare('UPDATE user_profiles SET plan_type = ?, subscription_status = ? WHERE user_id = ?')
         .bind('free', 'expired', user.id).run();
@@ -43,5 +46,13 @@ export async function GET() {
   const is_pro = plan_type === 'pro' || plan_type === 'school';
   const prompt_limit = is_pro ? null : FREE_LIMIT; // null = unlimited
 
-  return NextResponse.json({ plan_type, prompts_used, prompt_limit, is_pro, plan_expires_at: profile?.plan_expires_at ?? null });
+  return NextResponse.json({ 
+    plan_type, 
+    prompts_used, 
+    prompt_limit, 
+    is_pro, 
+    plan_expires_at: profile?.plan_expires_at ?? null,
+    subscription_status,
+    is_blocked
+  });
 }

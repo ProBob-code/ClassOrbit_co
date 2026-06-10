@@ -33,7 +33,10 @@ export async function GET() {
         CREATE TABLE IF NOT EXISTS user_profiles (
           user_id TEXT PRIMARY KEY, plan_type TEXT DEFAULT 'free',
           subscription_status TEXT DEFAULT 'active', plan_expires_at DATETIME,
-          has_seeded_workspace INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+          razorpay_order_id TEXT, razorpay_payment_id TEXT,
+          has_seeded_workspace INTEGER DEFAULT 0, created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+          is_blocked INTEGER DEFAULT 0
         )
       `)
     ]);

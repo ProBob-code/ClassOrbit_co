@@ -60,10 +60,19 @@ function emptyForm(): Partial<AdminTool> {
   };
 }
 
-type Tab = 'overview' | 'tools' | 'activity' | 'waitlist' | 'feedback';
+type Tab = 'overview' | 'tools' | 'activity' | 'waitlist' | 'feedback' | 'users';
+
+interface AdminUser {
+  user_id: string;
+  plan_type: string;
+  subscription_status: string;
+  plan_expires_at: string | null;
+  is_blocked: number;
+  created_at: string;
+}
 
 /* ─── Stat Card ─── */
-function StatCard({ icon, label, value, color = 'primary' }: { icon: React.ReactNode; label: string; value: string | number; color?: string }) {
+function StatCard({ icon, label, value, color = 'primary', onClick }: { icon: React.ReactNode; label: string; value: string | number; color?: string; onClick?: () => void }) {
   const colorMap: Record<string, string> = {
     primary: 'from-amber-500/10 to-amber-500/2 border-amber-500/20 text-amber-400 shadow-amber-500/5',
     emerald: 'from-emerald-500/10 to-emerald-500/2 border-emerald-500/20 text-emerald-400 shadow-emerald-500/5',
@@ -74,10 +83,11 @@ function StatCard({ icon, label, value, color = 'primary' }: { icon: React.React
   };
   return (
     <motion.div
+      onClick={onClick}
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       whileHover={{ y: -4, transition: { duration: 0.2 } }}
-      className={`bg-gradient-to-br ${colorMap[color].split(' ').slice(0, 3).join(' ')} border rounded-2xl p-5 shadow-sm hover:shadow-md ${colorMap[color].split(' ').pop()} transition-all duration-300`}
+      className={`bg-gradient-to-br ${colorMap[color].split(' ').slice(0, 3).join(' ')} border rounded-2xl p-5 shadow-sm hover:shadow-md ${colorMap[color].split(' ').pop()} transition-all duration-300 ${onClick ? 'cursor-pointer' : ''}`}
     >
       <div className="flex items-center gap-3 mb-3">
         <div className={`w-9 h-9 rounded-xl bg-white/5 flex items-center justify-center ${colorMap[color].split(' ')[3]}`}>
@@ -98,6 +108,10 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [stats, setStats] = useState<Stats | null>(null);
   const [statsLoading, setStatsLoading] = useState(false);
+
+  // Users state
+  const [users, setUsers] = useState<AdminUser[]>([]);
+  const [usersLoading, setUsersLoading] = useState(false);
 
   // Tools state
   const [tools, setTools] = useState<AdminTool[]>([]);
@@ -147,12 +161,26 @@ export default function AdminDashboard() {
     finally { setToolsLoading(false); }
   }, []);
 
+  /* ─── Load users ─── */
+  const loadUsers = useCallback(async () => {
+    setUsersLoading(true);
+    try {
+      const res = await fetch('/api/admin/users');
+      if (res.ok) {
+        const data = await res.json();
+        setUsers(data.users ?? []);
+      }
+    } catch { toast.error('Failed to load users'); }
+    finally { setUsersLoading(false); }
+  }, []);
+
   useEffect(() => {
     if (authed) {
       loadStats();
       loadTools();
+      loadUsers();
     }
-  }, [authed, loadStats, loadTools]);
+  }, [authed, loadStats, loadTools, loadUsers]);
 
   /* ─── Tool CRUD ─── */
   const openAdd = () => { setEditId(null); setForm(emptyForm()); setShowModal(true); };
@@ -253,6 +281,7 @@ export default function AdminDashboard() {
 
   const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <BarChart3 size={16} /> },
+    { id: 'users', label: 'Users', icon: <Users size={16} /> },
     { id: 'tools', label: 'AI Tools Launchpad', icon: <Wrench size={16} /> },
     { id: 'feedback', label: 'Feedback Reviews', icon: <MessageSquare size={16} /> },
     { id: 'activity', label: 'Recent Activity', icon: <Clock size={16} /> },
@@ -346,12 +375,12 @@ export default function AdminDashboard() {
                 <>
                   {/* Stats grid */}
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-                    <StatCard icon={<FileText size={18} />} label="Total Prompts" value={stats.total_prompts} color="primary" />
-                    <StatCard icon={<Users size={18} />} label="Unique Users" value={stats.unique_users} color="sky" />
-                    <StatCard icon={<Crown size={18} />} label="Pro Users" value={stats.pro_users} color="amber" />
-                    <StatCard icon={<Mail size={18} />} label="Waitlist" value={stats.waitlist_count} color="violet" />
-                    <StatCard icon={<Wrench size={18} />} label="Active Tools" value={stats.active_tools} color="emerald" />
-                    <StatCard icon={<ListOrdered size={18} />} label="Total Tools" value={stats.total_tools} color="rose" />
+                    <StatCard icon={<FileText size={18} />} label="Total Prompts" value={stats.total_prompts} color="primary" onClick={() => setActiveTab('activity')} />
+                    <StatCard icon={<Users size={18} />} label="Total Users" value={stats.unique_users} color="sky" onClick={() => setActiveTab('users')} />
+                    <StatCard icon={<Crown size={18} />} label="Pro Users" value={stats.pro_users} color="amber" onClick={() => setActiveTab('users')} />
+                    <StatCard icon={<Mail size={18} />} label="Waitlist" value={stats.waitlist_count} color="violet" onClick={() => setActiveTab('waitlist')} />
+                    <StatCard icon={<Wrench size={18} />} label="Active Tools" value={stats.active_tools} color="emerald" onClick={() => setActiveTab('tools')} />
+                    <StatCard icon={<ListOrdered size={18} />} label="Total Tools" value={stats.total_tools} color="rose" onClick={() => setActiveTab('tools')} />
                   </div>
 
                   {/* Active Launchpad Tools Grid (Direct-Manipulation View) */}
@@ -952,6 +981,101 @@ export default function AdminDashboard() {
                 <div className="text-center py-20 bg-surface/30 border border-border rounded-3xl">
                   <Clock size={32} className="text-text-subtle mx-auto mb-3" />
                   <p className="text-text-muted text-[14px]">No prompt operations logged yet.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── USERS REGISTRY ── */}
+          {activeTab === 'users' && (
+            <div className="space-y-6">
+              <div>
+                <h2 className="text-[20px] font-bold text-text-main font-display">User Management</h2>
+                <p className="text-[13px] text-text-muted mt-1">Manage user accounts, subscriptions, and access permissions.</p>
+              </div>
+
+              {usersLoading ? (
+                <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-primary" /></div>
+              ) : users?.length ? (
+                <div className="glass-panel border border-border rounded-2xl overflow-hidden shadow-soft">
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-left border-collapse">
+                      <thead>
+                        <tr className="border-b border-border text-[11px] font-bold text-text-muted uppercase tracking-wider bg-white/[0.01]">
+                          <th className="px-6 py-4">User ID</th>
+                          <th className="px-6 py-4">Plan & Status</th>
+                          <th className="px-6 py-4">Joined / Expires</th>
+                          <th className="px-6 py-4 text-right">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {users.map((u, i) => (
+                          <tr key={i} className={`border-b border-border/50 transition-colors ${u.is_blocked ? 'bg-red-500/5' : 'hover:bg-white/[0.01]'}`}>
+                            <td className="px-6 py-4 text-[13px] text-text-main font-semibold font-mono truncate max-w-[200px]">
+                              {u.user_id}
+                            </td>
+                            <td className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                                  u.plan_type === 'pro' ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20' : 'bg-white/5 text-text-muted border border-border'
+                                }`}>
+                                  {u.plan_type}
+                                </span>
+                                <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider border ${
+                                  u.subscription_status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 
+                                  u.subscription_status === 'cancelled' ? 'bg-rose-500/10 text-rose-400 border-rose-500/20' :
+                                  'bg-white/5 text-text-muted border-border'
+                                }`}>
+                                  {u.subscription_status}
+                                </span>
+                              </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <p className="text-[12px] text-text-main">
+                                Joined: {new Date(u.created_at).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' })}
+                              </p>
+                              {u.plan_expires_at && (
+                                <p className="text-[11px] text-text-muted mt-0.5">
+                                  Expires: {new Date(u.plan_expires_at).toLocaleDateString('en-IN')}
+                                </p>
+                              )}
+                            </td>
+                            <td className="px-6 py-4 text-right">
+                              <button
+                                onClick={async () => {
+                                  try {
+                                    const res = await fetch(`/api/admin/users/${u.user_id}/block`, {
+                                      method: 'POST',
+                                      headers: { 'Content-Type': 'application/json' },
+                                      body: JSON.stringify({ is_blocked: !u.is_blocked }),
+                                    });
+                                    if (res.ok) {
+                                      toast.success(`User ${!u.is_blocked ? 'blocked' : 'unblocked'}`);
+                                      loadUsers();
+                                    }
+                                  } catch (e) {
+                                    toast.error('Failed to update block status');
+                                  }
+                                }}
+                                className={`px-4 py-1.5 rounded-lg text-[12px] font-bold transition-colors cursor-pointer border ${
+                                  u.is_blocked
+                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                                    : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                                }`}
+                              >
+                                {u.is_blocked ? 'Unblock' : 'Block User'}
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-20 bg-surface/30 border border-border rounded-3xl">
+                  <Users size={32} className="text-text-subtle mx-auto mb-3" />
+                  <p className="text-text-muted text-[14px]">No users found in the database.</p>
                 </div>
               )}
             </div>

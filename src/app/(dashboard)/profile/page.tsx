@@ -216,23 +216,59 @@ export default function ProfilePage() {
                   <p className="font-display font-extrabold text-white text-[16px]">ClassOrbit Pro Membership</p>
                   <p className="text-[12px] text-primary font-medium">Unlimited prompts · Premium tools unlocked</p>
                 </div>
-                <span className="text-[10px] font-bold text-white bg-primary px-3 py-1 rounded-full uppercase tracking-wider shadow-sm shadow-primary/20">
-                  Active
-                </span>
+                {plan.subscription_status === 'cancelled' ? (
+                  <span className="text-[10px] font-bold text-red-400 bg-red-500/10 border border-red-500/20 px-3 py-1 rounded-full uppercase tracking-wider">
+                    Cancelled
+                  </span>
+                ) : (
+                  <span className="text-[10px] font-bold text-white bg-primary px-3 py-1 rounded-full uppercase tracking-wider shadow-sm shadow-primary/20">
+                    Active
+                  </span>
+                )}
               </div>
 
               {plan.plan_expires_at && (
                 <div className="flex items-center gap-2.5 text-[13px] text-text-muted bg-white/[0.01] border border-border/40 rounded-xl px-4 py-2.5 w-fit">
                   <Calendar size={14} className="text-primary" />
-                  <span>Renews automatically on <strong className="text-text-main">{new Date(plan.plan_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</strong></span>
+                  <span>
+                    {plan.subscription_status === 'cancelled' ? 'Expires on ' : 'Renews automatically on '}
+                    <strong className="text-text-main">{new Date(plan.plan_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+                  </span>
                 </div>
               )}
 
               <div className="pt-4 border-t border-border flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <p className="text-[13px] text-text-muted leading-relaxed">
-                  Need to cancel or make changes? Reach out to support at{' '}
-                  <a href="mailto:hello@classorbit.co" className="text-primary font-semibold hover:underline">hello@classorbit.co</a>.
-                </p>
+                {plan.subscription_status === 'cancelled' ? (
+                  <p className="text-[13px] text-text-muted leading-relaxed">
+                    Your plan has been cancelled and will not renew. You will retain Pro access until the expiration date.
+                  </p>
+                ) : (
+                  <>
+                    <p className="text-[13px] text-text-muted leading-relaxed">
+                      Need to cancel or make changes? Reach out to support at{' '}
+                      <a href="mailto:hello@classorbit.co" className="text-primary font-semibold hover:underline">hello@classorbit.co</a>.
+                    </p>
+                    <button
+                      onClick={async () => {
+                        if (!confirm('Are you sure you want to cancel your plan?')) return;
+                        try {
+                          const res = await fetch('/api/me/cancel-plan', { method: 'POST' });
+                          if (res.ok) {
+                            plan.refetch();
+                          } else {
+                            const err = await res.json();
+                            alert(err.error || 'Failed to cancel plan');
+                          }
+                        } catch (e) {
+                          alert('An error occurred');
+                        }
+                      }}
+                      className="px-4 py-2 text-[12px] font-bold text-red-400 border border-red-500/30 hover:bg-red-500/10 rounded-lg transition-colors"
+                    >
+                      Cancel Plan
+                    </button>
+                  </>
+                )}
               </div>
             </div>
           ) : (

@@ -49,7 +49,11 @@ export async function POST(req: Request) {
 
   // Upsert user plan in D1
   const db = getDB();
-  if (db) {
+  if (!db) {
+    return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
+  }
+
+  try {
     await db.prepare(`
       INSERT INTO user_profiles (user_id, plan_type, razorpay_order_id, razorpay_payment_id, subscription_status, plan_expires_at, updated_at)
       VALUES (?, 'pro', ?, ?, 'active', ?, CURRENT_TIMESTAMP)
@@ -61,6 +65,9 @@ export async function POST(req: Request) {
         plan_expires_at = excluded.plan_expires_at,
         updated_at = CURRENT_TIMESTAMP
     `).bind(user.id, razorpay_order_id, razorpay_payment_id, expiresAt.toISOString()).run();
+  } catch (err: any) {
+    console.error('Payment verification DB error:', err);
+    return NextResponse.json({ error: 'Failed to update user profile in database' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true, plan_type: 'pro', plan_expires_at: expiresAt.toISOString() });

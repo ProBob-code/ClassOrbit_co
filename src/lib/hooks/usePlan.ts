@@ -8,6 +8,8 @@ export interface PlanState {
   prompt_limit: number | null;
   is_pro: boolean;
   plan_expires_at: string | null;
+  subscription_status: string;
+  is_blocked: boolean;
   loading: boolean;
 }
 
@@ -17,6 +19,8 @@ const DEFAULT: PlanState = {
   prompt_limit: 25,
   is_pro: false,
   plan_expires_at: null,
+  subscription_status: 'active',
+  is_blocked: false,
   loading: true,
 };
 

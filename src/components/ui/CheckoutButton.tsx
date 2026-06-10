@@ -70,7 +70,7 @@ export default function CheckoutButton({ plan, label, className, onSuccess }: Pr
       currency: orderData.currency,
       name: 'ClassOrbit',
       description: orderData.description,
-      image: '/logo_transparent.png',
+      image: `${window.location.origin}/logo_transparent.png`,
       order_id: orderData.order_id,
       handler: async (response: {
         razorpay_payment_id: string;
@@ -120,7 +120,7 @@ export default function CheckoutButton({ plan, label, className, onSuccess }: Pr
     rzp.open();
   };
 
-  const isLocalhost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname.startsWith('192.168.'));
+  const isDev = process.env.NODE_ENV === 'development';
 
   const handleDevBypass = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -164,7 +164,7 @@ export default function CheckoutButton({ plan, label, className, onSuccess }: Pr
           <><Zap size={18} fill="currentColor" /> {label ?? 'Upgrade to Pro'}</>
         )}
       </button>
-      {isLocalhost && (
+      {isDev && (
         <button
           type="button"
           onClick={handleDevBypass}
