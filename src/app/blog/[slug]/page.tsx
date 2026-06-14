@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Topbar from '@/components/layout/Topbar';
 
+export const runtime = 'edge';
 const posts: Record<string, { title: string; date: string; readTime: string; category: string; content: string }> = {
   '10-ai-prompts-every-teacher-should-know': {
     title: '10 AI Prompts Every Teacher Should Know in 2026',
