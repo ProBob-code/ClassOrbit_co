@@ -511,7 +511,6 @@ export default function AdminDashboard() {
       if (res.ok) {
         toast.success('Ticket resolved!');
         setChatInput('');
-        setResolveCountdown(null);
         closeAdminChat();
         await loadTickets();
         await loadStats();
