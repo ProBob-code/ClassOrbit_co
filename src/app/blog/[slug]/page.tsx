@@ -2,7 +2,14 @@ import type { Metadata } from 'next';
 import Link from 'next/link';
 import Topbar from '@/components/layout/Topbar';
 
-export const runtime = 'edge';
+export function generateStaticParams() {
+  return [
+    { slug: '10-ai-prompts-every-teacher-should-know' },
+    { slug: 'chatgpt-lesson-planning-without-prompt-engineering' },
+    { slug: 'classorbit-vs-writing-prompts-yourself' }
+  ];
+}
+
 const posts: Record<string, { title: string; date: string; readTime: string; category: string; content: string }> = {
   '10-ai-prompts-every-teacher-should-know': {
     title: '10 AI Prompts Every Teacher Should Know in 2026',
