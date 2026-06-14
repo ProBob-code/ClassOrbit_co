@@ -17,7 +17,7 @@ export default function ProfilePage() {
       try {
         const res = await fetch('/api/prompts');
         if (res.ok) {
-          const data = await res.json();
+          const data = (await res.json()) as any;
           const promptsList = data.prompts ?? [];
           setStats({
             prompts: promptsList.length,
@@ -228,12 +228,21 @@ export default function ProfilePage() {
               </div>
 
               {plan.plan_expires_at && (
-                <div className="flex items-center gap-2.5 text-[13px] text-text-muted bg-white/[0.01] border border-border/40 rounded-xl px-4 py-2.5 w-fit">
-                  <Calendar size={14} className="text-primary" />
-                  <span>
-                    {plan.subscription_status === 'cancelled' ? 'Expires on ' : 'Renews automatically on '}
-                    <strong className="text-text-main">{new Date(plan.plan_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-                  </span>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-3 bg-white/[0.01] border border-border/40 rounded-2xl px-4 py-3 w-full">
+                  <div className="flex items-center gap-2.5 text-[13.5px] text-text-muted">
+                    <Calendar size={15} className="text-primary" />
+                    <span>
+                      {plan.subscription_status === 'cancelled' ? 'Expires on: ' : 'Next billing date: '}
+                      <strong className="text-text-main">
+                        {new Date(plan.plan_expires_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}
+                      </strong>
+                    </span>
+                  </div>
+                  {plan.subscription_status !== 'cancelled' && (
+                    <div className="text-[12.5px] text-emerald-400 font-bold bg-emerald-500/10 border border-emerald-500/20 px-3 py-1 rounded-full w-fit sm:ml-auto">
+                      ✓ Cancel plan anytime
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -245,8 +254,7 @@ export default function ProfilePage() {
                 ) : (
                   <>
                     <p className="text-[13px] text-text-muted leading-relaxed">
-                      Need to cancel or make changes? Reach out to support at{' '}
-                      <a href="mailto:hello@classorbit.co" className="text-primary font-semibold hover:underline">hello@classorbit.co</a>.
+                      Need to cancel or make changes? Reach out via the support chat at the bottom right.
                     </p>
                     <button
                       onClick={async () => {
@@ -256,7 +264,7 @@ export default function ProfilePage() {
                           if (res.ok) {
                             plan.refetch();
                           } else {
-                            const err = await res.json();
+                            const err = (await res.json()) as any;
                             alert(err.error || 'Failed to cancel plan');
                           }
                         } catch (e) {

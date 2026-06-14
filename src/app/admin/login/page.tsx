@@ -30,7 +30,7 @@ export default function AdminLoginPage() {
       if (res.ok) {
         router.push('/admin');
       } else {
-        const data = await res.json();
+        const data = (await res.json()) as any;
         setError(data.error || 'Invalid credentials');
       }
     } catch {

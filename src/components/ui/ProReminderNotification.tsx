@@ -25,7 +25,7 @@ export default function ProReminderNotification() {
       try {
         const res = await fetch('/api/me/plan');
         if (!res.ok) return;
-        const plan = await res.json();
+        const plan = (await res.json()) as any;
         
         // If user is already pro or school, never remind them
         if (plan.is_pro || plan.plan_type === 'school') return;

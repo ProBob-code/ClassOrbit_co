@@ -32,7 +32,7 @@ export function usePlan() {
     try {
       const res = await fetch('/api/me/plan');
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as any;
         setState({ ...data, loading: false });
       } else {
         setState(s => ({ ...s, loading: false }));

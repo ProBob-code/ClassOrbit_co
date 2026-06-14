@@ -36,9 +36,10 @@ export async function GET(req: Request) {
     customToolsList,
     feedbackStats,
     feedbackList,
+    openTickets,
   ] = await Promise.all([
     db.prepare('SELECT COUNT(*) as count FROM saved_prompts').first<{ count: number }>(),
-    db.prepare('SELECT COUNT(DISTINCT user_id) as count FROM saved_prompts').first<{ count: number }>(),
+    db.prepare('SELECT COUNT(*) as count FROM user_profiles').first<{ count: number }>(),
     db.prepare("SELECT COUNT(*) as count FROM user_profiles WHERE plan_type = 'pro'").first<{ count: number }>().catch(() => ({ count: 0 })),
     db.prepare('SELECT COUNT(*) as count FROM waitlist').first<{ count: number }>(),
     db.prepare('SELECT COUNT(*) as count FROM system_tools WHERE active = 1').first<{ count: number }>(),
@@ -49,6 +50,7 @@ export async function GET(req: Request) {
     db.prepare('SELECT c.id, c.user_id, c.tool_name, c.tool_url, c.description, c.category, c.is_free, c.created_at, p.email as user_email FROM custom_tools c LEFT JOIN user_profiles p ON c.user_id = p.user_id ORDER BY c.created_at DESC LIMIT 50').all().catch(() => ({ results: [] })),
     db.prepare('SELECT AVG(rating) as avg, COUNT(*) as count FROM platform_feedback').first<{ avg: number; count: number }>().catch(() => ({ avg: 0, count: 0 })),
     db.prepare('SELECT user_email, rating, feedback, created_at FROM platform_feedback ORDER BY created_at DESC LIMIT 50').all().catch(() => ({ results: [] })),
+    db.prepare("SELECT COUNT(*) as count FROM support_tickets WHERE status = 'open'").first<{ count: number }>().catch(() => ({ count: 0 })),
   ]);
 
   return NextResponse.json({
@@ -65,5 +67,6 @@ export async function GET(req: Request) {
     feedback_avg: feedbackStats?.avg ?? 0,
     feedback_count: feedbackStats?.count ?? 0,
     feedback_list: feedbackList?.results ?? [],
+    open_tickets_count: openTickets?.count ?? 0,
   });
 }

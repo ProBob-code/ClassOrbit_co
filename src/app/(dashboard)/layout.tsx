@@ -8,6 +8,7 @@ import { ToolsProvider } from '@/context/ToolsContext';
 import ProReminderNotification from '@/components/ui/ProReminderNotification';
 import FeedbackModal from '@/components/ui/FeedbackModal';
 import BlockedShield from '@/components/ui/BlockedShield';
+import SupportChatWidget from '@/components/ui/SupportChatWidget';
 
 export default function DashboardLayout({
   children,
@@ -29,6 +30,7 @@ export default function DashboardLayout({
       <ProReminderNotification />
       <FeedbackModal />
       <BlockedShield />
+      <SupportChatWidget />
       {/* Background embellishments */}
       <div className="fixed top-0 right-0 -z-10 w-[600px] h-[600px] bg-primary opacity-[0.03] rounded-full blur-[100px] translate-x-1/2 -translate-y-1/2 pointer-events-none" />
       <div className="fixed bottom-0 left-0 -z-10 w-[400px] h-[400px] bg-secondary opacity-[0.03] rounded-full blur-[80px] -translate-x-1/2 translate-y-1/2 pointer-events-none" />

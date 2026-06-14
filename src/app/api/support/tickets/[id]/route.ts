@@ -14,7 +14,8 @@ function getJwtSecret(): string {
   }
 }
 
-export async function GET(req: Request) {
+export async function DELETE(req: Request, props: { params: Promise<{ id: string }> }) {
+  const params = await props.params;
   const secret = getJwtSecret();
   if (!(await isAdminRequest(req, secret))) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -24,13 +25,15 @@ export async function GET(req: Request) {
   if (!db) return NextResponse.json({ error: 'DB unavailable' }, { status: 503 });
 
   try {
-    const users = await db.prepare(
-      'SELECT user_id, plan_type, subscription_status, plan_expires_at, is_blocked, email, name, created_at FROM user_profiles ORDER BY created_at DESC'
-    ).all();
+    // Delete messages associated with the ticket first
+    await db.prepare('DELETE FROM ticket_messages WHERE ticket_id = ?').bind(params.id).run();
+    
+    // Delete the ticket
+    await db.prepare('DELETE FROM support_tickets WHERE id = ?').bind(params.id).run();
 
-    return NextResponse.json({ users: users.results || [] });
+    return NextResponse.json({ success: true });
   } catch (error: any) {
-    console.error('Failed to fetch users:', error);
-    return NextResponse.json({ error: 'Failed to fetch users' }, { status: 500 });
+    console.error('Failed to delete support ticket:', error);
+    return NextResponse.json({ error: 'Failed to delete ticket' }, { status: 500 });
   }
 }

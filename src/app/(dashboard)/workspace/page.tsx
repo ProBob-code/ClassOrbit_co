@@ -103,7 +103,7 @@ export default function WorkspacePage() {
     try {
       const res = await apiFetch('/api/workspace');
       if (res.status === 401) { setLoading(false); return; }
-      const data = await res.json();
+      const data = (await res.json()) as any;
       const mappedFiles: FileData[] = (data.files ?? []).map((f: any) => ({
         id: f.id,
         name: f.name,
@@ -157,7 +157,7 @@ export default function WorkspacePage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ kind: 'folder', name: newFolderName.trim(), sticker: newFolderSticker, color: newFolderColor }),
         });
-        const data = await res.json();
+        const data = (await res.json()) as any;
         setFolders(prev => [...prev, data]);
       }
       setNewFolderName('');
@@ -186,7 +186,7 @@ export default function WorkspacePage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ kind: 'file', folder_id: targetFolder, name: finalName, type: newFileType, content: newFileContent }),
         });
-        const data = await res.json();
+        const data = (await res.json()) as any;
         setFiles(prev => [{ id: data.id, name: data.name, type: data.type, folder_id: data.folder_id, content: data.content, date: formatDate(new Date().toISOString()) }, ...prev]);
       }
       setNewFileName(''); setNewFileContent(''); setShowUploadModal(false);

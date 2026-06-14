@@ -49,7 +49,7 @@ export default function PromptsPage() {
     try {
       const res = await apiFetch('/api/workspace');
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as any;
         const folders = data.folders ?? [];
         setWorkspaceFolders(folders);
         if (folders.length > 0) setSaveFolderId(folders[0].id);
@@ -82,7 +82,7 @@ export default function PromptsPage() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ kind: 'folder', name: newFolderName.trim(), sticker: stickers[Math.floor(Math.random() * stickers.length)], color: colors[Math.floor(Math.random() * colors.length)] }),
         });
-        if (res.ok) { const d = await res.json(); targetFolderId = d.id; targetFolderName = d.name; }
+        if (res.ok) { const d = (await res.json()) as any; targetFolderId = d.id; targetFolderName = d.name; }
       } else {
         targetFolderName = workspaceFolders.find((f: any) => f.id === saveFolderId)?.name ?? 'Workspace';
       }
@@ -115,7 +115,7 @@ export default function PromptsPage() {
     try {
       const res = await apiFetch('/api/prompts');
       if (res.status === 401) { setLoading(false); return; }
-      const data = await res.json();
+      const data = (await res.json()) as any;
       setPrompts(data.prompts ?? []);
       setUseLocal(false);
     } catch {

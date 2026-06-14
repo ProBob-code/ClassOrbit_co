@@ -297,7 +297,7 @@ function BuilderContent() {
       try {
         const res = await fetch('/api/me/plan');
         if (res.ok) {
-          const data = await res.json();
+          const data = (await res.json()) as any;
           setUserPlan(data.plan_type || 'free');
         }
       } catch (err) {
@@ -332,7 +332,7 @@ function BuilderContent() {
     try {
       const res = await fetch('/api/workspace');
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as any;
         const folders = data.folders ?? [];
         setWorkspaceFolders(folders);
         if (folders.length > 0) setSaveFolderId(folders[0].id);
@@ -375,7 +375,7 @@ function BuilderContent() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ kind: 'folder', name: newFolderName.trim(), sticker: stickers[Math.floor(Math.random() * stickers.length)], color: colors[Math.floor(Math.random() * colors.length)] }),
         });
-        if (res.ok) { const d = await res.json(); targetFolderId = d.id; targetFolderName = d.name; }
+        if (res.ok) { const d = (await res.json()) as any; targetFolderId = d.id; targetFolderName = d.name; }
       } else {
         targetFolderName = workspaceFolders.find((f: any) => f.id === saveFolderId)?.name ?? 'Workspace';
       }
@@ -429,7 +429,7 @@ function BuilderContent() {
         }),
       });
       if (res.ok) {
-        const d = await res.json();
+        const d = (await res.json()) as any;
         const fullUrl = `${window.location.origin}${d.url}`;
         setShareUrl(fullUrl);
         await navigator.clipboard.writeText(fullUrl);
@@ -527,7 +527,7 @@ function BuilderContent() {
       });
 
       if (res.status === 403) {
-        const errData = await res.json();
+        const errData = (await res.json()) as any;
         if (errData.error === 'LIMIT_REACHED') {
           toast.dismiss(loader);
           setUsageInfo({ used: errData.prompts_used ?? 25, limit: errData.prompt_limit ?? 25 });
@@ -539,7 +539,7 @@ function BuilderContent() {
       }
 
       if (!res.ok) throw new Error('Failed to fetch');
-      const data = await res.json();
+      const data = (await res.json()) as any;
       
       const tools = mode === 'free' ? freeTools : formData.selectedTools;
       const selectedToolData = systemTools.filter(t => tools.includes(t.id));

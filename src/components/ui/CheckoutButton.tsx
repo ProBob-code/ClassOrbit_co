@@ -54,10 +54,10 @@ export default function CheckoutButton({ plan, label, className, onSuccess }: Pr
         body: JSON.stringify({ plan }),
       });
       if (!res.ok) {
-        const err = await res.json();
+        const err = (await res.json()) as any;
         throw new Error(err.error || 'Failed to create order');
       }
-      orderData = await res.json();
+      orderData = (await res.json()) as any;
     } catch (e: any) {
       toast.error(e.message || 'Could not start checkout. Please try again.');
       setLoading(false);

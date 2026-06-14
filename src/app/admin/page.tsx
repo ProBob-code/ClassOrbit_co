@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
@@ -9,8 +9,10 @@ import {
   TrendingUp, RefreshCw, Plus, Trash2, Edit2, ToggleLeft, ToggleRight,
   ExternalLink, X, Rocket, Mail, Clock, ChevronDown, BarChart3,
   UserCheck, Crown, ListOrdered, Search, ShieldAlert, CheckCircle2,
-  PenTool, Presentation, Puzzle, HelpCircle, Star, MessageSquare
+  PenTool, Presentation, Puzzle, HelpCircle, Star, MessageSquare, LifeBuoy,
+  Bot, User, Send, ArrowLeft
 } from 'lucide-react';
+
 
 /* ─── Types ─── */
 interface Stats {
@@ -27,6 +29,30 @@ interface Stats {
   feedback_avg: number;
   feedback_count: number;
   feedback_list: { user_email: string; rating: number; feedback: string; created_at: string }[];
+  open_tickets_count?: number;
+}
+
+interface Ticket {
+  id: string;
+  user_id: string;
+  user_email: string | null;
+  user_name: string | null;
+  message: string;
+  status: 'open' | 'resolved';
+  solution: string | null;
+  chat_status?: string;
+  assigned_to?: string | null;
+  created_at: string;
+  resolved_at: string | null;
+}
+
+interface ChatMsg {
+  id: string;
+  sender: string;
+  senderName: string;
+  text: string;
+  timestamp: number;
+  type?: string;
 }
 
 interface AdminTool {
@@ -60,7 +86,7 @@ function emptyForm(): Partial<AdminTool> {
   };
 }
 
-type Tab = 'overview' | 'tools' | 'activity' | 'waitlist' | 'feedback' | 'users';
+type Tab = 'overview' | 'tools' | 'activity' | 'waitlist' | 'feedback' | 'users' | 'tickets';
 
 interface AdminUser {
   user_id: string;
@@ -68,6 +94,8 @@ interface AdminUser {
   subscription_status: string;
   plan_expires_at: string | null;
   is_blocked: number;
+  email?: string | null;
+  name?: string | null;
   created_at: string;
 }
 
@@ -126,10 +154,28 @@ export default function AdminDashboard() {
   const [phaseFilter, setPhaseFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all'); // 'all', 'active', 'inactive'
 
+  // Tickets state
+  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [ticketsLoading, setTicketsLoading] = useState(false);
+  const [ticketSolutions, setTicketSolutions] = useState<Record<string, string>>({});
+  const [resolvingId, setResolvingId] = useState<string | null>(null);
+  const [ticketFilter, setTicketFilter] = useState<'all' | 'open' | 'resolved'>('all');
+  const [ticketSearchQuery, setTicketSearchQuery] = useState('');
+
+  // Live chat state (admin)
+  const [activeChat, setActiveChat] = useState<Ticket | null>(null);
+  const [chatMessages, setChatMessages] = useState<ChatMsg[]>([]);
+  const [chatInput, setChatInput] = useState('');
+  const [chatStatus, setChatStatus] = useState('waiting_for_admin');
+  const [assigningAi, setAssigningAi] = useState(false);
+  const [sendingMsg, setSendingMsg] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const pollingIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
   /* ─── Auth check ─── */
   useEffect(() => {
     fetch('/api/admin/verify')
-      .then(r => r.json())
+      .then(r => r.json() as Promise<any>)
       .then(d => {
         if (d.valid) setAuthed(true);
         else router.replace('/admin/login');
@@ -143,7 +189,7 @@ export default function AdminDashboard() {
     setStatsLoading(true);
     try {
       const res = await fetch('/api/admin/stats');
-      if (res.ok) setStats(await res.json());
+      if (res.ok) setStats((await res.json()) as any);
     } catch { toast.error('Failed to load stats'); }
     finally { setStatsLoading(false); }
   }, []);
@@ -154,7 +200,7 @@ export default function AdminDashboard() {
     try {
       const res = await fetch('/api/admin/tools');
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as any;
         setTools(data.tools ?? []);
       }
     } catch { toast.error('Failed to load tools'); }
@@ -167,11 +213,24 @@ export default function AdminDashboard() {
     try {
       const res = await fetch('/api/admin/users');
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as any;
         setUsers(data.users ?? []);
       }
     } catch { toast.error('Failed to load users'); }
     finally { setUsersLoading(false); }
+  }, []);
+
+  /* ─── Load tickets ─── */
+  const loadTickets = useCallback(async () => {
+    setTicketsLoading(true);
+    try {
+      const res = await fetch('/api/support/tickets');
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        setTickets(data.tickets ?? []);
+      }
+    } catch { toast.error('Failed to load support tickets'); }
+    finally { setTicketsLoading(false); }
   }, []);
 
   useEffect(() => {
@@ -179,8 +238,9 @@ export default function AdminDashboard() {
       loadStats();
       loadTools();
       loadUsers();
+      loadTickets();
     }
-  }, [authed, loadStats, loadTools, loadUsers]);
+  }, [authed, loadStats, loadTools, loadUsers, loadTickets]);
 
   /* ─── Tool CRUD ─── */
   const openAdd = () => { setEditId(null); setForm(emptyForm()); setShowModal(true); };
@@ -239,6 +299,230 @@ export default function AdminDashboard() {
     } catch { toast.error('Failed to delete.'); }
   };
 
+  const handleResolveTicket = async (id: string) => {
+    const solution = ticketSolutions[id];
+    if (!solution || !solution.trim()) {
+      toast.error('Please type a solution first');
+      return;
+    }
+    setResolvingId(id);
+    try {
+      const res = await fetch(`/api/support/tickets/${id}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ solution })
+      });
+      if (res.ok) {
+        toast.success('Ticket resolved and solution saved!');
+        setTicketSolutions(prev => {
+          const updated = { ...prev };
+          delete updated[id];
+          return updated;
+        });
+        if (activeChat?.id === id) {
+          closeAdminChat();
+        }
+        await loadTickets();
+        await loadStats();
+      } else {
+        const err = (await res.json()) as any;
+        toast.error(err.error || 'Failed to resolve ticket');
+      }
+    } catch {
+      toast.error('An error occurred');
+    } finally {
+      setResolvingId(null);
+    }
+  };
+
+  /* ─── Live Chat Handlers ─── */
+  const openAdminChat = (ticket: Ticket) => {
+    // Clean up previous listener
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    setActiveChat(ticket);
+    setChatMessages([]);
+    setChatInput('');
+    setChatStatus(ticket.chat_status || 'waiting_for_admin');
+
+    const pollMessages = async () => {
+      try {
+        const res = await fetch(`/api/support/tickets/${ticket.id}/messages`);
+        if (res.ok) {
+          const data = await res.json() as any;
+          if (data.meta?.status) setChatStatus(data.meta.status);
+          if (data.messages) {
+            const msgs: ChatMsg[] = data.messages.map((msg: any) => ({
+              id: msg.id,
+              sender: msg.sender,
+              senderName: msg.sender_name,
+              text: msg.text,
+              timestamp: new Date(msg.created_at).getTime(),
+              type: msg.type,
+            }));
+            setChatMessages(msgs);
+          }
+        }
+      } catch (err) {
+        console.error('Admin polling error:', err);
+      }
+    };
+
+    pollMessages();
+    pollingIntervalRef.current = setInterval(pollMessages, 3000);
+  };
+
+  const closeAdminChat = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    setActiveChat(null);
+    setChatMessages([]);
+  };
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, []);
+
+  // Scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [chatMessages]);
+
+  const handleAdminSendMsg = async () => {
+    if (!chatInput.trim() || !activeChat || sendingMsg) return;
+    setSendingMsg(true);
+
+    try {
+      await fetch(`/api/support/tickets/${activeChat.id}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: chatInput.trim(), sender: 'admin' }),
+      });
+      setChatInput('');
+    } catch {
+      toast.error('Failed to send');
+    } finally {
+      setSendingMsg(false);
+    }
+  };
+
+  const handleAssignAi = async () => {
+    if (!activeChat) return;
+    setAssigningAi(true);
+
+    try {
+      const res = await fetch(`/api/support/tickets/${activeChat.id}/assign-ai`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      if (res.ok) {
+        toast.success('AI Agent assigned to ticket');
+        await loadTickets();
+      } else {
+        toast.error('Failed to assign AI');
+      }
+    } catch {
+      toast.error('Error assigning AI');
+    } finally {
+      setAssigningAi(false);
+    }
+  };
+
+  const handleTakeOver = async () => {
+    if (!activeChat) return;
+
+    try {
+      await fetch(`/api/support/tickets/${activeChat.id}/message`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text: 'Admin has taken over this conversation.', sender: 'admin' }),
+      });
+      toast.success('You have taken over the ticket');
+      await loadTickets();
+    } catch {
+      toast.error('Failed to take over');
+    }
+  };
+
+  const handleInitiateResolve = async () => {
+    if (!activeChat) return;
+    
+    try {
+      await fetch(`/api/support/tickets/${activeChat.id}/messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          text: 'Has your issue been resolved? Please confirm to close the ticket.', 
+          sender: 'admin',
+          type: 'resolution_request'
+        }),
+      });
+      toast.success('Resolution request sent to user.');
+      setChatInput('');
+      await loadTickets();
+    } catch {
+      toast.error('Failed to initiate resolve');
+    }
+  };
+
+  const handleDeleteTicket = async (ticketId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!confirm('Are you sure you want to delete this ticket? This action cannot be undone.')) return;
+    
+    try {
+      const res = await fetch(`/api/support/tickets/${ticketId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        toast.success('Ticket deleted');
+        if (activeChat?.id === ticketId) {
+          closeAdminChat();
+        }
+        await loadTickets();
+        await loadStats();
+      } else {
+        toast.error('Failed to delete ticket');
+      }
+    } catch {
+      toast.error('An error occurred');
+    }
+  };
+
+  const handleResolveFromChat = async (autoSolution?: string) => {
+    if (!activeChat) return;
+    const solution = typeof autoSolution === 'string' ? autoSolution : (chatInput.trim() || 'Resolved via live chat.');
+    setResolvingId(activeChat.id);
+
+    try {
+      const res = await fetch(`/api/support/tickets/${activeChat.id}/resolve`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ solution }),
+      });
+      if (res.ok) {
+        toast.success('Ticket resolved!');
+        setChatInput('');
+        setResolveCountdown(null);
+        closeAdminChat();
+        await loadTickets();
+        await loadStats();
+      }
+    } catch {
+      toast.error('Failed to resolve');
+    } finally {
+      setResolvingId(null);
+    }
+  };
+
   const toggleOutput = (o: string) => {
     setForm(f => ({
       ...f,
@@ -279,10 +563,18 @@ export default function AdminDashboard() {
 
   if (!authed) return null;
 
-  const tabs: { id: Tab; label: string; icon: React.ReactNode }[] = [
+  const tabs: { id: Tab; label: string; icon: React.ReactNode; badge?: React.ReactNode }[] = [
     { id: 'overview', label: 'Overview', icon: <BarChart3 size={16} /> },
     { id: 'users', label: 'Users', icon: <Users size={16} /> },
     { id: 'tools', label: 'AI Tools Launchpad', icon: <Wrench size={16} /> },
+    { 
+      id: 'tickets', 
+      label: 'Support Tickets', 
+      icon: <LifeBuoy size={16} />, 
+      badge: stats?.open_tickets_count && stats.open_tickets_count > 0 ? (
+        <span className="w-2.5 h-2.5 rounded-full bg-red-500 animate-pulse shrink-0 ml-1.5" />
+      ) : null 
+    },
     { id: 'feedback', label: 'Feedback Reviews', icon: <MessageSquare size={16} /> },
     { id: 'activity', label: 'Recent Activity', icon: <Clock size={16} /> },
     { id: 'waitlist', label: 'Waitlist Registry', icon: <Mail size={16} /> },
@@ -347,12 +639,12 @@ export default function AdminDashboard() {
 
         <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 py-8">
           {/* Tabs */}
-          <div className="flex gap-1 bg-surface/40 border border-border rounded-2xl p-1.5 w-fit mb-8 backdrop-blur-md">
+          <div className="flex gap-1 bg-surface/40 border border-border rounded-2xl p-1.5 w-fit mb-8 backdrop-blur-md overflow-x-auto max-w-full">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer ${
+                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-primary text-white shadow-glow'
                     : 'text-text-muted hover:text-text-main hover:bg-white/[0.02]'
@@ -360,6 +652,7 @@ export default function AdminDashboard() {
               >
                 {tab.icon}
                 {tab.label}
+                {tab.badge}
               </button>
             ))}
           </div>
@@ -374,10 +667,11 @@ export default function AdminDashboard() {
               ) : stats ? (
                 <>
                   {/* Stats grid */}
-                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4">
                     <StatCard icon={<FileText size={18} />} label="Total Prompts" value={stats.total_prompts} color="primary" onClick={() => setActiveTab('activity')} />
                     <StatCard icon={<Users size={18} />} label="Total Users" value={stats.unique_users} color="sky" onClick={() => setActiveTab('users')} />
                     <StatCard icon={<Crown size={18} />} label="Pro Users" value={stats.pro_users} color="amber" onClick={() => setActiveTab('users')} />
+                    <StatCard icon={<LifeBuoy size={18} />} label="Open Tickets" value={stats.open_tickets_count ?? 0} color="rose" onClick={() => setActiveTab('tickets')} />
                     <StatCard icon={<Mail size={18} />} label="Waitlist" value={stats.waitlist_count} color="violet" onClick={() => setActiveTab('waitlist')} />
                     <StatCard icon={<Wrench size={18} />} label="Active Tools" value={stats.active_tools} color="emerald" onClick={() => setActiveTab('tools')} />
                     <StatCard icon={<ListOrdered size={18} />} label="Total Tools" value={stats.total_tools} color="rose" onClick={() => setActiveTab('tools')} />
@@ -1009,10 +1303,20 @@ export default function AdminDashboard() {
                         </tr>
                       </thead>
                       <tbody>
-                        {users.map((u, i) => (
+                         {users.map((u, i) => (
                           <tr key={i} className={`border-b border-border/50 transition-colors ${u.is_blocked ? 'bg-red-500/5' : 'hover:bg-white/[0.01]'}`}>
-                            <td className="px-6 py-4 text-[13px] text-text-main font-semibold font-mono truncate max-w-[200px]">
-                              {u.user_id}
+                            <td className="px-6 py-4">
+                              {u.email ? (
+                                <div className="flex flex-col gap-0.5">
+                                  <p className="text-[13px] font-bold text-text-main">{u.name || 'Anonymous Teacher'}</p>
+                                  <span className="text-[11px] text-text-muted">{u.email}</span>
+                                  <span className="text-[9px] text-text-subtle font-mono mt-0.5">{u.user_id}</span>
+                                </div>
+                              ) : (
+                                <span className="text-[13px] text-text-main font-semibold font-mono truncate max-w-[200px] block">
+                                  {u.user_id}
+                                </span>
+                              )}
                             </td>
                             <td className="px-6 py-4">
                               <div className="flex items-center gap-2">
@@ -1076,6 +1380,262 @@ export default function AdminDashboard() {
                 <div className="text-center py-20 bg-surface/30 border border-border rounded-3xl">
                   <Users size={32} className="text-text-subtle mx-auto mb-3" />
                   <p className="text-text-muted text-[14px]">No users found in the database.</p>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── SUPPORT TICKETS (LIVE DASHBOARD) ── */}
+          {activeTab === 'tickets' && (
+            <div className="space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h2 className="text-[20px] font-bold text-text-main font-display">Live Support Dashboard</h2>
+                  <p className="text-[13px] text-text-muted mt-1">Real-time customer support with live chat, AI agent delegation, and ticket resolution.</p>
+                </div>
+                <button onClick={() => { loadTickets(); }} className="flex items-center gap-2 bg-surface hover:bg-background border border-border hover:border-primary/50 text-text-muted hover:text-text-main px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all cursor-pointer shadow-sm shrink-0">
+                  <RefreshCw size={14} className="text-primary" /> Refresh Tickets
+                </button>
+              </div>
+
+              {/* Filtering Controls */}
+              <div className="bg-surface/30 border border-border rounded-2xl p-4 flex flex-col md:flex-row md:items-center justify-between gap-4 backdrop-blur-sm shadow-sm">
+                <div className="relative group w-full md:max-w-xs">
+                  <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle group-focus-within:text-primary transition-colors" />
+                  <input
+                    type="text"
+                    placeholder="Search tickets..."
+                    value={ticketSearchQuery}
+                    onChange={(e) => setTicketSearchQuery(e.target.value)}
+                    className="bg-background/80 border border-border rounded-xl pl-10 pr-4 py-2 text-[13px] w-full focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all text-text-main placeholder:text-text-subtle"
+                  />
+                </div>
+                <div className="flex items-center gap-3">
+                  <select value={ticketFilter} onChange={(e) => setTicketFilter(e.target.value as any)} className="bg-background/80 border border-border rounded-xl px-3.5 py-2 text-[13px] text-text-main focus:outline-none focus:border-primary transition-all cursor-pointer font-medium">
+                    <option value="all">All Tickets</option>
+                    <option value="open">Open Tickets</option>
+                    <option value="resolved">Resolved Tickets</option>
+                  </select>
+                </div>
+              </div>
+
+              {ticketsLoading ? (
+                <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-primary" /></div>
+              ) : (
+                <div className="flex gap-6 h-[700px]">
+                  {/* ─── Left: Ticket List ─── */}
+                  <div className={`overflow-y-auto max-h-[700px] custom-scrollbar ${activeChat ? 'w-[360px] shrink-0 space-y-3' : 'w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 content-start'}`}>
+                    {tickets
+                      .filter(t => {
+                        const matchesStatus = ticketFilter === 'all' || t.status === ticketFilter;
+                        const matchesSearch = t.id.toLowerCase().includes(ticketSearchQuery.toLowerCase()) || t.message.toLowerCase().includes(ticketSearchQuery.toLowerCase()) || (t.user_email || '').toLowerCase().includes(ticketSearchQuery.toLowerCase()) || (t.user_name || '').toLowerCase().includes(ticketSearchQuery.toLowerCase());
+                        return matchesStatus && matchesSearch;
+                      })
+                      .map((ticket) => {
+                        const isActive = activeChat?.id === ticket.id;
+                        const cs = ticket.chat_status || ticket.status;
+                        const statusColor = cs === 'resolved' ? 'emerald' : cs === 'ai_agent_active' ? 'violet' : cs === 'admin_active' ? 'emerald' : 'amber';
+                        const statusLabel = cs === 'resolved' ? 'Resolved' : cs === 'ai_agent_active' ? 'AI Agent' : cs === 'admin_active' ? 'Admin Active' : 'Waiting';
+                        const StatusIcon = cs === 'ai_agent_active' ? Bot : cs === 'admin_active' ? User : cs === 'resolved' ? CheckCircle2 : Clock;
+
+                        return (
+                          <div
+                            key={ticket.id}
+                            onClick={() => ticket.status === 'open' ? openAdminChat(ticket) : undefined}
+                            className={`glass-panel border rounded-2xl p-4 transition-all ${
+                              isActive ? 'border-primary/40 bg-primary/[0.03] ring-1 ring-primary/20' :
+                              ticket.status === 'open' ? 'border-amber-500/15 hover:border-primary/30 cursor-pointer' :
+                              'border-border/50 opacity-70'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-[11px] font-bold bg-${statusColor}-500/10 text-${statusColor}-400 border border-${statusColor}-500/20`}>
+                                  <StatusIcon size={14} />
+                                </div>
+                                <div>
+                                  <h4 className="text-[13px] font-bold text-text-main leading-tight">{ticket.user_name || 'Anonymous'}</h4>
+                                  <p className="text-[10px] text-text-muted font-mono">{ticket.id}</p>
+                                </div>
+                              </div>
+                              <span className={`text-[9px] font-bold px-2 py-0.5 rounded-full uppercase border flex items-center gap-1 bg-${statusColor}-500/10 text-${statusColor}-400 border-${statusColor}-500/20 ${cs === 'waiting_for_admin' ? 'animate-pulse' : ''}`}>
+                                {statusLabel}
+                              </span>
+                            </div>
+                            <p className="text-[11.5px] text-text-muted italic line-clamp-2">"{ticket.message}"</p>
+                            <div className="flex items-center justify-between mt-3">
+                              <span className="text-[10px] text-text-subtle">{new Date(ticket.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
+                              <div className="flex items-center gap-2">
+                                <button 
+                                  onClick={(e) => handleDeleteTicket(ticket.id, e)}
+                                  className="w-6 h-6 rounded-md bg-rose-500/10 text-rose-400 hover:bg-rose-500/20 flex items-center justify-center transition-colors cursor-pointer border border-rose-500/20"
+                                  title="Delete Ticket"
+                                >
+                                  <Trash2 size={12} />
+                                </button>
+                                {ticket.status === 'open' && <span className="text-[10px] text-primary font-semibold">Open Chat →</span>}
+                              </div>
+                            </div>
+
+                            {/* Resolved Solution (inline for resolved tickets) */}
+                            {ticket.status === 'resolved' && ticket.solution && (
+                              <div className="mt-2 bg-emerald-500/5 border-l-2 border-emerald-500 p-2.5 rounded-r-xl text-[11.5px]">
+                                <span className="font-bold text-emerald-400 block mb-0.5">Solution:</span>
+                                <p className="text-text-muted whitespace-pre-wrap line-clamp-3">{ticket.solution}</p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+
+                    {tickets.filter(t => {
+                      const matchesStatus = ticketFilter === 'all' || t.status === ticketFilter;
+                      const matchesSearch = t.id.toLowerCase().includes(ticketSearchQuery.toLowerCase()) || t.message.toLowerCase().includes(ticketSearchQuery.toLowerCase()) || (t.user_email || '').toLowerCase().includes(ticketSearchQuery.toLowerCase()) || (t.user_name || '').toLowerCase().includes(ticketSearchQuery.toLowerCase());
+                      return matchesStatus && matchesSearch;
+                    }).length === 0 && (
+                      <div className="text-center py-20 bg-surface/30 border border-border rounded-3xl">
+                        <LifeBuoy size={32} className="text-text-subtle mx-auto mb-3" />
+                        <p className="text-text-muted text-[14px]">No support tickets found matching criteria.</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* ─── Right: Live Chat Panel ─── */}
+                  {activeChat && (
+                    <div className="flex-1 glass-panel border border-border rounded-3xl flex flex-col overflow-hidden shadow-soft relative">
+                      {/* Chat header */}
+                      <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0 bg-white/[0.01]">
+                        <div className="flex items-center gap-3">
+                          <button onClick={closeAdminChat} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-text-main transition-colors cursor-pointer">
+                            <ArrowLeft size={16} />
+                          </button>
+                          <div>
+                            <h3 className="text-[14px] font-bold text-text-main font-display flex items-center gap-2">
+                              {activeChat.user_name || 'Anonymous User'}
+                              <span className="text-[10px] font-mono text-text-subtle font-normal">({activeChat.id})</span>
+                            </h3>
+                            <div className={`flex items-center gap-1 text-[10px] font-semibold ${
+                              chatStatus === 'admin_active' ? 'text-emerald-400' :
+                              chatStatus === 'ai_agent_active' ? 'text-violet-400' :
+                              chatStatus === 'resolved' ? 'text-emerald-400' : 'text-amber-400'
+                            }`}>
+                              {chatStatus === 'ai_agent_active' ? <Bot size={11} /> : chatStatus === 'admin_active' ? <User size={11} /> : chatStatus === 'resolved' ? <CheckCircle2 size={11} /> : <Clock size={11} />}
+                              {chatStatus === 'ai_agent_active' ? 'AI Agent Active' : chatStatus === 'admin_active' ? 'You are connected' : chatStatus === 'resolved' ? 'Resolved' : 'Waiting for response'}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Chat messages */}
+                      <div className="flex-1 overflow-y-auto custom-scrollbar p-5 flex flex-col gap-3">
+                        {chatMessages.length === 0 && (
+                          <div className="flex-1 flex items-center justify-center">
+                            <div className="text-center">
+                              <Loader2 size={24} className="animate-spin text-primary mx-auto mb-3" />
+                              <p className="text-[12px] text-text-muted">Connecting to chat room...</p>
+                            </div>
+                          </div>
+                        )}
+                        {chatMessages.map((msg) => {
+                          const isUser = msg.sender === 'user';
+                          const isSystem = msg.sender === 'system' || msg.type === 'system';
+                          const isResolution = msg.type === 'resolution';
+                          const isAi = msg.sender === 'ai_agent';
+                          const isAdmin = msg.sender === 'admin';
+
+                          if (isSystem) {
+                            return (
+                              <div key={msg.id} className="flex justify-center my-1">
+                                <span className="text-[10px] text-text-subtle bg-white/[0.03] border border-white/[0.06] px-3 py-1 rounded-full">{msg.text}</span>
+                              </div>
+                            );
+                          }
+
+                          if (isResolution) {
+                            return (
+                              <div key={msg.id} className="my-2">
+                                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-2xl p-3 text-[12.5px]">
+                                  <span className="font-bold text-emerald-400 flex items-center gap-1.5 mb-1"><CheckCircle2 size={13} /> Resolution</span>
+                                  <p className="text-text-muted whitespace-pre-wrap">{msg.text}</p>
+                                </div>
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <div key={msg.id} className={`flex ${isUser ? 'justify-start' : 'justify-end'}`}>
+                              <div className="flex flex-col gap-0.5 max-w-[75%]">
+                                <span className={`text-[10px] font-bold flex items-center gap-1 ${isUser ? 'ml-1' : 'mr-1 justify-end'} ${
+                                  isAi ? 'text-violet-400' : isAdmin ? 'text-emerald-400' : 'text-text-muted'
+                                }`}>
+                                  {isAi ? <Bot size={10} /> : isAdmin ? <User size={10} /> : null}
+                                  {msg.senderName}
+                                </span>
+                                <div className={`rounded-2xl px-4 py-2.5 text-[13px] leading-relaxed ${
+                                  isUser ? 'bg-white/5 border border-white/[0.06] text-text-main rounded-tl-none' :
+                                  isAi ? 'bg-violet-500/10 border border-violet-500/15 text-text-main rounded-tr-none' :
+                                  'bg-primary text-white rounded-tr-none shadow-md shadow-primary/10'
+                                }`}>
+                                  <p className="whitespace-pre-wrap">{msg.text}</p>
+                                </div>
+                                <span className={`text-[9px] text-text-subtle ${isUser ? 'ml-1' : 'mr-1 text-right'}`}>
+                                  {new Date(msg.timestamp).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        <div ref={chatEndRef} />
+                      </div>
+
+                      {/* Chat input */}
+                      {chatStatus !== 'resolved' && (
+                        <div className="flex flex-col border-t border-border shrink-0 bg-white/[0.01]">
+                          <div className="px-4 py-2.5 border-b border-border/50 flex flex-wrap items-center gap-2 bg-background/50">
+                            {chatStatus === 'ai_agent_active' && (
+                              <button onClick={handleTakeOver} className="px-3 py-1.5 bg-primary/10 hover:bg-primary/20 text-primary rounded-lg text-[11px] font-bold border border-primary/20 transition-all cursor-pointer flex items-center gap-1.5">
+                                <User size={12} /> Take Over
+                              </button>
+                            )}
+                            {chatStatus !== 'ai_agent_active' && (
+                              <button onClick={handleAssignAi} disabled={assigningAi} className="px-3 py-1.5 bg-violet-500/10 hover:bg-violet-500/20 text-violet-400 rounded-lg text-[11px] font-bold border border-violet-500/20 transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50">
+                                {assigningAi ? <Loader2 size={12} className="animate-spin" /> : <Bot size={12} />}
+                                Assign AI Agent
+                              </button>
+                            )}
+                            <button onClick={handleInitiateResolve} className="px-3 py-1.5 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-lg text-[11px] font-bold border border-emerald-500/20 transition-all cursor-pointer flex items-center gap-1.5">
+                              <CheckCircle2 size={12} /> Request Resolution
+                            </button>
+                            
+                            <div className="w-px h-4 bg-border mx-2" />
+                            
+                            <button onClick={() => handleResolveFromChat('Resolved via live chat.')} disabled={resolvingId === activeChat.id} className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-text-muted hover:text-text-main rounded-lg text-[11px] font-bold border border-border transition-all cursor-pointer flex items-center gap-1.5 disabled:opacity-50">
+                              {resolvingId === activeChat.id ? <Loader2 size={12} className="animate-spin" /> : <CheckCircle2 size={12} />}
+                              Force Resolve
+                            </button>
+                          </div>
+                          
+                          <div className="p-4 flex items-center gap-2">
+                            <input
+                              type="text"
+                              value={chatInput}
+                              onChange={(e) => setChatInput(e.target.value)}
+                              onKeyDown={(e) => { if (e.key === 'Enter') handleAdminSendMsg(); }}
+                              placeholder="Type your message to the user..."
+                              className="flex-1 bg-background border border-border rounded-xl px-4 py-2.5 text-[13px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+                            />
+                            <button
+                              onClick={handleAdminSendMsg}
+                              disabled={!chatInput.trim() || sendingMsg}
+                              className="w-10 h-10 rounded-xl bg-primary hover:bg-primary-hover text-white flex items-center justify-center transition-all shadow-md active:scale-95 cursor-pointer shrink-0 disabled:opacity-40"
+                            >
+                              {sendingMsg ? <Loader2 size={15} className="animate-spin" /> : <Send size={15} />}
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>

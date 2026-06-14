@@ -47,7 +47,7 @@ export function ToolsProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await fetch('/api/tools/system', { cache: 'no-store' });
       if (res.ok) {
-        const data = await res.json();
+        const data = (await res.json()) as any;
         if (Array.isArray(data.tools) && data.tools.length > 0) {
           setTools(data.tools.map(toSystemTool));
           return;

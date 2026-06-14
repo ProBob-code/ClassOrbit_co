@@ -64,7 +64,7 @@ export default function LaunchpadPage() {
         const res = await fetch('/api/tools');
         if (res.status === 503) throw new Error('DB_UNAVAILABLE');
         if (res.ok) {
-          const data = await res.json();
+          const data = (await res.json()) as any;
           const mapped = (data.tools ?? []).map((t: any) => ({
             id: t.id,
             tool_name: t.tool_name,
@@ -130,7 +130,7 @@ export default function LaunchpadPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ tool_name: toolName.trim(), tool_url: formattedUrl, description: toolDesc.trim() || 'Custom AI tool.', category, is_free: toolIsFree }),
       });
-      const data = await res.json();
+      const data = (await res.json()) as any;
       const newTool = {
         id: res.status === 503 ? 'custom-' + Math.random().toString(36).slice(2, 9) : data.id,
         tool_name: toolName.trim(),
