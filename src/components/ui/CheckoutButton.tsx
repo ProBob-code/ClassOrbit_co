@@ -53,13 +53,32 @@ export default function CheckoutButton({ plan, label, className, onSuccess }: Pr
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan }),
       });
-      if (!res.ok) {
-        const err = (await res.json()) as any;
-        throw new Error(err.error || 'Failed to create order');
+
+      // Parse defensively: the endpoint may return an empty body or an HTML
+      // error page (e.g. if the API worker is unreachable), which would make a
+      // bare res.json() throw an opaque "Unexpected end of JSON input".
+      const raw = await res.text();
+      let parsed: any = null;
+      if (raw) {
+        try { parsed = JSON.parse(raw); } catch { /* non-JSON response */ }
       }
-      orderData = (await res.json()) as any;
+
+      if (!res.ok) {
+        if (res.status === 401) throw new Error('Please sign in again to upgrade.');
+        throw new Error(parsed?.error || `Payment service error (${res.status}). Please try again later.`);
+      }
+      if (!parsed?.order_id) {
+        throw new Error('Payment service is temporarily unavailable. Please try again later.');
+      }
+      orderData = parsed;
     } catch (e: any) {
       toast.error(e.message || 'Could not start checkout. Please try again.');
+      setLoading(false);
+      return;
+    }
+
+    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+      toast.error('Payment is not configured. Please contact support.');
       setLoading(false);
       return;
     }
