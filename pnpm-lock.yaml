@@ -85,7 +85,7 @@ importers:
         specifier: ^4.95.0
         version: 4.95.0(@cloudflare/workers-types@4.20260609.1)
 
-  api:
+  worker:
     dependencies:
       '@supabase/ssr':
         specifier: 'catalog:'
