@@ -44,3 +44,9 @@ next-env.d.ts
 .wrangler/
 .wrangler
 .dev.vars
+
+# worker
+worker/node_modules
+worker/.wrangler
+worker/dist
+worker/.dev.vars
