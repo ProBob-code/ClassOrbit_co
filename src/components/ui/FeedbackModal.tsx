@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, Heart, Loader2 } from 'lucide-react';
+import Image from 'next/image';
 import toast from 'react-hot-toast';
 
 const STORAGE_SUBMITTED = 'classorbit_feedback_submitted';
@@ -119,7 +120,7 @@ export default function FeedbackModal() {
               
               {/* Core Circular Logo Badge */}
               <div className="w-20 h-20 rounded-full drop-shadow-[0_0_10px_rgba(139,92,246,0.3)] relative z-10 flex items-center justify-center bg-background border border-white/10 p-0 overflow-hidden">
-                <img src="/logo_transparent.png" alt="ClassOrbit Logo" className="w-full h-full object-cover rounded-full" />
+                <Image src="/logo_transparent.png" alt="ClassOrbit Logo" width={80} height={80} className="w-full h-full object-cover rounded-full" />
               </div>
             </div>
 

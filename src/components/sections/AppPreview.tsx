@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, CheckCircle2, Copy, ExternalLink, FolderOpen, FileText, Rocket, BookOpen, PenTool, Presentation } from 'lucide-react';
+import Image from 'next/image';
+import { Sparkles, CheckCircle2, ExternalLink, FolderOpen, FileText, BookOpen, PenTool } from 'lucide-react';
 
 const tabs = [
   { id: 'builder', label: 'Build Your Prompt', icon: PenTool },
@@ -20,7 +21,7 @@ function BuilderPreview() {
       </div>
       {/* Step 1 */}
       <div className="space-y-2">
-        <p className="text-[11px] font-bold text-primary uppercase tracking-widest">1 — What are we making?</p>
+        <p className="text-[11px] font-bold text-primary uppercase tracking-widest">1: What are we making?</p>
         <div className="grid grid-cols-3 gap-2">
           {[
             { icon: '📋', label: 'Lesson Plan', sel: true },
@@ -36,7 +37,7 @@ function BuilderPreview() {
       </div>
       {/* Step 2 */}
       <div className="space-y-2">
-        <p className="text-[11px] font-bold text-primary uppercase tracking-widest">2 — Who is it for?</p>
+        <p className="text-[11px] font-bold text-primary uppercase tracking-widest">2: Who is it for?</p>
         <div className="grid grid-cols-2 gap-2">
           <div className="bg-surface border border-border rounded-xl px-3 py-2 flex items-center gap-2">
             <BookOpen size={14} className="text-text-subtle" />
@@ -49,7 +50,7 @@ function BuilderPreview() {
       </div>
       {/* Step 3 */}
       <div className="space-y-2">
-        <p className="text-[11px] font-bold text-primary uppercase tracking-widest">3 — What's the topic?</p>
+        <p className="text-[11px] font-bold text-primary uppercase tracking-widest">3 - What&apos;s the topic?</p>
         <div className="bg-surface border border-primary/40 rounded-xl px-3 py-2.5 text-[12px] text-text-main font-medium ring-2 ring-primary/10">
           Photosynthesis & the role of chlorophyll in energy conversion
         </div>
@@ -58,7 +59,7 @@ function BuilderPreview() {
       <div className="flex flex-wrap gap-2">
         {['ChatGPT', 'Claude', 'Gamma'].map((t, i) => (
           <div key={t} className={`px-3 py-1.5 rounded-lg text-[11px] font-bold border flex items-center gap-1.5 ${i < 2 ? 'border-primary text-primary bg-primary/5 ring-1 ring-primary' : 'border-border text-text-muted bg-surface'}`}>
-            <img src={`https://www.google.com/s2/favicons?sz=32&domain=${t === 'ChatGPT' ? 'chat.openai.com' : t === 'Claude' ? 'claude.ai' : 'gamma.app'}`} className="w-3.5 h-3.5 rounded-sm" alt={t} />
+            <Image src={`https://www.google.com/s2/favicons?sz=32&domain=${t === 'ChatGPT' ? 'chat.openai.com' : t === 'Claude' ? 'claude.ai' : 'gamma.app'}`} width={14} height={14} unoptimized className="w-3.5 h-3.5 rounded-sm" alt={t} />
             {t}
           </div>
         ))}
@@ -85,7 +86,7 @@ function ReadyPreview() {
       <div className="flex border-b border-border gap-1">
         {['ChatGPT', 'Claude'].map((t, i) => (
           <div key={t} className={`px-4 py-2 text-[12px] font-semibold border-b-2 flex items-center gap-1.5 ${i === 0 ? 'border-primary text-primary' : 'border-transparent text-text-muted'}`}>
-            <img src={`https://www.google.com/s2/favicons?sz=32&domain=${i === 0 ? 'chat.openai.com' : 'claude.ai'}`} className="w-3.5 h-3.5 rounded-sm" alt={t} />
+            <Image src={`https://www.google.com/s2/favicons?sz=32&domain=${i === 0 ? 'chat.openai.com' : 'claude.ai'}`} width={14} height={14} unoptimized className="w-3.5 h-3.5 rounded-sm" alt={t} />
             {t}
           </div>
         ))}
@@ -93,7 +94,7 @@ function ReadyPreview() {
       {/* Prompt box */}
       <div className="bg-surface border border-border rounded-xl p-3.5 max-h-[120px] overflow-hidden relative">
         <p className="text-[11px] font-mono text-text-muted leading-relaxed line-clamp-5">
-          Act as an expert Grade 8 Science teacher. Create a comprehensive lesson plan on <strong className="text-text-main">Photosynthesis</strong> covering chlorophyll's role in light energy conversion. Include a 5-minute hook activity, direct instruction with diagrams, guided practice with a concept map, and an exit ticket assessment...
+          Act as an expert Grade 8 Science teacher. Create a comprehensive lesson plan on <strong className="text-text-main">Photosynthesis</strong> covering chlorophyll&apos;s role in light energy conversion. Include a 5-minute hook activity, direct instruction with diagrams, guided practice with a concept map, and an exit ticket assessment...
         </p>
         <div className="absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-surface to-transparent" />
       </div>
@@ -105,7 +106,7 @@ function ReadyPreview() {
         ].map(tool => (
           <div key={tool.name} className="glass-card rounded-xl p-3 flex items-center gap-2.5 cursor-pointer hover:border-primary/50 transition-all">
             <div className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center p-1.5 shrink-0">
-              <img src={`https://www.google.com/s2/favicons?sz=64&domain=${tool.domain}`} className="w-full h-full object-contain" alt={tool.name} />
+              <Image src={`https://www.google.com/s2/favicons?sz=64&domain=${tool.domain}`} width={32} height={32} unoptimized className="w-full h-full object-contain" alt={tool.name} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-bold text-text-main">Open in {tool.name}</p>

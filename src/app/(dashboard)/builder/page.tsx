@@ -3,11 +3,11 @@
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { contentTypes } from '@/data/content-types';
 import { subjects } from '@/data/subjects';
-import { grades, studentLevels } from '@/data/grades';
-import { teachingStyles } from '@/data/teaching-styles';
+import { grades } from '@/data/grades';
 import { launchTool, supportsAutoFill } from '@/lib/tools/router';
 import { useTools } from '@/context/ToolsContext';
 import { TeacherInput, ToolPrompts } from '@/types';
@@ -17,8 +17,8 @@ import {
   Sparkles, CheckCircle2, ChevronDown, Rocket, Copy, ExternalLink, PenTool, Presentation,
   BookOpen, FileText, ClipboardList, Book, Home, Layers, Users, MessageSquare, Gamepad2,
   Video, CheckSquare, File, Loader2, FlaskConical, Calculator, BookA, Globe,
-  Palette, History, Music, Binary, PenLine, SlidersHorizontal, ArrowLeft,
-  Send, PartyPopper, Bookmark, RotateCcw, X, Plus, Share2, Lock
+  Palette, History, Music, Binary, PenLine, SlidersHorizontal,
+  Send, Bookmark, RotateCcw, X, Plus, Share2, Lock
 } from 'lucide-react';
 import UpgradeModal from '@/components/ui/UpgradeModal';
 
@@ -34,7 +34,7 @@ const getToolLogoUrl = (url: string, logo?: string) => {
   try {
     const parsedUrl = new URL(url);
     return `https://www.google.com/s2/favicons?sz=128&domain=${parsedUrl.hostname}`;
-  } catch (e) {
+  } catch {
     return `https://www.google.com/s2/favicons?sz=128&domain=${url}`;
   }
 };
@@ -445,15 +445,6 @@ function BuilderContent() {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const toggleStyle = (styleId: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      teachingStyles: prev.teachingStyles.includes(styleId)
-        ? prev.teachingStyles.filter((s) => s !== styleId)
-        : [...prev.teachingStyles, styleId],
-    }));
-  };
-
   const toggleTool = (toolId: string) => {
     setFormData((prev) => ({
       ...prev,
@@ -617,7 +608,7 @@ function BuilderContent() {
           }),
         }).catch(err => console.error("Failed to save history", err));
       }
-    } catch (e) {
+    } catch {
       toast.error('Failed to generate prompt. Please check your API key.', { id: loader });
     } finally {
       setIsGenerating(false);
@@ -687,7 +678,7 @@ function BuilderContent() {
                   }`}
                 >
                   {data.toolLogo && (
-                    <img src={data.toolLogo} alt={data.toolName} className="w-4 h-4 rounded-sm object-cover" />
+                    <Image src={data.toolLogo} alt={data.toolName} width={16} height={16} unoptimized className="w-4 h-4 rounded-sm object-cover" />
                   )}
                   {data.toolName}
                 </button>
@@ -732,7 +723,7 @@ function BuilderContent() {
           </div>
         </motion.div>
 
-        {/* Launch Buttons — one per selected tool */}
+        {/* Launch Buttons - one per selected tool */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -780,7 +771,7 @@ function BuilderContent() {
                 >
                   <div className="w-12 h-12 rounded-xl bg-white border border-border shadow-sm overflow-hidden flex items-center justify-center p-2 shrink-0">
                     {data.toolLogo ? (
-                      <img src={data.toolLogo} alt={data.toolName} className="w-full h-full object-contain" />
+                      <Image src={data.toolLogo} alt={data.toolName} width={48} height={48} unoptimized className="w-full h-full object-contain" />
                     ) : (
                       <Rocket size={20} className="text-primary/40" />
                     )}
@@ -791,11 +782,11 @@ function BuilderContent() {
                     </p>
                     {autoFill ? (
                       <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-400 mt-0.5">
-                        ✨ Auto-paste — prompt pre-loaded
+                        ✨ Auto-paste - prompt pre-loaded
                       </span>
                     ) : (
                       <span className="text-label-sm text-text-muted">
-                        Copied — press Ctrl+V / ⌘V to paste
+                        Copied - press Ctrl+V / ⌘V to paste
                       </span>
                     )}
                   </div>
@@ -945,7 +936,7 @@ function BuilderContent() {
             Build Your Prompt
           </h1>
           <p className="text-body-lg text-text-muted max-w-2xl mt-2 mx-auto md:mx-0 leading-relaxed">
-            Tell us what you need. We'll craft a platform-optimized prompt ready for your favorite AI tools.
+            Tell us what you need. We&apos;ll craft a platform-optimized prompt ready for your favorite AI tools.
           </p>
         </motion.div>
       </header>
@@ -999,7 +990,7 @@ function BuilderContent() {
                   What do you need?
                 </h3>
                 <p className="text-body-md text-text-muted">
-                  Type freely — describe the lesson material, quiz, or resource you want to create. We'll optimize it for your chosen AI platforms.
+                  Type freely - describe the lesson material, quiz, or resource you want to create. We&apos;ll optimize it for your chosen AI platforms.
                 </p>
               </div>
 
@@ -1093,7 +1084,7 @@ function BuilderContent() {
                         : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
                       }`}
                     >
-                      <img src={getToolLogoUrl(tool.tool_url, tool.tool_logo)} alt={tool.tool_name} className="w-5 h-5 rounded-sm object-contain" />
+                      <Image src={getToolLogoUrl(tool.tool_url, tool.tool_logo)} alt={tool.tool_name} width={20} height={20} unoptimized className="w-5 h-5 rounded-sm object-contain" />
                       {tool.tool_name}
                     </button>
                   ))}
@@ -1257,7 +1248,7 @@ function BuilderContent() {
               <div className="space-y-4">
                 <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
                   <span className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-label-md">3</span>
-                  What's the topic?
+                  What&apos;s the topic?
                 </h3>
                 <textarea
                   value={formData.topic}
@@ -1462,7 +1453,7 @@ function BuilderContent() {
                           : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'
                         }`}
                       >
-                        <img src={getToolLogoUrl(tool.tool_url, tool.tool_logo)} alt={tool.tool_name} className="w-5 h-5 rounded-sm object-contain" />
+                        <Image src={getToolLogoUrl(tool.tool_url, tool.tool_logo)} alt={tool.tool_name} width={20} height={20} unoptimized className="w-5 h-5 rounded-sm object-contain" />
                         {tool.tool_name}
                       </button>
                     ))}

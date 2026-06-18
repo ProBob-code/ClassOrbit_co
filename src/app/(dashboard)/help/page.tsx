@@ -3,8 +3,8 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { 
-  LifeBuoy, Sparkles, BookOpen, Rocket, MessageSquare, 
-  ChevronRight, Mail, ExternalLink, HelpCircle
+  LifeBuoy, Sparkles, BookOpen, Rocket, MessageSquare,
+  ChevronRight, Mail, HelpCircle
 } from 'lucide-react';
 import { useState } from 'react';
 
@@ -16,7 +16,7 @@ interface FAQItem {
 const faqs: FAQItem[] = [
   {
     question: 'What is ClassOrbit?',
-    answer: 'ClassOrbit is a prompt-building and platform-navigation system for teachers. We help you craft optimized AI prompts effortlessly and launch them directly into tools like ChatGPT, Claude, Gamma, Canva, and more. We don\'t compete with AI platforms — we make them easier to use.',
+    answer: 'ClassOrbit is a prompt-building and platform-navigation system for teachers. We help you craft optimized AI prompts effortlessly and launch them directly into tools like ChatGPT, Claude, Gamma, Canva, and more. We don\'t compete with AI platforms - we make them easier to use.',
   },
   {
     question: 'How does the Prompt Builder work?',
@@ -28,7 +28,7 @@ const faqs: FAQItem[] = [
   },
   {
     question: 'Is ClassOrbit free to use?',
-    answer: 'Yes! ClassOrbit itself is free to use. You sign in with your Google account and can start building prompts immediately. The AI tools you launch into (like ChatGPT or Claude) may have their own pricing — ClassOrbit simply helps you get the most out of them.',
+    answer: 'Yes! ClassOrbit itself is free to use. You sign in with your Google account and can start building prompts immediately. The AI tools you launch into (like ChatGPT or Claude) may have their own pricing - ClassOrbit simply helps you get the most out of them.',
   },
   {
     question: 'Do I need to know prompt engineering?',
@@ -190,7 +190,7 @@ export default function HelpPage() {
           Still have questions?
         </h3>
         <p className="text-body-md text-text-muted mb-6 max-w-md mx-auto">
-          We'd love to hear from you. Reach out and we'll help you get the most out of ClassOrbit.
+          We&apos;d love to hear from you. Reach out and we&apos;ll help you get the most out of ClassOrbit.
         </p>
         <a
           href="mailto:support@classorbit.co"

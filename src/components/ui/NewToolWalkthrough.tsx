@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ChevronRight, Rocket, PenTool, Zap } from 'lucide-react';
+import Image from 'next/image';
 import { useTools, type SystemTool } from '@/context/ToolsContext';
 
 const STORAGE_KEY = 'classorbit_dismissed_new_tools';
@@ -33,7 +34,7 @@ function buildSteps(tool: SystemTool) {
     },
     {
       title: 'Launch from your Launchpad',
-      body: `Go to the Launchpad page to open ${tool.tool_name} directly. Your Google session is synced — just click "Launch Integration" and you're in.`,
+      body: `Go to the Launchpad page to open ${tool.tool_name} directly. Your Google session is synced - just click "Launch Integration" and you're in.`,
     },
     {
       title: `You're all set! 🚀`,
@@ -117,11 +118,13 @@ export default function NewToolWalkthrough() {
           {/* Tool badge */}
           <div className="flex items-center gap-3 mb-5">
             <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center p-1.5 shrink-0">
-              <img
+              <Image
                 src={activeTool.tool_logo || `https://www.google.com/s2/favicons?sz=64&domain=${new URL(activeTool.tool_url.startsWith('http') ? activeTool.tool_url : 'https://' + activeTool.tool_url).hostname}`}
                 alt={activeTool.tool_name}
+                width={40}
+                height={40}
+                unoptimized
                 className="w-full h-full object-contain"
-                onError={(e) => { (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=64&domain=google.com'; }}
               />
             </div>
             <div>

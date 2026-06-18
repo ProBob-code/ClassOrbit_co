@@ -4,7 +4,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare, X, Send, LifeBuoy, Loader2, Sparkles,
-  CheckCircle2, Bot, User, ArrowLeft, Clock, Zap, RefreshCw, HelpCircle
+  CheckCircle2, Bot, User, ArrowLeft, Clock, Zap, RefreshCw
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -142,7 +142,7 @@ export default function SupportChatWidget() {
               type: msg.type,
             }));
             
-            setLiveMessages((prev) => {
+            setLiveMessages(() => {
               // Check for inactivity
               if (msgs.length > 0) {
                 const lastMsg = msgs[msgs.length - 1];
@@ -308,7 +308,7 @@ export default function SupportChatWidget() {
           },
         ]);
       }
-    } catch (err) {
+    } catch {
       setMessages((prev) => prev.filter((m) => m.id !== 'loading'));
       setMessages((prev) => [
         ...prev,
@@ -450,7 +450,7 @@ export default function SupportChatWidget() {
     try {
       if (ticketStatus === 'ai_agent_active') {
         // Route through AI agent
-        const res = await fetch(`/api/support/tickets/${activeTicketId}/ai-respond`, {
+        await fetch(`/api/support/tickets/${activeTicketId}/ai-respond`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ userMessage: text.trim() }),
@@ -463,7 +463,7 @@ export default function SupportChatWidget() {
           body: JSON.stringify({ text: text.trim(), sender: 'user' }),
         });
       }
-    } catch (err) {
+    } catch {
       toast.error('Failed to send message');
     }
   };
@@ -479,7 +479,7 @@ export default function SupportChatWidget() {
       } else {
         toast.error('Failed to reopen ticket');
       }
-    } catch (err) {
+    } catch {
       toast.error('An error occurred');
     }
   };
@@ -499,7 +499,7 @@ export default function SupportChatWidget() {
       } else {
         toast.error('Failed to resolve ticket');
       }
-    } catch (err) {
+    } catch {
       toast.error('An error occurred');
     }
   };

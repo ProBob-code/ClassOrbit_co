@@ -30,7 +30,7 @@ const PRO_FEATURES = [
 ];
 
 const SCHOOL_FEATURES = [
-  'Everything in Pro — for every teacher',
+  'Everything in Pro, for every teacher',
   'Per-faculty volume pricing (10+ seats)',
   'Shared school workspace & prompt library',
   'Admin dashboard with usage analytics',
@@ -183,7 +183,7 @@ export default function PricingSection() {
               user ? (
                 <CheckoutButton
                   plan={isYearly ? 'pro_yearly' : 'pro_monthly'}
-                  label={isYearly ? 'Upgrade — ₹179/mo (yearly)' : 'Upgrade to Pro — ₹199/mo'}
+                  label={isYearly ? 'Upgrade: ₹179/mo (yearly)' : 'Upgrade to Pro: ₹199/mo'}
                 />
               ) : undefined
             }

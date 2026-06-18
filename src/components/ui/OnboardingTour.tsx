@@ -14,12 +14,12 @@ const steps = [
   },
   {
     title: 'Pick your content type',
-    body: 'Tell us what you\'re making — a Lesson Plan, Quiz, Worksheet, PPT Slides, and more. Each type generates a purpose-built prompt.',
+    body: 'Tell us what you\'re making - a Lesson Plan, Quiz, Worksheet, PPT Slides, and more. Each type generates a purpose-built prompt.',
     target: 'content-type',
   },
   {
     title: 'Choose your AI platforms',
-    body: 'Select one or more tools — ChatGPT, Claude, Gamma, Canva, and more. Each platform gets its own optimized prompt.',
+    body: 'Select one or more tools - ChatGPT, Claude, Gamma, Canva, and more. Each platform gets its own optimized prompt.',
     target: 'tools-select',
   },
   {

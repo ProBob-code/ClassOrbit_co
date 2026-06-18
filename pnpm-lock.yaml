@@ -4,6 +4,15 @@ settings:
   autoInstallPeers: true
   excludeLinksFromLockfile: false
 
+catalogs:
+  default:
+    '@supabase/ssr':
+      specifier: ^0.10.3
+      version: 0.10.3
+    '@supabase/supabase-js':
+      specifier: ^2.106.2
+      version: 2.106.2
+
 importers:
 
   .:
@@ -12,10 +21,10 @@ importers:
         specifier: ^1.13.16
         version: 1.13.16(@cloudflare/workers-types@4.20260609.1)(next@16.2.6(@babel/core@7.29.7)(react-dom@19.2.4(react@19.2.4))(react@19.2.4))(wrangler@4.95.0(@cloudflare/workers-types@4.20260609.1))
       '@supabase/ssr':
-        specifier: ^0.10.3
+        specifier: 'catalog:'
         version: 0.10.3(@supabase/supabase-js@2.106.2)
       '@supabase/supabase-js':
-        specifier: ^2.106.2
+        specifier: 'catalog:'
         version: 2.106.2
       file-saver:
         specifier: ^2.0.5
@@ -69,6 +78,28 @@ importers:
       tailwindcss:
         specifier: ^4
         version: 4.3.0
+      typescript:
+        specifier: ^5
+        version: 5.9.3
+      wrangler:
+        specifier: ^4.95.0
+        version: 4.95.0(@cloudflare/workers-types@4.20260609.1)
+
+  api:
+    dependencies:
+      '@supabase/ssr':
+        specifier: 'catalog:'
+        version: 0.10.3(@supabase/supabase-js@2.106.2)
+      '@supabase/supabase-js':
+        specifier: 'catalog:'
+        version: 2.106.2
+      hono:
+        specifier: ^4.6.14
+        version: 4.12.25
+    devDependencies:
+      '@cloudflare/workers-types':
+        specifier: ^4.20260609.1
+        version: 4.20260609.1
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -1825,6 +1856,10 @@ packages:
 
   hermes-parser@0.25.1:
     resolution: {integrity: sha512-6pEjquH3rqaI6cYAXYPcz9MS4rY6R4ngRgrgfDshRptUZIc3lw0MCIJIGDj9++mfySOuPTHB4nrSW99BCvOPIA==}
+
+  hono@4.12.25:
+    resolution: {integrity: sha512-2NFaIyNVgJmBs/ecmtGzlmluTFs5cHEWGTdu0t1HBwYzoGXOL5nUQBRMXsXWla5i4KkG//QMzVP88m1+I3fdAQ==}
+    engines: {node: '>=16.9.0'}
 
   iceberg-js@0.8.1:
     resolution: {integrity: sha512-1dhVQZXhcHje7798IVM+xoo/1ZdVfzOMIc8/rgVSijRK38EDqOJoGula9N/8ZI5RD8QTxNQtK/Gozpr+qUqRRA==}
@@ -4459,6 +4494,8 @@ snapshots:
   hermes-parser@0.25.1:
     dependencies:
       hermes-estree: 0.25.1
+
+  hono@4.12.25: {}
 
   iceberg-js@0.8.1: {}
 

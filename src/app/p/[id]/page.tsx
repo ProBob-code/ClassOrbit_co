@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
+import Image from 'next/image';
 
 export const runtime = 'edge';
 interface Props {
@@ -23,7 +24,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!share) return { title: 'Shared Prompt | ClassOrbit' };
   return {
     title: `${share.topic || 'Shared Prompt'} | ClassOrbit`,
-    description: `A ${share.content_type || 'teaching'} prompt for ${share.grade || 'educators'} — built with ClassOrbit and optimized for ${share.tool_name}.`,
+    description: `A ${share.content_type || 'teaching'} prompt for ${share.grade || 'educators'}, built with ClassOrbit and optimized for ${share.tool_name}.`,
   };
 }
 
@@ -52,7 +53,7 @@ export default async function SharedPromptPage({ params }: Props) {
         {/* Header */}
         <div className="text-center mb-10">
           <Link href="/" className="inline-flex items-center gap-2 mb-8">
-            <img src="/logo_transparent.png" alt="ClassOrbit" className="w-8 h-8 object-contain" />
+            <Image src="/logo_transparent.png" alt="ClassOrbit" width={32} height={32} className="w-8 h-8 object-contain" />
             <span className="text-xl font-extrabold text-white">Class<span className="text-primary">Orbit</span></span>
           </Link>
           <div className="flex flex-wrap items-center justify-center gap-2 mb-3">
@@ -71,7 +72,7 @@ export default async function SharedPromptPage({ params }: Props) {
           <div className="flex items-center justify-between px-5 py-4 border-b border-border">
             <div className="flex items-center gap-2">
               {share.tool_name && (
-                <img src={`https://www.google.com/s2/favicons?sz=64&domain=${share.tool_url}`} alt={share.tool_name} className="w-5 h-5 rounded-sm" onError={() => {}} />
+                <Image src={`https://www.google.com/s2/favicons?sz=64&domain=${share.tool_url}`} alt={share.tool_name} width={20} height={20} unoptimized className="w-5 h-5 rounded-sm" />
               )}
               <span className="text-sm font-bold text-text-main">Prompt for {share.tool_name}</span>
             </div>
@@ -112,7 +113,7 @@ export default async function SharedPromptPage({ params }: Props) {
 
         {/* CTA */}
         <div className="glass-panel rounded-[24px] p-7 text-center border border-primary/20">
-          <p className="text-white font-bold text-lg mb-2">Build your own prompts like this — free</p>
+          <p className="text-white font-bold text-lg mb-2">Build your own prompts like this, free to use</p>
           <p className="text-text-muted text-sm mb-5">ClassOrbit generates platform-optimized prompts for any lesson, quiz, or worksheet in seconds.</p>
           <Link href="/login?next=/builder" className="inline-flex items-center gap-2 bg-primary text-white px-7 py-3.5 rounded-full font-bold hover:bg-primary-hover transition-all shadow-glow">
             Get Started Free →

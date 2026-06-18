@@ -4,11 +4,11 @@ import { motion } from 'framer-motion';
 import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Settings, Palette, Bell, Sparkles, Save, Check, CreditCard, Zap, CheckCircle2, Calendar, TrendingUp } from 'lucide-react';
+import Image from 'next/image';
 import { defaultTools } from '@/data/default-tools';
 import toast from 'react-hot-toast';
 import { usePlan } from '@/lib/hooks/usePlan';
 import CheckoutButton from '@/components/ui/CheckoutButton';
-import Link from 'next/link';
 
 interface UserSettings {
   defaultTools: string[];
@@ -93,7 +93,7 @@ function SettingsContent() {
               {defaultTools.filter(t => t.active).map(tool => (
                 <button key={tool.id} onClick={() => toggleDefaultTool(tool.id)}
                   className={`px-4 py-3 rounded-xl text-label-md font-semibold transition-all border flex items-center gap-2 shadow-sm ${settings.defaultTools.includes(tool.id) ? 'bg-surface border-primary ring-1 ring-primary text-primary' : 'bg-surface border-border hover:border-text-subtle text-text-muted hover:text-text-main'}`}>
-                  {tool.tool_logo && <img src={tool.tool_logo} alt={tool.tool_name} className="w-5 h-5 rounded-sm object-cover" />}
+                  {tool.tool_logo && <Image src={tool.tool_logo} alt={tool.tool_name} width={20} height={20} unoptimized className="w-5 h-5 rounded-sm object-cover" />}
                   {tool.tool_name}
                 </button>
               ))}
@@ -219,10 +219,10 @@ function SettingsContent() {
 
                 <div className="pt-2 border-t border-border space-y-3">
                   <p className="text-[14px] text-text-muted font-medium">Upgrade to remove all limits:</p>
-                  <CheckoutButton plan="pro_monthly" label="Upgrade to Pro — ₹199/month" onSuccess={() => plan.refetch()} />
+                  <CheckoutButton plan="pro_monthly" label="Upgrade to Pro - ₹199/month" onSuccess={() => plan.refetch()} />
                   <CheckoutButton
                     plan="pro_yearly"
-                    label="Yearly Plan — ₹179/month (billed ₹2,148/year)"
+                    label="Yearly Plan - ₹179/month (billed ₹2,148/year)"
                     className="w-full py-3.5 rounded-xl font-bold text-[14px] flex items-center justify-center gap-2 border-2 border-primary text-primary hover:bg-primary/10 transition-all active:scale-[0.98]"
                     onSuccess={() => plan.refetch()}
                   />

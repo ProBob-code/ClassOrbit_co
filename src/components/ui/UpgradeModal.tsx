@@ -2,6 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle2, Zap } from 'lucide-react';
+import Image from 'next/image';
 import CheckoutButton from './CheckoutButton';
 
 const PRO_PERKS = [
@@ -59,7 +60,7 @@ export default function UpgradeModal({ open, onClose, promptsUsed, promptLimit }
               
               {/* Core Circular Logo Badge */}
               <div className="w-24 h-24 rounded-full drop-shadow-[0_0_12px_rgba(245,158,11,0.4)] relative z-10 flex items-center justify-center bg-background border border-white/10 p-0 overflow-hidden">
-                <img src="/logo_transparent.png" alt="ClassOrbit Logo" className="w-full h-full object-cover rounded-full" />
+                <Image src="/logo_transparent.png" alt="ClassOrbit Logo" width={96} height={96} className="w-full h-full object-cover rounded-full" />
               </div>
             </div>
 
@@ -72,7 +73,7 @@ export default function UpgradeModal({ open, onClose, promptsUsed, promptLimit }
                 Unlock ClassOrbit <span className="text-gradient-gold">PRO</span>
               </h2>
               <p className="text-[14px] text-text-muted leading-relaxed max-w-xs mx-auto">
-                You've reached your free monthly limit. Remove all limits and unlock every feature ClassOrbit offers.
+                You&apos;ve reached your free monthly limit. Remove all limits and unlock every feature ClassOrbit offers.
               </p>
             </div>
 
@@ -104,7 +105,7 @@ export default function UpgradeModal({ open, onClose, promptsUsed, promptLimit }
             <div className="space-y-3">
               <CheckoutButton 
                 plan="pro_monthly" 
-                label="Upgrade to Pro — ₹199/month" 
+                label="Upgrade to Pro - ₹199/month" 
                 className="w-full py-4 rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white transition-all active:scale-[0.98] shadow-glow cursor-pointer"
                 onSuccess={onClose} 
               />

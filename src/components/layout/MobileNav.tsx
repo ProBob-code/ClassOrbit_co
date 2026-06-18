@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -74,11 +75,13 @@ export default function MobileNav() {
               {!loading && profile && (
                 <div className="flex items-center gap-3 mb-8 pb-5 border-b border-border">
                   {profile.avatar_url ? (
-                    <img 
-                      src={profile.avatar_url} 
-                      alt={profile.name || 'User'} 
+                    <Image
+                      src={profile.avatar_url}
+                      alt={profile.name || 'User'}
+                      width={44}
+                      height={44}
+                      unoptimized
                       className="w-11 h-11 rounded-full border-2 border-primary/30 object-cover"
-                      referrerPolicy="no-referrer"
                     />
                   ) : (
                     <div className="w-11 h-11 rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center text-primary font-bold">

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import Image from 'next/image';
 import { useTools } from '@/context/ToolsContext';
 import Badge from '@/components/ui/Badge';
 import toast from 'react-hot-toast';
@@ -107,7 +108,7 @@ export default function LaunchpadPage() {
         if (!toolName) {
           setToolName(suggestedName);
         }
-      } catch (e) {
+      } catch {
         // Ignored
       }
     }
@@ -181,7 +182,7 @@ export default function LaunchpadPage() {
     try {
       const parsedUrl = new URL(url);
       return `https://www.google.com/s2/favicons?sz=128&domain=${parsedUrl.hostname}`;
-    } catch (e) {
+    } catch {
       return `https://www.google.com/s2/favicons?sz=128&domain=${url}`;
     }
   };
@@ -243,10 +244,12 @@ export default function LaunchpadPage() {
       {/* Header section with ClassOrbit logo and Google SSO Session Bridge */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 mb-10">
         <div className="flex items-center gap-4 text-left">
-          <img 
-            src="/logo_transparent.png" 
-            alt="ClassOrbit Logo" 
-            className="w-14 h-14 object-contain drop-shadow-[0_0_12px_rgba(245,158,11,0.4)] shrink-0" 
+          <Image
+            src="/logo_transparent.png"
+            alt="ClassOrbit Logo"
+            width={56}
+            height={56}
+            className="w-14 h-14 object-contain drop-shadow-[0_0_12px_rgba(245,158,11,0.4)] shrink-0"
           />
           <div>
             <span className="text-label-sm font-bold text-primary tracking-widest uppercase mb-1 block flex items-center gap-1.5">
@@ -270,7 +273,7 @@ export default function LaunchpadPage() {
                 {newTools.length === 1 ? `New tool: ${newTools[0].tool_name}!` : `${newTools.length} new tools added!`}
               </p>
               <p className="text-[12px] text-text-muted mt-0.5">
-                {newTools.map(t => t.tool_name).join(', ')} — scroll down to try {newTools.length === 1 ? 'it' : 'them'} out.
+                {newTools.map(t => t.tool_name).join(', ')} - scroll down to try {newTools.length === 1 ? 'it' : 'them'} out.
               </p>
             </div>
           </div>
@@ -281,11 +284,13 @@ export default function LaunchpadPage() {
           <div className="glass-panel rounded-2xl p-4.5 flex items-center gap-4 border border-emerald-500/20 bg-emerald-500/5 max-w-md w-full lg:w-auto shadow-sm shadow-emerald-500/5 text-left shrink-0">
             <div className="relative">
               {profile.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={profile.name || ''} 
-                  className="w-11 h-11 rounded-full border-2 border-emerald-500/40 object-cover" 
-                  referrerPolicy="no-referrer"
+                <Image
+                  src={profile.avatar_url}
+                  alt={profile.name || ''}
+                  width={44}
+                  height={44}
+                  unoptimized
+                  className="w-11 h-11 rounded-full border-2 border-emerald-500/40 object-cover"
                 />
               ) : (
                 <div className="w-11 h-11 rounded-full bg-emerald-500/20 border-2 border-emerald-500/40 flex items-center justify-center text-emerald-400 font-bold">
@@ -298,7 +303,7 @@ export default function LaunchpadPage() {
               <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest block">Google SSO Session Synced</span>
               <p className="text-label-sm font-bold text-text-main truncate mt-0.5">{profile.email}</p>
               <p className="text-[11px] text-text-muted mt-0.5 leading-tight max-w-[280px]">
-                Single-sign-on active. Click "Continue with Google" on external tools to log in instantly.
+                Single-sign-on active. Click &quot;Continue with Google&quot; on external tools to log in instantly.
               </p>
             </div>
           </div>
@@ -400,13 +405,13 @@ export default function LaunchpadPage() {
                   <div className="flex-grow">
                     <div className="flex items-start justify-between mb-4">
                       <div className="w-14 h-14 rounded-2xl bg-white border border-border shadow-sm overflow-hidden flex items-center justify-center p-2 shrink-0">
-                        <img 
-                          src={getToolLogoUrl(tool.tool_url, tool.tool_logo)} 
-                          alt={tool.tool_name} 
+                        <Image
+                          src={getToolLogoUrl(tool.tool_url, tool.tool_logo)}
+                          alt={tool.tool_name}
+                          width={56}
+                          height={56}
+                          unoptimized
                           className="w-full h-full object-contain"
-                          onError={(e) => {
-                            (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=128&domain=google.com';
-                          }}
                         />
                       </div>
                       <div className="flex items-center gap-1.5">

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import Topbar from '@/components/layout/Topbar';
 
 export default function PrivacyPage() {
@@ -34,7 +35,7 @@ export default function PrivacyPage() {
             <section className="space-y-3">
               <h2 className="font-display text-headline-md font-bold text-text-main">1. Introduction</h2>
               <p className="text-body-md text-text-muted leading-relaxed">
-                Welcome to ClassOrbit.co (the "Service", "we", "us", or "our"). We are committed to protecting the privacy and personal data of the educators, teachers, and school administrators who use our Service. This Privacy Policy explains how we collect, use, and protect your information when you use our AI Prompt Studio.
+                Welcome to ClassOrbit.co (the &quot;Service&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). We are committed to protecting the privacy and personal data of the educators, teachers, and school administrators who use our Service. This Privacy Policy explains how we collect, use, and protect your information when you use our AI Prompt Studio.
               </p>
             </section>
 
@@ -66,7 +67,7 @@ export default function PrivacyPage() {
             <section className="space-y-3">
               <h2 className="font-display text-headline-md font-bold text-text-main">4. Data Storage and Security</h2>
               <p className="text-body-md text-text-muted leading-relaxed">
-                Your workspace documents, folders, registered tools, and prompt favorites are securely managed and backed up. Additionally, active working directories and custom integrations are temporarily stored locally in your browser's secure `localStorage` sandbox to ensure lightning-fast speeds. We implement robust industry-standard encryption protocols to protect your OAuth tokens and cloud-synced files.
+                Your workspace documents, folders, registered tools, and prompt favorites are securely managed and backed up. Additionally, active working directories and custom integrations are temporarily stored locally in your browser&apos;s secure localStorage sandbox to ensure lightning-fast speeds. We implement robust industry-standard encryption protocols to protect your OAuth tokens and cloud-synced files.
               </p>
             </section>
 
@@ -105,7 +106,7 @@ export default function PrivacyPage() {
       <footer className="w-full py-12 px-margin-mobile md:px-margin-page bg-surface border-t border-border text-left relative z-10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
-            <img src="/logo_transparent.png" alt="ClassOrbit Logo" className="w-8 h-8 object-contain" />
+            <Image src="/logo_transparent.png" alt="ClassOrbit Logo" width={32} height={32} className="w-8 h-8 object-contain" />
             <span className="text-2xl font-extrabold tracking-tight text-text-main">
               Class<span className="text-primary">Orbit</span>
             </span>

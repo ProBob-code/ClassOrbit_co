@@ -8,9 +8,9 @@ import CheckoutButton from '@/components/ui/CheckoutButton';
 import { usePlan } from '@/lib/hooks/usePlan';
 
 const PRO_PERKS = [
-  { icon: '∞', label: 'Unlimited prompts per month', sub: 'No cap — build as many prompts as you need' },
+  { icon: '∞', label: 'Unlimited prompts per month', sub: 'No cap - build as many prompts as you need' },
   { icon: '🤖', label: 'All available AI platforms', sub: 'ChatGPT, Claude, Canva, Gamma, Suno, ElevenLabs, Ideogram & more' },
-  { icon: '📎', label: 'Unlimited document uploads', sub: 'Attach your syllabus, textbook, or notes as context — no cap' },
+  { icon: '📎', label: 'Unlimited document uploads', sub: 'Attach your syllabus, textbook, or notes as context - no cap' },
   { icon: '📋', label: 'All 14 content types', sub: 'Quiz, PPT, Debate, Rubric, Video Script, Study Guide & more' },
   { icon: '🗂️', label: 'Unlimited Workspace', sub: 'Unlimited folders and saved files, across all devices' },
   { icon: '🔧', label: 'Custom AI tools', sub: 'Register any AI tool to your personal launchpad' },
@@ -29,7 +29,7 @@ export default function UpgradePage() {
           <div className="w-16 h-16 bg-primary/15 rounded-full flex items-center justify-center mx-auto mb-5">
             <Zap size={28} className="text-primary" fill="currentColor" />
           </div>
-          <h1 className="font-display text-[28px] font-extrabold text-white mb-3">You're already on Pro!</h1>
+          <h1 className="font-display text-[28px] font-extrabold text-white mb-3">You&apos;re already on Pro!</h1>
           <p className="text-text-muted text-[15px] mb-8">All features are unlocked. Go build something great.</p>
           <Link href="/builder" className="inline-flex items-center gap-2 bg-primary text-white px-7 py-3.5 rounded-xl font-bold hover:bg-primary-hover transition-all shadow-glow">
             <Sparkles size={18} /> Open Prompt Builder
@@ -53,7 +53,7 @@ export default function UpgradePage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
-        {/* LEFT — Perks */}
+        {/* LEFT - Perks */}
         <div>
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
             <div className="inline-flex items-center gap-2 bg-primary/10 border border-primary/20 text-primary px-3 py-1.5 rounded-full text-[12px] font-bold uppercase tracking-widest mb-5">
@@ -64,7 +64,7 @@ export default function UpgradePage() {
               <span className="text-gradient-gold">No limits.</span>
             </h1>
             <p className="text-[17px] text-text-muted leading-relaxed mb-8">
-              Everything a teacher needs to prep faster, teach better, and use AI like a pro — for less than a coffee a week.
+              Everything a teacher needs to prep faster, teach better, and use AI like a pro - for less than a coffee a week.
             </p>
           </motion.div>
 
@@ -90,7 +90,7 @@ export default function UpgradePage() {
           </div>
         </div>
 
-        {/* RIGHT — Checkout card */}
+        {/* RIGHT - Checkout card */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
@@ -140,7 +140,7 @@ export default function UpgradePage() {
             {!plan.loading && (
               <div className="mb-5">
                 <div className="flex justify-between text-[12px] font-bold mb-1.5">
-                  <span className="text-text-muted">This month's usage</span>
+                  <span className="text-text-muted">This month&apos;s usage</span>
                   <span className="text-primary">{plan.prompts_used}/{plan.prompt_limit} prompts</span>
                 </div>
                 <div className="h-2 bg-background border border-border rounded-full overflow-hidden">
@@ -158,7 +158,7 @@ export default function UpgradePage() {
             {/* CTA */}
             <CheckoutButton
               plan={billing === 'monthly' ? 'pro_monthly' : 'pro_yearly'}
-              label={billing === 'monthly' ? 'Upgrade to Pro — ₹199/month' : 'Upgrade to Pro — ₹179/month'}
+              label={billing === 'monthly' ? 'Upgrade to Pro - ₹199/month' : 'Upgrade to Pro - ₹179/month'}
             />
 
             <div className="mt-4 space-y-2">
@@ -178,7 +178,7 @@ export default function UpgradePage() {
             <div className="w-9 h-9 rounded-xl bg-secondary/10 flex items-center justify-center text-[18px] shrink-0">🏫</div>
             <div className="flex-1 min-w-0">
               <p className="text-[13px] font-bold text-white">School or institution?</p>
-              <p className="text-[11px] text-text-muted">Volume pricing for 10+ teachers — email us</p>
+              <p className="text-[11px] text-text-muted">Volume pricing for 10+ teachers - email us</p>
             </div>
             <a href="mailto:hello@classorbit.co" className="text-primary text-[12px] font-bold hover:underline shrink-0">
               Contact →

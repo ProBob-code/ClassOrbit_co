@@ -7,11 +7,11 @@ const BASE_URL = 'https://classorbit.co';
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
   title: {
-    default: 'ClassOrbit — The AI Prompt Studio for Educators',
+    default: 'ClassOrbit: The AI Prompt Studio for Educators',
     template: '%s | ClassOrbit',
   },
   description:
-    'Build perfect AI prompts for your classroom in seconds. ClassOrbit optimizes prompts for ChatGPT, Claude, Canva, Gamma, NotebookLM, and more — zero prompt engineering required.',
+    'Build perfect AI prompts for your classroom in seconds. ClassOrbit optimizes prompts for ChatGPT, Claude, Canva, Gamma, NotebookLM, and more, zero prompt engineering required.',
   keywords: [
     'AI prompts for teachers',
     'ChatGPT for educators',
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     url: BASE_URL,
     siteName: 'ClassOrbit',
-    title: 'ClassOrbit — The AI Prompt Studio for Educators',
+    title: 'ClassOrbit: The AI Prompt Studio for Educators',
     description:
       'Build perfect AI prompts for your classroom in seconds. Launch directly to ChatGPT, Claude, Canva, Gamma, and more.',
     images: [
@@ -42,13 +42,13 @@ export const metadata: Metadata = {
         url: '/og-image.png',
         width: 1200,
         height: 630,
-        alt: 'ClassOrbit — AI Prompt Studio for Educators',
+        alt: 'ClassOrbit: AI Prompt Studio for Educators',
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'ClassOrbit — The AI Prompt Studio for Educators',
+    title: 'ClassOrbit: The AI Prompt Studio for Educators',
     description: 'Build perfect AI prompts for your classroom in seconds.',
     images: ['/og-image.png'],
     creator: '@classorbit',

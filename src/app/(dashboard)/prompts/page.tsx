@@ -198,7 +198,7 @@ export default function PromptsPage() {
             <FileText size={16} /> Prompt Library
           </span>
           <h1 className="font-display text-display-lg-mobile md:text-[40px] text-text-main font-bold tracking-tight">Saved Prompts</h1>
-          <p className="text-body-md text-text-muted max-w-xl mt-2">Your prompt history — review, re-launch, or save favourites.</p>
+          <p className="text-body-md text-text-muted max-w-xl mt-2">Your prompt history - review, re-launch, or save favourites.</p>
         </div>
         <div className="flex flex-wrap items-center gap-3">
           <div className="relative group">

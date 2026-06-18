@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import { usePathname } from 'next/navigation';
-import { LifeBuoy, Settings, LogOut, User, ChevronDown, Menu, X, Zap } from 'lucide-react';
+import Image from 'next/image';
+import { LifeBuoy, Settings, LogOut, User, ChevronDown, Zap } from 'lucide-react';
 import { useUser } from '@/lib/hooks/useUser';
 import { usePlan } from '@/lib/hooks/usePlan';
 
@@ -88,7 +89,7 @@ export default function Topbar() {
         ) : profile ? (
           /* ===== LOGGED IN STATE ===== */
           <div className="flex items-center gap-3" ref={dropdownRef}>
-            {/* Go Pro button — only for free users, not on landing */}
+            {/* Go Pro button - only for free users, not on landing */}
             {!isLanding && !plan.loading && !plan.is_pro && (
               <Link
                 href="/upgrade"
@@ -122,11 +123,13 @@ export default function Topbar() {
               className="flex items-center gap-2.5 px-2 py-1.5 rounded-full hover:bg-white/5 transition-all cursor-pointer group"
             >
               {profile.avatar_url ? (
-                <img 
-                  src={profile.avatar_url} 
-                  alt={profile.name || 'User'} 
+                <Image
+                  src={profile.avatar_url}
+                  alt={profile.name || 'User'}
+                  width={36}
+                  height={36}
+                  unoptimized
                   className="w-9 h-9 rounded-full border-2 border-primary/40 object-cover shadow-sm group-hover:border-primary transition-colors"
-                  referrerPolicy="no-referrer"
                 />
               ) : (
                 <div className="w-9 h-9 rounded-full bg-primary/20 border-2 border-primary/40 flex items-center justify-center text-primary font-bold text-sm">

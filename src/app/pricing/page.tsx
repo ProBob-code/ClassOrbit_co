@@ -7,7 +7,7 @@ import Link from 'next/link';
 export const metadata: Metadata = {
   title: 'Pricing',
   description:
-    'ClassOrbit pricing — free forever plan, Pro at $8/month, and school/enterprise plans. Start free, upgrade anytime.',
+    'ClassOrbit pricing: free forever plan, Pro at ₹199/month, and school/enterprise plans. Start free, upgrade anytime.',
 };
 
 export default function PricingPage() {

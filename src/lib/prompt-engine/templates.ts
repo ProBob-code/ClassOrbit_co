@@ -63,7 +63,7 @@ Guidelines:
 - Student level: ${input.studentLevel}
 - Teaching approach: ${input.teachingStyles.join(', ')}
 - Time frame: ${input.duration}
-- Keep text concise — use bullet points
+- Keep text concise - use bullet points
 - Suggest relevant images for each slide`,
 
   notebooklm: (input) =>

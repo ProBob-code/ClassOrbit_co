@@ -1,0 +1,286 @@
+api\src\routes\admin.ts:16:9  [@typescript-eslint/no-unused-vars]  'segments' is assigned a value but never used.
+api\src\routes\admin.ts:61:31  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\admin.ts:78:38  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\admin.ts:95:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\admin.ts:105:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\admin.ts:187:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\admin.ts:207:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\admin.ts:228:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\admin.ts:253:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\admin.ts:264:23  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\admin.ts:294:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\ai.ts:149:90  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\ai.ts:152:43  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\ai.ts:153:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\ai.ts:161:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\ai.ts:217:43  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\ai.ts:236:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\blogs.ts:14:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\blogs.ts:33:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\payment.ts:58:40  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\payment.ts:110:17  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\prompts.ts:18:42  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\support.ts:22:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\support.ts:37:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\support.ts:75:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\support.ts:95:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\support.ts:283:28  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\support.ts:322:57  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\support.ts:356:28  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\support.ts:403:57  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+api\src\routes\tools.ts:59:36  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+next.config.ts:4:45  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(auth)\login\page.tsx:76:15  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\builder\page.tsx:9:18  [@typescript-eslint/no-unused-vars]  'studentLevels' is defined but never used.
+src\app\(dashboard)\builder\page.tsx:10:10  [@typescript-eslint/no-unused-vars]  'teachingStyles' is defined but never used.
+src\app\(dashboard)\builder\page.tsx:20:64  [@typescript-eslint/no-unused-vars]  'ArrowLeft' is defined but never used.
+src\app\(dashboard)\builder\page.tsx:21:9  [@typescript-eslint/no-unused-vars]  'PartyPopper' is defined but never used.
+src\app\(dashboard)\builder\page.tsx:37:12  [@typescript-eslint/no-unused-vars]  'e' is defined but never used.
+src\app\(dashboard)\builder\page.tsx:72:37  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:73:18  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:73:51  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:81:14  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:82:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:97:52  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:150:31  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:262:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:300:46  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:314:9  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\app\(dashboard)\builder\page.tsx:321:60  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:335:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:378:55  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:380:54  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:395:66  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:432:41  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:444:58  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:448:9  [@typescript-eslint/no-unused-vars]  'toggleStyle' is assigned a value but never used.
+src\app\(dashboard)\builder\page.tsx:530:47  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:542:42  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:620:14  [@typescript-eslint/no-unused-vars]  'e' is defined but never used.
+src\app\(dashboard)\builder\page.tsx:690:21  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\builder\page.tsx:783:23  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\builder\page.tsx:873:53  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\builder\page.tsx:948:38  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\(dashboard)\builder\page.tsx:1002:103  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\(dashboard)\builder\page.tsx:1096:23  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\builder\page.tsx:1260:23  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\(dashboard)\builder\page.tsx:1465:25  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\help\page.tsx:7:23  [@typescript-eslint/no-unused-vars]  'ExternalLink' is defined but never used.
+src\app\(dashboard)\help\page.tsx:193:13  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\(dashboard)\help\page.tsx:193:55  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\(dashboard)\profile\page.tsx:25:43  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\profile\page.tsx:28:14  [@typescript-eslint/no-unused-vars]  'e' is defined but never used.
+src\app\(dashboard)\profile\page.tsx:40:46  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\profile\page.tsx:44:47  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\profile\page.tsx:59:41  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\profile\page.tsx:122:13  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\profile\page.tsx:134:17  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\prompts\page.tsx:41:60  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\prompts\page.tsx:52:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\prompts\page.tsx:85:55  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\prompts\page.tsx:87:54  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\prompts\page.tsx:100:66  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\prompts\page.tsx:118:42  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\prompts\page.tsx:126:33  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\prompts\page.tsx:142:21  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\app\(dashboard)\prompts\page.tsx:149:38  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\prompts\page.tsx:167:56  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\prompts\page.tsx:338:51  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\settings\page.tsx:11:8  [@typescript-eslint/no-unused-vars]  'Link' is defined but never used.
+src\app\(dashboard)\settings\page.tsx:38:17  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\app\(dashboard)\settings\page.tsx:96:38  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\tools\page.tsx:16:9  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\tools\page.tsx:53:50  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\tools\page.tsx:67:46  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\tools\page.tsx:68:53  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\tools\page.tsx:90:37  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\tools\page.tsx:110:16  [@typescript-eslint/no-unused-vars]  'e' is defined but never used.
+src\app\(dashboard)\tools\page.tsx:133:42  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\tools\page.tsx:173:31  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\tools\page.tsx:184:14  [@typescript-eslint/no-unused-vars]  'e' is defined but never used.
+src\app\(dashboard)\tools\page.tsx:246:11  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\tools\page.tsx:284:17  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\tools\page.tsx:301:46  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\(dashboard)\tools\page.tsx:301:67  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\(dashboard)\tools\page.tsx:403:25  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\(dashboard)\tools\page.tsx:532:74  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\upgrade\page.tsx:32:86  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\(dashboard)\upgrade\page.tsx:143:63  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\(dashboard)\workspace\page.tsx:98:68  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:106:42  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:107:66  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:127:36  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:134:21  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\app\(dashboard)\workspace\page.tsx:137:13  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\app\(dashboard)\workspace\page.tsx:160:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:189:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:197:61  [@typescript-eslint/no-unused-vars]  'folder_id' is defined but never used.
+src\app\(dashboard)\workspace\page.tsx:202:58  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:247:63  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:248:63  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:282:42  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:454:52  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:542:99  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:577:57  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\(dashboard)\workspace\page.tsx:596:27  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\admin\login\page.tsx:33:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\login\page.tsx:95:15  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\admin\page.tsx:8:37  [@typescript-eslint/no-unused-vars]  'Zap' is defined but never used.
+src\app\admin\page.tsx:10:41  [@typescript-eslint/no-unused-vars]  'ChevronDown' is defined but never used.
+src\app\admin\page.tsx:12:3  [@typescript-eslint/no-unused-vars]  'PenTool' is defined but never used.
+src\app\admin\page.tsx:12:12  [@typescript-eslint/no-unused-vars]  'Presentation' is defined but never used.
+src\app\admin\page.tsx:12:26  [@typescript-eslint/no-unused-vars]  'Puzzle' is defined but never used.
+src\app\admin\page.tsx:12:34  [@typescript-eslint/no-unused-vars]  'HelpCircle' is defined but never used.
+src\app\admin\page.tsx:201:38  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:215:50  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:226:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:239:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:252:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:265:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:274:7  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\app\admin\page.tsx:381:9  [@typescript-eslint/no-unused-vars]  'handleResolveTicket' is assigned a value but never used.
+src\app\admin\page.tsx:407:43  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:433:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:436:61  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:630:14  [@typescript-eslint/no-unused-vars]  'e' is defined but never used.
+src\app\admin\page.tsx:688:17  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\admin\page.tsx:787:29  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\admin\page.tsx:839:29  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\admin\page.tsx:1021:31  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\admin\page.tsx:1156:37  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\admin\page.tsx:1439:44  [@typescript-eslint/no-unused-vars]  'e' is defined but never used.
+src\app\admin\page.tsx:1493:99  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:1544:94  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\admin\page.tsx:1544:111  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\admin\page.tsx:1927:76  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:1929:36  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:1933:36  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\admin\page.tsx:2019:27  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\api\admin\stats\route.ts:59:29  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\admin\tools\[id]\route.ts:33:17  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\admin\tools\route.ts:34:36  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\admin\users\[id]\block\route.ts:36:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\admin\users\route.ts:32:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\groq\route.ts:158:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\groq\route.ts:166:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\me\cancel-plan\route.ts:7:28  [@typescript-eslint/no-unused-vars]  'req' is defined but never used.
+src\app\api\prompts\route.ts:19:42  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\chat\route.ts:87:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\[id]\ai-respond\route.ts:114:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\[id]\assign-ai\route.ts:55:26  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\[id]\assign-ai\route.ts:132:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\[id]\message\route.ts:66:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\[id]\reopen\route.ts:37:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\[id]\resolve\route.ts:79:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\[id]\route.ts:35:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\route.ts:32:21  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\route.ts:48:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\support\tickets\route.ts:91:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\tools\system\route.ts:14:36  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\api\verify-payment\route.ts:68:17  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\blog\[slug]\page.tsx:73:15  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\blog\page.tsx:42:31  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\app\blog\page.tsx:50:21  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\p\[id]\page.tsx:55:13  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\p\[id]\page.tsx:74:17  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\page.tsx:93:19  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\page.tsx:100:17  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\page.tsx:148:15  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\page.tsx:181:23  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\page.tsx:181:70  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\page.tsx:225:119  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\page.tsx:249:23  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\page.tsx:350:24  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\page.tsx:350:43  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\page.tsx:370:15  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\privacy\page.tsx:37:47  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\privacy\page.tsx:37:55  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\privacy\page.tsx:37:58  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\privacy\page.tsx:37:61  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\privacy\page.tsx:37:64  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\privacy\page.tsx:37:67  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\privacy\page.tsx:37:73  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\privacy\page.tsx:37:77  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\privacy\page.tsx:69:238  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\app\privacy\page.tsx:108:13  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\app\terms\page.tsx:37:58  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:37:66  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:37:69  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:37:72  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:37:75  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:37:78  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:37:84  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:37:88  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:72:41  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:72:47  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:72:53  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:72:66  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\app\terms\page.tsx:104:13  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\layout\MobileNav.tsx:77:21  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\layout\Sidebar.tsx:38:9  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\layout\Sidebar.tsx:120:15  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\layout\Topbar.tsx:6:57  [@typescript-eslint/no-unused-vars]  'Menu' is defined but never used.
+src\components\layout\Topbar.tsx:6:63  [@typescript-eslint/no-unused-vars]  'X' is defined but never used.
+src\components\layout\Topbar.tsx:125:17  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\sections\AppPreview.tsx:5:34  [@typescript-eslint/no-unused-vars]  'Copy' is defined but never used.
+src\components\sections\AppPreview.tsx:5:76  [@typescript-eslint/no-unused-vars]  'Rocket' is defined but never used.
+src\components\sections\AppPreview.tsx:5:103  [@typescript-eslint/no-unused-vars]  'Presentation' is defined but never used.
+src\components\sections\AppPreview.tsx:52:93  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\components\sections\AppPreview.tsx:61:13  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\sections\AppPreview.tsx:88:13  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\sections\AppPreview.tsx:96:170  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\components\sections\AppPreview.tsx:108:15  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\sections\Testimonials.tsx:88:17  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\components\sections\Testimonials.tsx:88:27  [react/no-unescaped-entities]  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`.
+src\components\ui\CheckoutButton.tsx:10:15  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\CheckoutButton.tsx:36:3  [react-hooks/refs]  Error: Cannot access refs during render
+src\components\ui\CheckoutButton.tsx:49:20  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\CheckoutButton.tsx:57:43  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\CheckoutButton.tsx:60:41  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\CheckoutButton.tsx:61:17  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\CheckoutButton.tsx:116:41  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\FeedbackModal.tsx:122:17  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\ui\NewToolWalkthrough.tsx:120:15  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\ui\ProReminderNotification.tsx:28:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\ProReminderNotification.tsx:91:17  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\ui\SupportChatWidget.tsx:7:62  [@typescript-eslint/no-unused-vars]  'HelpCircle' is defined but never used.
+src\components\ui\SupportChatWidget.tsx:73:5  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\components\ui\SupportChatWidget.tsx:89:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\SupportChatWidget.tsx:105:17  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\components\ui\SupportChatWidget.tsx:129:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\SupportChatWidget.tsx:136:61  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\SupportChatWidget.tsx:145:30  [@typescript-eslint/no-unused-vars]  'prev' is defined but never used.
+src\components\ui\SupportChatWidget.tsx:150:19  [react-hooks/immutability]  Error: Cannot access variable before it is declared
+src\components\ui\SupportChatWidget.tsx:152:19  [react-hooks/immutability]  Error: Cannot access variable before it is declared
+src\components\ui\SupportChatWidget.tsx:169:6  [react-hooks/exhaustive-deps]  React Hook useCallback has a missing dependency: 'resetInactivityTimer'. Either include it or remove the dependency array.
+src\components\ui\SupportChatWidget.tsx:235:20  [react-hooks/purity]  Error: Cannot call impure function during render
+src\components\ui\SupportChatWidget.tsx:280:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\SupportChatWidget.tsx:284:24  [react-hooks/purity]  Error: Cannot call impure function during render
+src\components\ui\SupportChatWidget.tsx:311:14  [@typescript-eslint/no-unused-vars]  'err' is defined but never used.
+src\components\ui\SupportChatWidget.tsx:385:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\SupportChatWidget.tsx:410:43  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\components\ui\SupportChatWidget.tsx:453:15  [@typescript-eslint/no-unused-vars]  'res' is assigned a value but never used.
+src\components\ui\SupportChatWidget.tsx:466:14  [@typescript-eslint/no-unused-vars]  'err' is defined but never used.
+src\components\ui\SupportChatWidget.tsx:482:14  [@typescript-eslint/no-unused-vars]  'err' is defined but never used.
+src\components\ui\SupportChatWidget.tsx:502:14  [@typescript-eslint/no-unused-vars]  'err' is defined but never used.
+src\components\ui\UpgradeModal.tsx:62:17  [@next/next/no-img-element]  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element
+src\components\ui\UpgradeModal.tsx:75:20  [react/no-unescaped-entities]  `'` can be escaped with `&apos;`, `&lsquo;`, `&#39;`, `&rsquo;`.
+src\context\ToolsContext.tsx:27:26  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\context\ToolsContext.tsx:50:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\context\ToolsContext.tsx:62:5  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\global.d.ts:2:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\global.d.ts:6:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\d1.ts:4:19  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\d1.ts:5:13  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\d1.ts:6:11  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\d1.ts:6:76  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\d1.ts:7:7  [@typescript-eslint/no-unused-vars]  'T' is defined but never used.
+src\lib\d1.ts:7:11  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\d1.ts:7:62  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\d1.ts:13:53  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\d1.ts:14:32  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\d1.ts:20:51  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\hooks\usePlan.ts:35:44  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.
+src\lib\hooks\usePlan.ts:45:21  [react-hooks/set-state-in-effect]  Error: Calling setState synchronously within an effect can trigger cascading renders
+src\lib\tools\router.ts:48:14  [@typescript-eslint/no-unused-vars]  't' is defined but never used.
+src\lib\tools\router.ts:51:22  [@typescript-eslint/no-explicit-any]  Unexpected any. Specify a different type.

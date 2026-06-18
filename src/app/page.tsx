@@ -9,6 +9,7 @@ import AppPreview from '@/components/sections/AppPreview';
 import PricingSection from '@/components/sections/PricingSection';
 import Testimonials from '@/components/sections/Testimonials';
 import FAQ from '@/components/sections/FAQ';
+import Image from 'next/image';
 import { Users, Mail, ArrowRight, Loader2 } from 'lucide-react';
 
 const presets = [
@@ -90,14 +91,14 @@ export default function LandingPage() {
             ].map(({ cls, domain, label }) => (
               <div key={label} className={`absolute w-0 h-0 flex items-center justify-center ${cls}`} style={{ transformStyle: 'preserve-3d' }}>
                 <div className="w-12 h-12 rounded-full glass-card border border-white/10 shadow-2xl flex items-center justify-center p-2.5 transition-all hover:scale-125 hover:border-white/30 duration-300 pointer-events-auto cursor-pointer backdrop-blur-md group" style={{ transform: 'rotateY(10deg) rotateX(-55deg)' }} title={label}>
-                  <img src={`https://www.google.com/s2/favicons?sz=128&domain=${domain}`} className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" alt={label} />
+                  <Image src={`https://www.google.com/s2/favicons?sz=128&domain=${domain}`} width={48} height={48} unoptimized className="w-full h-full object-contain grayscale opacity-60 group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-300" alt={label} />
                 </div>
               </div>
             ))}
 
             <div className="absolute w-32 h-32 bg-primary/10 rounded-full flex items-center justify-center shadow-[0_0_60px_rgba(245,158,11,0.15)] animate-pulse-glow border border-primary/20 backdrop-blur-sm" style={{ transform: 'rotateY(10deg) rotateX(-55deg) translateZ(10px)' }}>
               <div className="w-20 h-20 rounded-full glass-card flex items-center justify-center p-3.5 border border-white/10 animate-float shadow-2xl backdrop-blur-xl">
-                <img src="/logo_transparent.png" className="w-full h-full object-contain opacity-90 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" alt="ClassOrbit Center" />
+                <Image src="/logo_transparent.png" width={80} height={80} className="w-full h-full object-contain opacity-90 drop-shadow-[0_0_8px_rgba(255,255,255,0.2)]" alt="ClassOrbit Center" />
               </div>
             </div>
           </div>
@@ -117,7 +118,7 @@ export default function LandingPage() {
             </h1>
 
             <p className="text-[18px] md:text-[20px] text-text-muted max-w-2xl mx-auto leading-relaxed mt-4">
-              ClassOrbit helps teachers craft optimized prompts effortlessly — then sends you straight to ChatGPT, Claude, Gamma, Canva, or any AI tool. <strong className="text-white font-medium">Zero prompt engineering required.</strong>
+              ClassOrbit helps teachers craft optimized prompts effortlessly, then sends you straight to ChatGPT, Claude, Gamma, Canva, or any AI tool. <strong className="text-white font-medium">Zero prompt engineering required.</strong>
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 w-full sm:w-auto">
@@ -136,15 +137,15 @@ export default function LandingPage() {
               </Link>
             </div>
 
-            {/* Social proof — waitlist count */}
+            {/* Social proof */}
             <div className="flex items-center gap-2 pt-2">
               <Users size={16} className="text-primary" />
               <span className="text-[14px] text-text-muted font-medium">
-                {waitlistCount !== null && waitlistCount > 0
-                  ? <><strong className="text-white">{waitlistCount.toLocaleString()}</strong> educators on the waitlist</>
-                  : 'Free to use · No credit card required'}
+                Free to use · No credit card required
               </span>
             </div>
+
+
           </AnimatedContainer>
 
           {/* Interactive Sandbox */}
@@ -176,7 +177,7 @@ export default function LandingPage() {
                     <span className="bg-purple-50/80 text-purple-700 font-bold px-3 py-1 rounded-md border-b-2 border-purple-500 mx-1 font-sans text-[20px] shadow-sm inline-block">{sandboxSubject}</span>{' '}
                     class. The primary learning objective is:{' '}
                     <span className="border-b-2 border-dashed border-[#888] font-bold px-3 py-1 text-[#111] bg-white rounded-t-md ml-1 font-sans text-[20px] shadow-sm inline-block mt-2 sm:mt-0">
-                      "{sandboxTopic.replace(/[🍎📐📜]/g, '').trim()}"
+                      &quot;{sandboxTopic.replace(/[🍎📐📜]/g, '').trim()}&quot;
                     </span>.
                   </div>
                   <div className="mt-16 pt-6 flex justify-end">
@@ -220,7 +221,7 @@ export default function LandingPage() {
                 Three Steps to <br className="hidden md:block" /> Better Teaching
               </h2>
               <p className="text-[18px] text-text-muted max-w-2xl mx-auto mt-4 leading-relaxed">
-                Your teaching ideas orbit seamlessly between AI platforms — we handle the prompt engineering so you don't have to.
+                Your teaching ideas orbit seamlessly between AI platforms. We handle the prompt engineering so you don&apos;t have to.
               </p>
             </AnimatedContainer>
 
@@ -230,7 +231,7 @@ export default function LandingPage() {
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-primary/20 transition-colors" />
                   <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner relative z-10 text-primary">✍️</div>
                   <h3 className="font-display text-[24px] font-bold mb-3 text-white relative z-10">Tell Us What You Need</h3>
-                  <p className="text-[16px] text-text-muted leading-relaxed relative z-10">Type freely or use our guided builder — describe your lesson plan, quiz, worksheet, or any teaching resource. No prompt skills needed.</p>
+                  <p className="text-[16px] text-text-muted leading-relaxed relative z-10">Type freely or use our guided builder. Describe your lesson plan, quiz, worksheet, or any teaching resource. No prompt skills needed.</p>
                 </div>
               </AnimatedContainer>
 
@@ -241,15 +242,9 @@ export default function LandingPage() {
                     <div className="flex-1">
                       <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner text-secondary-hover">⚡</div>
                       <h3 className="font-display text-[28px] font-bold mb-3 text-white">We Build Your Prompt</h3>
-                      <p className="text-[16px] text-text-muted leading-relaxed max-w-md">Our engine transforms your input into platform-optimized prompts — structured, formatted, and ready for each AI tool. No guesswork required.</p>
+                      <p className="text-[16px] text-text-muted leading-relaxed max-w-md">Our engine transforms your input into platform-optimized prompts: structured, formatted, and ready for each AI tool. No guesswork required.</p>
                     </div>
-                    <div className="w-full md:w-[280px] h-[180px] rounded-2xl border border-white/10 bg-white/5 flex flex-col justify-center p-6 gap-3 shadow-inner overflow-hidden relative">
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent" />
-                      <div className="w-3/4 h-3 rounded-full bg-white/10 animate-pulse" />
-                      <div className="w-full h-3 rounded-full bg-white/5" />
-                      <div className="w-5/6 h-3 rounded-full bg-white/5" />
-                      <div className="w-1/2 h-3 rounded-full bg-primary/20 mt-4" />
-                    </div>
+
                   </div>
                 </div>
               </AnimatedContainer>
@@ -269,7 +264,7 @@ export default function LandingPage() {
                     <div className="flex-1">
                       <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner text-pink-400">🚀</div>
                       <h3 className="font-display text-[28px] font-bold mb-3 text-white">Launch to Your AI Tool</h3>
-                      <p className="text-[16px] text-text-muted leading-relaxed">One click copies your prompt and opens ChatGPT, Claude, Gamma, Canva, or any supported platform. Start generating immediately — no more copy-pasting or formatting.</p>
+                      <p className="text-[16px] text-text-muted leading-relaxed">One click copies your prompt and opens ChatGPT, Claude, Gamma, Canva, or any supported platform. Start generating immediately, no more copy-pasting or formatting.</p>
                     </div>
                   </div>
                 </div>
@@ -311,32 +306,6 @@ export default function LandingPage() {
               Join educators already building smarter prompts and launching to their favorite AI platforms in seconds.
             </p>
 
-            {/* Waitlist form */}
-            {!user && waitlistStatus !== 'done' && (
-              <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row items-center gap-3 justify-center mb-6 relative z-10 max-w-md mx-auto">
-                <div className="relative flex-1 w-full">
-                  <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
-                  <input
-                    type="email"
-                    placeholder="your@school.edu"
-                    value={waitlistEmail}
-                    onChange={e => setWaitlistEmail(e.target.value)}
-                    className="w-full bg-surface border border-border rounded-full pl-10 pr-4 py-3.5 text-[15px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
-                  />
-                </div>
-                <button type="submit" disabled={waitlistStatus === 'loading'} className="shrink-0 bg-primary text-white px-6 py-3.5 rounded-full font-bold text-[15px] hover:bg-primary-hover transition-all shadow-glow flex items-center gap-2 disabled:opacity-60 whitespace-nowrap">
-                  {waitlistStatus === 'loading' ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
-                  Join Waitlist
-                </button>
-              </form>
-            )}
-
-            {waitlistStatus === 'done' && (
-              <div className="mb-6 inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-5 py-3 rounded-full font-semibold text-[15px] relative z-10">
-                ✓ You're on the list! We'll be in touch.
-              </div>
-            )}
-
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
               <Link href="/login?next=/builder" className="bg-primary text-white px-8 py-4 rounded-full text-body-md font-bold shadow-md hover:scale-[1.03] transition-all active:scale-98 shadow-glow">
                 Get Started Free
@@ -346,6 +315,45 @@ export default function LandingPage() {
               </Link>
             </div>
             <p className="text-[12px] text-text-muted font-bold mt-4 relative z-10">Free to use · Set up in under a minute · No credit card required</p>
+
+            {/* Schools & Districts early access */}
+            <div className="mt-10 pt-8 border-t border-white/10 relative z-10 max-w-md mx-auto">
+              <p className="text-[12px] font-bold text-primary uppercase tracking-[0.2em] mb-2">For Schools &amp; Districts</p>
+              <p className="text-[14px] text-text-muted mb-4 leading-relaxed">
+                Get early access to shared school workspaces, admin dashboards, and volume pricing for your faculty.
+              </p>
+
+              {!user && waitlistStatus !== 'done' && (
+                <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row items-center gap-3 justify-center">
+                  <div className="relative flex-1 w-full">
+                    <Mail size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
+                    <input
+                      type="email"
+                      placeholder="your@school.edu"
+                      value={waitlistEmail}
+                      onChange={e => setWaitlistEmail(e.target.value)}
+                      className="w-full bg-surface border border-border rounded-full pl-10 pr-4 py-3.5 text-[15px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+                    />
+                  </div>
+                  <button type="submit" disabled={waitlistStatus === 'loading'} className="shrink-0 bg-white/5 border border-white/10 text-white px-6 py-3.5 rounded-full font-bold text-[15px] hover:bg-white/10 transition-all flex items-center gap-2 disabled:opacity-60 whitespace-nowrap">
+                    {waitlistStatus === 'loading' ? <Loader2 size={16} className="animate-spin" /> : <ArrowRight size={16} />}
+                    Join Early Access
+                  </button>
+                </form>
+              )}
+
+              {waitlistStatus === 'done' && (
+                <div className="inline-flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 px-5 py-3 rounded-full font-semibold text-[15px]">
+                  ✓ You&apos;re on the list! We&apos;ll be in touch.
+                </div>
+              )}
+
+              {waitlistCount !== null && waitlistCount > 0 && (
+                <p className="text-[12px] text-text-subtle mt-3">
+                  Join <strong className="text-white">{waitlistCount.toLocaleString()}+</strong> educators and schools already on the list.
+                </p>
+              )}
+            </div>
           </AnimatedContainer>
         </section>
       </main>
@@ -356,7 +364,7 @@ export default function LandingPage() {
           <div className="flex flex-col md:flex-row justify-between items-start gap-8 mb-8">
             {/* Brand */}
             <div className="flex items-center gap-3">
-              <img src="/logo_transparent.png" alt="ClassOrbit Logo" className="w-8 h-8 object-contain" />
+              <Image src="/logo_transparent.png" alt="ClassOrbit Logo" width={32} height={32} className="w-8 h-8 object-contain" />
               <span className="text-2xl font-extrabold tracking-tight text-text-main">Class<span className="text-primary">Orbit</span></span>
             </div>
 
@@ -372,7 +380,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-t border-border pt-6">
-            <p className="text-label-sm text-text-muted font-bold">© 2026 ClassOrbit.co — The AI Prompt Studio for Educators.</p>
+            <p className="text-label-sm text-text-muted font-bold">© 2026 ClassOrbit.co · The AI Prompt Studio for Educators.</p>
             <p className="text-[12px] text-text-subtle">Made with ♥ for teachers everywhere.</p>
           </div>
         </div>

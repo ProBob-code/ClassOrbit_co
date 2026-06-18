@@ -1,6 +1,6 @@
 import toast from 'react-hot-toast';
 
-// Platforms that pre-fill the prompt directly in the URL — no paste needed
+// Platforms that pre-fill the prompt directly in the URL - no paste needed
 const URL_PRELOAD_MAP: Record<string, (prompt: string) => string> = {
   chatgpt: (p) => `https://chatgpt.com/?q=${encodeURIComponent(p.slice(0, 1800))}`,
   claude:  (p) => `https://claude.ai/new?q=${encodeURIComponent(p.slice(0, 1800))}`,
@@ -45,14 +45,14 @@ export async function launchTool(toolName: string, toolUrl: string, prompt: stri
       setTimeout(() => window.open(targetUrl, '_blank'), 300);
     } else {
       const targetUrl = SSO_URLS[key] || toolUrl;
-      toast((t) => {
+      toast(() => {
         const el = document.createElement('span');
-        el.innerHTML = `<span style="font-weight:700">Opening ${toolName}…</span><br/><span style="font-size:13px;color:#71717A">Prompt copied — press <kbd style="background:#f3f4f6;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px">Ctrl+V</kbd> or <kbd style="background:#f3f4f6;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px">⌘V</kbd> to paste it.</span>`;
+        el.innerHTML = `<span style="font-weight:700">Opening ${toolName}…</span><br/><span style="font-size:13px;color:#71717A">Prompt copied - press <kbd style="background:#f3f4f6;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px">Ctrl+V</kbd> or <kbd style="background:#f3f4f6;padding:1px 5px;border-radius:4px;font-family:monospace;font-size:11px">⌘V</kbd> to paste it.</span>`;
         return el as any;
       }, { duration: 6000, icon: '🚀' });
       setTimeout(() => window.open(targetUrl, '_blank'), 400);
     }
   } catch {
-    toast.error('Could not copy prompt — please copy it manually above.');
+    toast.error('Could not copy prompt - please copy it manually above.');
   }
 }

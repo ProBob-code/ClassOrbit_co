@@ -120,37 +120,6 @@ export default function CheckoutButton({ plan, label, className, onSuccess }: Pr
     rzp.open();
   };
 
-  const isDev = process.env.NODE_ENV === 'development';
-
-  const handleDevBypass = async (e: React.MouseEvent) => {
-    e.stopPropagation();
-    setLoading(true);
-    try {
-      const res = await fetch('/api/verify-payment', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          razorpay_order_id: `dev_order_${Math.random().toString(36).slice(2)}`,
-          razorpay_payment_id: `dev_pay_${Math.random().toString(36).slice(2)}`,
-          razorpay_signature: 'dev_bypass',
-          plan: planRef.current,
-        }),
-      });
-
-      if (res.ok) {
-        toast.success('🎉 Dev Bypass Success! Plan set to Pro.', { duration: 5000 });
-        onSuccess?.();
-        setTimeout(() => window.location.reload(), 1500);
-      } else {
-        toast.error('Dev bypass verification failed.');
-      }
-    } catch {
-      toast.error('Dev bypass verification failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   return (
     <div className="w-full space-y-2">
       <button
@@ -164,16 +133,6 @@ export default function CheckoutButton({ plan, label, className, onSuccess }: Pr
           <><Zap size={18} fill="currentColor" /> {label ?? 'Upgrade to Pro'}</>
         )}
       </button>
-      {isDev && (
-        <button
-          type="button"
-          onClick={handleDevBypass}
-          disabled={loading}
-          className="w-full py-2 rounded-lg font-semibold text-[12px] flex items-center justify-center gap-1.5 border border-dashed border-primary/40 text-primary/80 hover:bg-primary/5 transition-all cursor-pointer"
-        >
-          ⚡ Dev Bypass Payment (Success)
-        </button>
-      )}
     </div>
   );
 }

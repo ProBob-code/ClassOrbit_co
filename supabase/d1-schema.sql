@@ -85,3 +85,16 @@ CREATE TABLE IF NOT EXISTS prompt_usage (
   count INTEGER DEFAULT 0,
   PRIMARY KEY (user_id, month)
 );
+
+CREATE TABLE IF NOT EXISTS blogs (
+  id TEXT PRIMARY KEY,
+  title TEXT NOT NULL,
+  slug TEXT UNIQUE NOT NULL,
+  content TEXT NOT NULL,
+  excerpt TEXT,
+  author TEXT,
+  cover_image_url TEXT,
+  published INTEGER NOT NULL DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

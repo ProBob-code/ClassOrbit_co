@@ -12,7 +12,7 @@ const testimonials = [
     avatar: 'AD',
     color: 'bg-emerald-500',
     quote:
-      "I used to spend 20 minutes just writing a decent prompt for ChatGPT. ClassOrbit does it in seconds — and it actually knows what Grade 7 science needs. My lesson prep time has been cut in half.",
+      "I used to spend 20 minutes just writing a decent prompt for ChatGPT. ClassOrbit does it in seconds, and it actually knows what Grade 7 science needs. My lesson prep time has been cut in half.",
     stars: 5,
   },
   {
@@ -22,7 +22,7 @@ const testimonials = [
     avatar: 'RV',
     color: 'bg-blue-500',
     quote:
-      "The fact that it optimizes for each platform separately is what sold me. My Gamma prompt looks completely different from my ChatGPT one — and both are better than anything I'd write myself.",
+      "The fact that it optimizes for each platform separately is what sold me. My Gamma prompt looks completely different from my ChatGPT one, and both are better than anything I'd write myself.",
     stars: 5,
   },
   {
@@ -85,7 +85,7 @@ export default function Testimonials() {
               <StarRating count={t.stars} />
 
               <p className="text-[16px] text-text-muted leading-relaxed italic relative z-10">
-                "{t.quote}"
+                &quot;{t.quote}&quot;
               </p>
 
               <div className="flex items-center gap-3 pt-2 border-t border-white/5 relative z-10">

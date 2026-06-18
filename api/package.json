@@ -1,0 +1,20 @@
+{
+  "name": "classorbit-api",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev --persist-to=../.wrangler/state",
+    "deploy": "wrangler deploy",
+    "cf-typegen": "wrangler types"
+  },
+  "dependencies": {
+    "@supabase/ssr": "catalog:",
+    "@supabase/supabase-js": "catalog:",
+    "hono": "^4.6.14"
+  },
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20260609.1",
+    "typescript": "^5",
+    "wrangler": "^4.95.0"
+  }
+}

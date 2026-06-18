@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
+import Image from 'next/image';
 import { GraduationCap, BookOpen, PenTool, FlaskConical, Calculator } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense } from 'react';
@@ -73,7 +74,7 @@ function LoginContent() {
             
             {/* Core Circular Logo Badge */}
             <div className="w-32 h-32 rounded-full drop-shadow-[0_0_15px_rgba(245,158,11,0.5)] relative z-10 flex items-center justify-center bg-surface/80 backdrop-blur border border-white/10 p-0 overflow-hidden">
-              <img src="/logo_transparent.png" alt="ClassOrbit Logo" className="w-full h-full object-cover rounded-full" />
+              <Image src="/logo_transparent.png" alt="ClassOrbit Logo" width={128} height={128} className="w-full h-full object-cover rounded-full" />
             </div>
           </div>
 

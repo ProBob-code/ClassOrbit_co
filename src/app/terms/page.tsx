@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import Topbar from '@/components/layout/Topbar';
 
 export default function TermsPage() {
@@ -34,7 +35,7 @@ export default function TermsPage() {
             <section className="space-y-3">
               <h2 className="font-display text-headline-md font-bold text-text-main">1. Acceptance of Terms</h2>
               <p className="text-body-md text-text-muted leading-relaxed">
-                By accessing or using ClassOrbit.co (the "Service", "we", "us", or "our"), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not access or use the Service.
+                By accessing or using ClassOrbit.co (the &quot;Service&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;), you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not access or use the Service.
               </p>
             </section>
 
@@ -69,7 +70,7 @@ export default function TermsPage() {
             <section className="space-y-3">
               <h2 className="font-display text-headline-md font-bold text-text-main">6. Disclaimers and Limitation of Liability</h2>
               <p className="text-body-md text-text-muted leading-relaxed">
-                The Service is provided "as is" and "as available". We do not guarantee uninterrupted, secure, or error-free operations. To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, or consequential damages resulting from your use of the prompt engine or navigation resources.
+                The Service is provided &quot;as is&quot; and &quot;as available&quot;. We do not guarantee uninterrupted, secure, or error-free operations. To the maximum extent permitted by law, we shall not be liable for any indirect, incidental, or consequential damages resulting from your use of the prompt engine or navigation resources.
               </p>
             </section>
 
@@ -101,7 +102,7 @@ export default function TermsPage() {
       <footer className="w-full py-12 px-margin-mobile md:px-margin-page bg-surface border-t border-border text-left relative z-10">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-3">
-            <img src="/logo_transparent.png" alt="ClassOrbit Logo" className="w-8 h-8 object-contain" />
+            <Image src="/logo_transparent.png" alt="ClassOrbit Logo" width={32} height={32} className="w-8 h-8 object-contain" />
             <span className="text-2xl font-extrabold tracking-tight text-text-main">
               Class<span className="text-primary">Orbit</span>
             </span>

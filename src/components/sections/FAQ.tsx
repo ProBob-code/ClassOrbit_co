@@ -7,23 +7,23 @@ import { ChevronDown } from 'lucide-react';
 const faqs = [
   {
     q: 'Is ClassOrbit free to use?',
-    a: "Yes — the Free plan gives you 25 prompts per month, 5 workspace folders with 25 saves each, up to 10 document uploads, 5 content types, and ZIP export. No credit card needed. Upgrade to Pro at ₹199/month for unlimited everything.",
+    a: "Yes. The Free plan gives you 25 prompts per month, 5 workspace folders with 25 saves each, up to 10 document uploads, 5 content types, and ZIP export. No credit card needed. Upgrade to Pro at ₹199/month for unlimited everything.",
   },
   {
     q: 'Do I need to know how to write AI prompts?',
-    a: "Not at all — that's the whole point. The Guided Builder asks simple questions (grade, subject, topic, difficulty) and builds a fully optimized, platform-specific prompt for you. Even first-time AI users get professional-quality output immediately.",
+    a: "Not at all, that's the whole point. The Guided Builder asks simple questions (grade, subject, topic, difficulty) and builds a fully optimized, platform-specific prompt for you. Even first-time AI users get professional-quality output immediately.",
   },
   {
     q: 'Which AI tools does ClassOrbit support?',
-    a: "We support ChatGPT, Claude, Canva, Gamma, Google NotebookLM, Suno (AI music), ElevenLabs (AI voice), and Ideogram (AI images) — 8 platforms, each getting a uniquely tailored prompt. You can also add any custom AI tool to your launchpad with just a URL.",
+    a: "We support ChatGPT, Claude, Canva, Gamma, Google NotebookLM, Suno (AI music), ElevenLabs (AI voice), and Ideogram (AI images): 8 platforms, each getting a uniquely tailored prompt. You can also add any custom AI tool to your launchpad with just a URL.",
   },
   {
-    q: 'Can I attach my own documents — like a syllabus or textbook?',
+    q: 'Can I attach my own documents, like a syllabus or textbook?',
     a: "Yes. Free plan users can upload up to 10 documents per month (PDF, Word .docx, or plain text). Pro users have unlimited uploads. ClassOrbit reads the file and uses it as reference material so every prompt is grounded in your exact curriculum.",
   },
   {
     q: 'Does my data sync across devices?',
-    a: "Yes. Your workspace, saved prompts, and custom tools are stored in Cloudflare D1 and sync instantly across every device you sign in on. We use Google Sign-In — no separate password to manage.",
+    a: "Yes. Your workspace, saved prompts, and custom tools are stored in Cloudflare D1 and sync instantly across every device you sign in on. We use Google Sign-In, no separate password to manage.",
   },
   {
     q: "What's the difference between Free and Pro?",

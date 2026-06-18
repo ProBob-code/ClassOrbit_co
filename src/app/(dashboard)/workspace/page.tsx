@@ -6,6 +6,7 @@ import Badge from '@/components/ui/Badge';
 import { exportLessonPackage } from '@/lib/export/zip-generator';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   FolderPlus, FilePlus, Search, Archive, Eye, Trash2, X, Copy, Package,
   FolderOpen, FileText, LayoutTemplate, Image as ImageIcon, File, Calendar, Sparkles, Rocket, Edit2
@@ -117,7 +118,7 @@ export default function WorkspacePage() {
       if ((data.folders ?? []).length > 0) setNewFileFolder(data.folders[0].id);
       setUseLocal(false);
     } catch {
-      // D1 unavailable — fall back to localStorage (local dev)
+      // D1 unavailable - fall back to localStorage (local dev)
       setUseLocal(true);
       const lf = localStorage.getItem('classorbit_folders');
       const lfi = localStorage.getItem('classorbit_files');
@@ -194,7 +195,7 @@ export default function WorkspacePage() {
     } catch { toast.error('Failed to create file.'); }
   };
 
-  const handleDeleteFile = async (id: string, name: string, folder_id: string) => {
+  const handleDeleteFile = async (id: string, name: string) => {
     if (!confirm(`Delete "${name}"?`)) return;
     try {
       if (useLocal) {
@@ -377,7 +378,7 @@ export default function WorkspacePage() {
         </div>
         <div className="flex flex-wrap gap-4">
           {folders.length === 0 && (
-            <div className="text-text-muted text-sm py-4">No folders yet — create one to get started.</div>
+            <div className="text-text-muted text-sm py-4">No folders yet - create one to get started.</div>
           )}
           {folders.map((folder) => {
             const isSelected = selectedFolder === folder.id;
@@ -470,7 +471,7 @@ export default function WorkspacePage() {
                       <button onClick={() => setViewingFile(file)} className="w-8 h-8 rounded-lg bg-surface border border-border hover:border-primary flex items-center justify-center text-text-muted hover:text-primary transition-colors" title="View">
                         <Eye size={16} />
                       </button>
-                      <button onClick={() => handleDeleteFile(file.id, file.name, file.folder_id)} className="w-8 h-8 rounded-lg bg-surface border border-border hover:border-error hover:bg-error/10 flex items-center justify-center text-text-muted hover:text-error transition-colors" title="Delete">
+                      <button onClick={() => handleDeleteFile(file.id, file.name)} className="w-8 h-8 rounded-lg bg-surface border border-border hover:border-error hover:bg-error/10 flex items-center justify-center text-text-muted hover:text-error transition-colors" title="Delete">
                         <Trash2 size={16} />
                       </button>
                     </div>
@@ -593,7 +594,7 @@ export default function WorkspacePage() {
                     {allAvailableTools.map((tool) => (
                       <button key={tool.id} onClick={() => launchTool(tool.tool_name, tool.tool_url, viewingFile.content || '')} className="flex items-center gap-2.5 p-2 bg-background border border-border hover:border-primary rounded-xl text-left transition-all active:scale-95 text-text-main group cursor-pointer">
                         <div className="w-8 h-8 rounded-lg bg-white border border-border shadow-sm flex items-center justify-center p-1 shrink-0">
-                          <img src={tool.tool_logo || `https://www.google.com/s2/favicons?sz=128&domain=${tool.tool_url}`} alt={tool.tool_name} className="w-full h-full object-contain" onError={(e) => { (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=128&domain=google.com'; }} />
+                          <Image src={tool.tool_logo || `https://www.google.com/s2/favicons?sz=128&domain=${tool.tool_url}`} alt={tool.tool_name} width={32} height={32} unoptimized className="w-full h-full object-contain" />
                         </div>
                         <span className="text-[12px] font-bold truncate group-hover:text-primary transition-colors">{tool.tool_name}</span>
                       </button>

@@ -1,0 +1,17 @@
+name = "classorbit-api"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+routes = [
+  { pattern = "classorbit.co/api/*", zone_name = "classorbit.co" },
+  { pattern = "www.classorbit.co/api/*", zone_name = "classorbit.co" }
+]
+
+[vars]
+ADMIN_EMAILS = "probob.in.git@gmail.com,bobinjacob46@gmail.com"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "classorbit-db"
+database_id = "f2885e0a-53d0-4a1f-ad38-b50cd89b4948"

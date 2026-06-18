@@ -2,16 +2,18 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import toast from 'react-hot-toast';
 import {
-  Loader2, LogOut, Users, FileText, Zap, Wrench,
+  Loader2, LogOut, Users, FileText, Wrench,
   TrendingUp, RefreshCw, Plus, Trash2, Edit2, ToggleLeft, ToggleRight,
-  ExternalLink, X, Rocket, Mail, Clock, ChevronDown, BarChart3,
+  ExternalLink, X, Rocket, Mail, Clock, BarChart3,
   UserCheck, Crown, ListOrdered, Search, ShieldAlert, CheckCircle2,
-  PenTool, Presentation, Puzzle, HelpCircle, Star, MessageSquare, LifeBuoy,
-  Bot, User, Send, ArrowLeft
+  Star, MessageSquare, LifeBuoy,
+  Bot, User, Send, ArrowLeft, BookOpen, Eye, Pencil
 } from 'lucide-react';
+import BlogContent from '@/components/blog/BlogContent';
 
 
 /* ─── Types ─── */
@@ -86,7 +88,20 @@ function emptyForm(): Partial<AdminTool> {
   };
 }
 
-type Tab = 'overview' | 'tools' | 'activity' | 'waitlist' | 'feedback' | 'users' | 'tickets';
+type Tab = 'overview' | 'tools' | 'activity' | 'waitlist' | 'feedback' | 'users' | 'tickets' | 'blogs';
+
+interface Blog {
+  id: string;
+  title: string;
+  slug: string;
+  content: string;
+  excerpt: string;
+  author: string;
+  cover_image_url: string | null;
+  published: number;
+  created_at: string;
+  updated_at: string;
+}
 
 interface AdminUser {
   user_id: string;
@@ -149,6 +164,15 @@ export default function AdminDashboard() {
   const [form, setForm] = useState<Partial<AdminTool>>(emptyForm());
   const [saving, setSaving] = useState(false);
 
+  // Blogs state
+  const [blogs, setBlogs] = useState<Blog[]>([]);
+  const [blogsLoading, setBlogsLoading] = useState(false);
+  const [showBlogModal, setShowBlogModal] = useState(false);
+  const [editBlogId, setEditBlogId] = useState<string | null>(null);
+  const [blogForm, setBlogForm] = useState<Partial<Blog>>({});
+  const [savingBlog, setSavingBlog] = useState(false);
+  const [blogModalTab, setBlogModalTab] = useState<'edit' | 'preview'>('edit');
+
   // Search & Filter state for tools registry
   const [searchQuery, setSearchQuery] = useState('');
   const [phaseFilter, setPhaseFilter] = useState('all');
@@ -157,7 +181,6 @@ export default function AdminDashboard() {
   // Tickets state
   const [tickets, setTickets] = useState<Ticket[]>([]);
   const [ticketsLoading, setTicketsLoading] = useState(false);
-  const [ticketSolutions, setTicketSolutions] = useState<Record<string, string>>({});
   const [resolvingId, setResolvingId] = useState<string | null>(null);
   const [ticketFilter, setTicketFilter] = useState<'all' | 'open' | 'resolved'>('all');
   const [ticketSearchQuery, setTicketSearchQuery] = useState('');
@@ -233,14 +256,70 @@ export default function AdminDashboard() {
     finally { setTicketsLoading(false); }
   }, []);
 
+  /* ─── Load blogs ─── */
+  const loadBlogs = useCallback(async () => {
+    setBlogsLoading(true);
+    try {
+      const res = await fetch('/api/admin/blogs');
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        setBlogs(data.blogs ?? []);
+      }
+    } catch { toast.error('Failed to load blogs'); }
+    finally { setBlogsLoading(false); }
+  }, []);
+
   useEffect(() => {
     if (authed) {
       loadStats();
       loadTools();
       loadUsers();
       loadTickets();
+      loadBlogs();
     }
-  }, [authed, loadStats, loadTools, loadUsers, loadTickets]);
+  }, [authed, loadStats, loadTools, loadUsers, loadTickets, loadBlogs]);
+
+  /* ─── Blog CRUD ─── */
+  const openAddBlog = () => { setEditBlogId(null); setBlogForm({ title: '', slug: '', content: '', excerpt: '', author: '', published: 0 }); setBlogModalTab('edit'); setShowBlogModal(true); };
+  const openEditBlog = (b: Blog) => {
+    setEditBlogId(b.id);
+    setBlogForm({
+      title: b.title, slug: b.slug, content: b.content,
+      excerpt: b.excerpt, author: b.author, published: b.published,
+      cover_image_url: b.cover_image_url,
+    });
+    setBlogModalTab('edit');
+    setShowBlogModal(true);
+  };
+
+  const handleSaveBlog = async () => {
+    if (!blogForm.title?.trim() || !blogForm.slug?.trim() || !blogForm.content?.trim()) {
+      toast.error('Title, slug, and content are required'); return;
+    }
+    setSavingBlog(true);
+    try {
+      const url = editBlogId ? `/api/admin/blogs/${editBlogId}` : '/api/admin/blogs';
+      const method = editBlogId ? 'PATCH' : 'POST';
+      const res = await fetch(url, {
+        method, headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(blogForm),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(editBlogId ? 'Blog updated!' : 'Blog added!');
+      setShowBlogModal(false);
+      await loadBlogs();
+    } catch { toast.error('Failed to save blog. Ensure slug is unique.'); }
+    finally { setSavingBlog(false); }
+  };
+
+  const handleDeleteBlog = async (id: string, title: string) => {
+    if (!confirm(`Delete blog "${title}" permanently?`)) return;
+    try {
+      await fetch(`/api/admin/blogs/${id}`, { method: 'DELETE' });
+      toast.success(`"${title}" deleted.`);
+      await loadBlogs();
+    } catch { toast.error('Failed to delete blog.'); }
+  };
 
   /* ─── Tool CRUD ─── */
   const openAdd = () => { setEditId(null); setForm(emptyForm()); setShowModal(true); };
@@ -297,42 +376,6 @@ export default function AdminDashboard() {
       toast.success(`"${name}" deleted.`);
       await loadStats();
     } catch { toast.error('Failed to delete.'); }
-  };
-
-  const handleResolveTicket = async (id: string) => {
-    const solution = ticketSolutions[id];
-    if (!solution || !solution.trim()) {
-      toast.error('Please type a solution first');
-      return;
-    }
-    setResolvingId(id);
-    try {
-      const res = await fetch(`/api/support/tickets/${id}/resolve`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ solution })
-      });
-      if (res.ok) {
-        toast.success('Ticket resolved and solution saved!');
-        setTicketSolutions(prev => {
-          const updated = { ...prev };
-          delete updated[id];
-          return updated;
-        });
-        if (activeChat?.id === id) {
-          closeAdminChat();
-        }
-        await loadTickets();
-        await loadStats();
-      } else {
-        const err = (await res.json()) as any;
-        toast.error(err.error || 'Failed to resolve ticket');
-      }
-    } catch {
-      toast.error('An error occurred');
-    } finally {
-      setResolvingId(null);
-    }
   };
 
   /* ─── Live Chat Handlers ─── */
@@ -548,7 +591,7 @@ export default function AdminDashboard() {
     try {
       const parsedUrl = new URL(url);
       return `https://www.google.com/s2/favicons?sz=128&domain=${parsedUrl.hostname}`;
-    } catch (e) {
+    } catch {
       return `https://www.google.com/s2/favicons?sz=128&domain=${url}`;
     }
   };
@@ -575,6 +618,7 @@ export default function AdminDashboard() {
       ) : null 
     },
     { id: 'feedback', label: 'Feedback Reviews', icon: <MessageSquare size={16} /> },
+    { id: 'blogs', label: 'Blogs (SEO)', icon: <BookOpen size={16} /> },
     { id: 'activity', label: 'Recent Activity', icon: <Clock size={16} /> },
     { id: 'waitlist', label: 'Waitlist Registry', icon: <Mail size={16} /> },
   ];
@@ -605,7 +649,7 @@ export default function AdminDashboard() {
           <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="relative w-10 h-10 rounded-full bg-surface border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-sm shadow-primary/20">
-                <img src="/logo_transparent.png" alt="ClassOrbit Logo" className="w-full h-full object-contain" />
+                <Image src="/logo_transparent.png" alt="ClassOrbit Logo" width={40} height={40} className="w-full h-full object-contain" />
               </div>
               <div>
                 <h1 className="text-[16px] font-bold text-text-main leading-tight flex items-center gap-1.5 font-display">
@@ -704,11 +748,13 @@ export default function AdminDashboard() {
                           className="glass-card rounded-2xl p-4 flex flex-col items-center text-center hover:border-primary/40 transition-all cursor-pointer relative group"
                         >
                           <div className="w-12 h-12 rounded-xl bg-white border border-border flex items-center justify-center p-2 mb-3 shadow-sm shrink-0 overflow-hidden relative group-hover:scale-105 transition-transform duration-200">
-                            <img
+                            <Image
                               src={getToolLogoUrl(tool.tool_url, tool.tool_logo)}
                               alt={tool.tool_name}
+                              width={48}
+                              height={48}
+                              unoptimized
                               className="w-full h-full object-contain"
-                              onError={(e) => { (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=128&domain=google.com'; }}
                             />
                           </div>
                           <p className="text-[13px] font-bold text-text-main truncate w-full mb-1">{tool.tool_name}</p>
@@ -756,11 +802,13 @@ export default function AdminDashboard() {
                             #{i + 1}
                           </div>
                           <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center p-1.5 shrink-0 overflow-hidden">
-                            <img
+                            <Image
                               src={`https://www.google.com/s2/favicons?sz=128&domain=${u.tool_name.toLowerCase().includes('http') ? u.tool_name : u.tool_name + '.com'}`}
                               alt={u.tool_name}
+                              width={40}
+                              height={40}
+                              unoptimized
                               className="w-full h-full object-contain"
-                              onError={(e) => { (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=128&domain=google.com'; }}
                             />
                           </div>
                           <div className="flex-1 min-w-0">
@@ -938,13 +986,13 @@ export default function AdminDashboard() {
                         <div className="flex-grow">
                           <div className="flex items-start justify-between mb-4">
                             <div className="w-12 h-12 rounded-xl bg-white border border-border shadow-sm overflow-hidden flex items-center justify-center p-2 shrink-0">
-                              <img
+                              <Image
                                 src={getToolLogoUrl(tool.tool_url, tool.tool_logo)}
                                 alt={tool.tool_name}
+                                width={48}
+                                height={48}
+                                unoptimized
                                 className="w-full h-full object-contain"
-                                onError={(e) => {
-                                  (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=128&domain=google.com';
-                                }}
                               />
                             </div>
 
@@ -1073,11 +1121,13 @@ export default function AdminDashboard() {
                               <td className="px-6 py-4">
                                 <div className="flex items-center gap-3">
                                   <div className="w-8 h-8 rounded-lg bg-white border border-border flex items-center justify-center p-1 shrink-0 overflow-hidden">
-                                    <img
+                                    <Image
                                       src={`https://www.google.com/s2/favicons?sz=128&domain=${c.tool_url}`}
                                       alt={c.tool_name}
+                                      width={32}
+                                      height={32}
+                                      unoptimized
                                       className="w-full h-full object-contain"
-                                      onError={(e) => { (e.target as HTMLImageElement).src = 'https://www.google.com/s2/favicons?sz=128&domain=google.com'; }}
                                     />
                                   </div>
                                   <div>
@@ -1356,7 +1406,7 @@ export default function AdminDashboard() {
                                       toast.success(`User ${!u.is_blocked ? 'blocked' : 'unblocked'}`);
                                       loadUsers();
                                     }
-                                  } catch (e) {
+                                  } catch {
                                     toast.error('Failed to update block status');
                                   }
                                 }}
@@ -1461,7 +1511,7 @@ export default function AdminDashboard() {
                                 {statusLabel}
                               </span>
                             </div>
-                            <p className="text-[11.5px] text-text-muted italic line-clamp-2">"{ticket.message}"</p>
+                            <p className="text-[11.5px] text-text-muted italic line-clamp-2">&quot;{ticket.message}&quot;</p>
                             <div className="flex items-center justify-between mt-3">
                               <span className="text-[10px] text-text-subtle">{new Date(ticket.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' })}</span>
                               <div className="flex items-center gap-2">
@@ -1683,6 +1733,66 @@ export default function AdminDashboard() {
               )}
             </div>
           )}
+
+          {/* ── BLOGS REGISTRY ── */}
+          {activeTab === 'blogs' && (
+            <div className="space-y-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-[20px] font-bold text-text-main font-display">Blogs Registry</h2>
+                  <p className="text-[13px] text-text-muted mt-1">Manage SEO blogs and articles.</p>
+                </div>
+                <button
+                  onClick={openAddBlog}
+                  className="bg-primary hover:bg-primary-hover text-white px-4 py-2 rounded-xl text-[13px] font-bold shadow-glow flex items-center gap-2 transition-colors cursor-pointer"
+                >
+                  <Plus size={16} /> Add Blog
+                </button>
+              </div>
+
+              {blogsLoading ? (
+                <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-primary" /></div>
+              ) : blogs.length ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {blogs.map(b => (
+                    <div key={b.id} className="glass-panel border border-border rounded-3xl p-6 relative overflow-hidden shadow-soft hover:border-primary/30 transition-all flex flex-col">
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="font-bold text-[16px] text-text-main line-clamp-2">{b.title}</h3>
+                          <p className="text-[12px] text-text-subtle mt-1 flex items-center gap-1.5 font-mono">
+                            /blogs/{b.slug}
+                          </p>
+                        </div>
+                      </div>
+                      <p className="text-[13px] text-text-muted line-clamp-3 mb-6 flex-1">
+                        {b.excerpt || b.content.substring(0, 100) + '...'}
+                      </p>
+                      <div className="flex items-center justify-between border-t border-border pt-4">
+                        <span className={`text-[10px] font-bold px-2 py-1 rounded-full uppercase tracking-wider ${
+                          b.published ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                        }`}>
+                          {b.published ? 'Published' : 'Draft'}
+                        </span>
+                        <div className="flex gap-2">
+                          <button onClick={() => openEditBlog(b)} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-text-main transition-colors cursor-pointer">
+                            <Edit2 size={14} />
+                          </button>
+                          <button onClick={() => handleDeleteBlog(b.id, b.title)} className="w-8 h-8 rounded-lg bg-red-500/10 hover:bg-red-500/20 flex items-center justify-center text-red-400 transition-colors cursor-pointer">
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-20 bg-surface/30 border border-border rounded-3xl">
+                  <BookOpen size={32} className="text-text-subtle mx-auto mb-3" />
+                  <p className="text-text-muted text-[14px]">No blogs added yet.</p>
+                </div>
+              )}
+            </div>
+          )}
         </main>
       </div>
 
@@ -1810,6 +1920,132 @@ export default function AdminDashboard() {
                 >
                   {saving && <Loader2 size={16} className="animate-spin" />}
                   {editId ? 'Save Configurations' : 'Register Integration'}
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── Add/Edit Blog Modal ── */}
+      <AnimatePresence>
+        {showBlogModal && (
+          <div className="fixed inset-0 bg-[#06040F]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-surface border border-border rounded-[28px] w-full max-w-[800px] p-7 md:p-8 shadow-2xl relative my-8 text-left"
+            >
+              <div className="flex justify-between items-center mb-6">
+                <h3 className="font-display text-[20px] font-bold text-text-main flex items-center gap-2">
+                  <BookOpen size={20} className="text-primary" />
+                  {editBlogId ? 'Edit Blog' : 'Create New Blog'}
+                </h3>
+                <button onClick={() => setShowBlogModal(false)} className="text-text-subtle hover:text-text-main transition-colors cursor-pointer p-1 rounded-lg hover:bg-white/[0.04]">
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* Edit / Preview tabs */}
+              <div className="flex gap-1 bg-background/60 border border-border rounded-xl p-1 w-fit mb-5">
+                <button
+                  onClick={() => setBlogModalTab('edit')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                    blogModalTab === 'edit' ? 'bg-primary text-white shadow-glow' : 'text-text-muted hover:text-text-main'
+                  }`}
+                >
+                  <Pencil size={14} /> Edit
+                </button>
+                <button
+                  onClick={() => setBlogModalTab('preview')}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                    blogModalTab === 'preview' ? 'bg-primary text-white shadow-glow' : 'text-text-muted hover:text-text-main'
+                  }`}
+                >
+                  <Eye size={14} /> Preview
+                </button>
+              </div>
+
+              {blogModalTab === 'preview' ? (
+                <div className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                  {!blogForm.title?.trim() && !blogForm.content?.trim() ? (
+                    <div className="text-center py-20 text-text-muted text-[13px] border border-dashed border-border rounded-2xl">
+                      Nothing to preview yet, add a title and content in the Edit tab.
+                    </div>
+                  ) : (
+                    <div className="bg-mesh-gradient rounded-2xl p-6 md:p-8">
+                      <div className="mb-6">
+                        <span className="text-[12px] text-text-subtle">
+                          {new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                          {blogForm.author ? ` · ${blogForm.author}` : ''}
+                        </span>
+                        <h1 className="font-display text-[28px] md:text-[36px] font-extrabold text-white leading-tight mt-2">
+                          {blogForm.title || 'Untitled Post'}
+                        </h1>
+                      </div>
+                      <BlogContent content={blogForm.content ?? ''} />
+                    </div>
+                  )}
+                </div>
+              ) : (
+              <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-2">Blog Title *</label>
+                    <input value={blogForm.title ?? ''} onChange={e => setBlogForm(f => ({ ...f, title: e.target.value, slug: editBlogId ? f.slug : e.target.value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)+/g, '') }))} placeholder="e.g. 5 AI Prompts for Teachers" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[14px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-2">URL Slug *</label>
+                    <input value={blogForm.slug ?? ''} onChange={e => setBlogForm(f => ({ ...f, slug: e.target.value }))} placeholder="e.g. 5-ai-prompts" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[14px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-2">Excerpt (Short Summary)</label>
+                  <textarea value={blogForm.excerpt ?? ''} onChange={e => setBlogForm(f => ({ ...f, excerpt: e.target.value }))} placeholder="Brief description for SEO and preview cards..." rows={2} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[14px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all resize-none" />
+                </div>
+
+                <div>
+                  <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-2">Content (HTML/Markdown) *</label>
+                  <textarea value={blogForm.content ?? ''} onChange={e => setBlogForm(f => ({ ...f, content: e.target.value }))} placeholder="Write your blog content here..." rows={12} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[14px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all resize-y font-mono" />
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-2">Author Name</label>
+                    <input value={blogForm.author ?? ''} onChange={e => setBlogForm(f => ({ ...f, author: e.target.value }))} placeholder="e.g. ClassOrbit Team" className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[14px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" />
+                  </div>
+                  <div className="flex items-end">
+                    <label className="flex items-center gap-3 cursor-pointer group mb-3">
+                      <div
+                        onClick={() => setBlogForm(f => ({ ...f, published: f.published ? 0 : 1 }))}
+                        className={`w-11 h-6 rounded-full transition-all relative shrink-0 ${
+                          blogForm.published ? 'bg-primary shadow-glow' : 'bg-background border border-border'
+                        }`}
+                      >
+                        <div className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white shadow transition-all ${
+                          blogForm.published ? 'left-5.5' : 'left-0.5'
+                        }`} />
+                      </div>
+                      <span className="text-[13px] font-bold text-text-main select-none">Publish to Website</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+              )}
+
+              <div className="mt-8 flex justify-end gap-3 border-t border-border pt-5">
+                <button onClick={() => setShowBlogModal(false)} className="px-5 py-2.5 rounded-xl font-bold text-[13px] text-text-muted hover:bg-white/[0.04] transition-colors cursor-pointer">
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleSaveBlog} 
+                  disabled={savingBlog} 
+                  className="bg-primary hover:bg-primary-hover text-white px-6 py-2.5 rounded-xl font-bold text-[13px] transition-colors shadow-glow flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {savingBlog && <Loader2 size={16} className="animate-spin" />}
+                  {editBlogId ? 'Save Blog' : 'Create Blog'}
                 </button>
               </div>
             </motion.div>

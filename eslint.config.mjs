@@ -12,6 +12,12 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Vendored/minified third-party scripts:
+    "public/pdf.min.js",
+    "public/pdf.worker.min.js",
+    // Wrangler build caches (root and api/ workspace):
+    ".wrangler/**",
+    "**/.wrangler/**",
   ]),
 ]);
 

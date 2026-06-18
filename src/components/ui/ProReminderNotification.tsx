@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, CheckCircle2, Zap } from 'lucide-react';
+import Image from 'next/image';
 import CheckoutButton from './CheckoutButton';
 
 const STORAGE_KEY = 'classorbit_last_pro_reminder';
@@ -88,7 +89,7 @@ export default function ProReminderNotification() {
               
               {/* Core Circular Logo Badge */}
               <div className="w-24 h-24 rounded-full drop-shadow-[0_0_12px_rgba(245,158,11,0.4)] relative z-10 flex items-center justify-center bg-background border border-white/10 p-0 overflow-hidden">
-                <img src="/logo_transparent.png" alt="ClassOrbit Logo" className="w-full h-full object-cover rounded-full" />
+                <Image src="/logo_transparent.png" alt="ClassOrbit Logo" width={96} height={96} className="w-full h-full object-cover rounded-full" />
               </div>
             </div>
 
@@ -119,7 +120,7 @@ export default function ProReminderNotification() {
             <div className="space-y-3">
               <CheckoutButton 
                 plan="pro_monthly" 
-                label="Upgrade to Pro — ₹199/mo" 
+                label="Upgrade to Pro - ₹199/mo" 
                 className="w-full py-4 rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 bg-primary hover:bg-primary-hover text-white transition-all active:scale-[0.98] shadow-glow cursor-pointer"
                 onSuccess={handleDismiss} 
               />

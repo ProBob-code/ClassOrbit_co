@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -33,16 +34,18 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] z-40 bg-surface border-r border-border hidden md:flex flex-col shadow-soft overflow-hidden">
 
-      {/* Logo — compact */}
+      {/* Logo - compact */}
       <div className="flex justify-center px-6 pt-5 pb-4 border-b border-border shrink-0">
-        <img
+        <Image
           src="/logo_transparent.png"
           alt="ClassOrbit Logo"
+          width={96}
+          height={96}
           className="w-24 h-auto object-contain drop-shadow-[0_0_10px_rgba(245,158,11,0.4)]"
         />
       </div>
 
-      {/* Nav — scrollable middle, takes all available space */}
+      {/* Nav - scrollable middle, takes all available space */}
       <nav className="flex flex-col gap-1.5 flex-1 overflow-y-auto custom-scrollbar px-4 py-4 text-left">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
@@ -71,7 +74,7 @@ export default function Sidebar() {
         })}
 
 
-        {/* Upgrade link — inside nav, visible for free users */}
+        {/* Upgrade link - inside nav, visible for free users */}
         {!plan.is_pro && (
           <Link
             href="/upgrade"
@@ -98,7 +101,7 @@ export default function Sidebar() {
         )}
       </nav>
 
-      {/* Bottom section — always visible, fixed height */}
+      {/* Bottom section - always visible, fixed height */}
       <div className="shrink-0 px-4 pb-4 pt-3 border-t border-border flex flex-col gap-1">
 
         {/* New Prompt button */}
@@ -110,18 +113,20 @@ export default function Sidebar() {
           New Prompt
         </Link>
 
-        {/* User profile card — always visible, always clickable */}
+        {/* User profile card - always visible, always clickable */}
         {!loading && profile && (
           <Link
             href="/profile"
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-background transition-all group border border-transparent hover:border-border"
           >
             {profile.avatar_url ? (
-              <img
+              <Image
                 src={profile.avatar_url}
                 alt={profile.name || 'User'}
+                width={32}
+                height={32}
+                unoptimized
                 className="w-8 h-8 rounded-full border-2 border-primary/30 object-cover group-hover:border-primary transition-colors shrink-0"
-                referrerPolicy="no-referrer"
               />
             ) : (
               <div className="w-8 h-8 rounded-full bg-primary/20 border-2 border-primary/30 flex items-center justify-center text-primary font-bold text-sm shrink-0">

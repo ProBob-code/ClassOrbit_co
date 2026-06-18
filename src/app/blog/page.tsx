@@ -1,43 +1,36 @@
 import type { Metadata } from 'next';
 import Link from 'next/link';
 import Topbar from '@/components/layout/Topbar';
+import { getApiBaseUrl } from '@/lib/api-base';
 
 export const metadata: Metadata = {
   title: 'Blog',
-  description: 'Practical AI guides and prompt strategies for educators — from the ClassOrbit team.',
+  description: 'Practical AI guides and prompt strategies for educators, from the ClassOrbit team.',
 };
 
-const posts = [
-  {
-    slug: '10-ai-prompts-every-teacher-should-know',
-    title: '10 AI Prompts Every Teacher Should Know in 2026',
-    excerpt: 'From lesson planning to quiz generation, these 10 prompts will save you hours of prep time every week.',
-    date: 'Jun 01, 2026',
-    readTime: '6 min read',
-    category: 'Prompt Guides',
-    emoji: '📋',
-  },
-  {
-    slug: 'chatgpt-lesson-planning-without-prompt-engineering',
-    title: 'How to Use ChatGPT for Lesson Planning (Without Knowing Prompt Engineering)',
-    excerpt: "You don't need to be a prompt engineer to get great results from AI. Here's the simple framework teachers use.",
-    date: 'May 25, 2026',
-    readTime: '8 min read',
-    category: 'Tutorials',
-    emoji: '🤖',
-  },
-  {
-    slug: 'classorbit-vs-writing-prompts-yourself',
-    title: 'ClassOrbit vs Writing Prompts Yourself — A Time Study',
-    excerpt: 'We timed 20 teachers across two weeks. The results were clear: platform-optimized prompts produce better output, faster.',
-    date: 'May 18, 2026',
-    readTime: '5 min read',
-    category: 'Research',
-    emoji: '⏱️',
-  },
-];
+export const runtime = 'edge';
 
-export default function BlogPage() {
+interface BlogPost {
+  slug: string;
+  created_at: string;
+  cover_image_url?: string;
+  title: string;
+  excerpt?: string;
+}
+
+async function getBlogs() {
+  try {
+    const res = await fetch(`${getApiBaseUrl()}/api/blogs`, { next: { revalidate: 60 } });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return data.blogs || [];
+  } catch {
+    return [];
+  }
+}
+
+export default async function BlogPage() {
+  const posts = await getBlogs();
   return (
     <>
       <Topbar />
@@ -54,19 +47,20 @@ export default function BlogPage() {
           </div>
 
           <div className="space-y-5">
-            {posts.map((post) => (
+            {posts.map((post: BlogPost) => (
               <Link
                 key={post.slug}
                 href={`/blog/${post.slug}`}
                 className="glass-card rounded-[24px] p-7 flex flex-col sm:flex-row items-start gap-6 hover:border-primary/40 transition-all group"
               >
                 <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center text-3xl shrink-0">
-                  {post.emoji}
+                  📄
                 </div>
                 <div className="flex-1">
                   <div className="flex flex-wrap items-center gap-2 mb-2">
-                    <span className="text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">{post.category}</span>
-                    <span className="text-[12px] text-text-subtle">{post.date} · {post.readTime}</span>
+                    <span className="text-[12px] text-text-subtle">
+                      {new Date(post.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                    </span>
                   </div>
                   <h2 className="font-display text-[20px] font-bold text-white group-hover:text-primary transition-colors leading-snug mb-2">
                     {post.title}

@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev -p 2020",
+    "dev:api": "pnpm --filter classorbit-api dev",
+    "dev:all": "pnpm run -r --parallel dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -13,8 +15,8 @@
   },
   "dependencies": {
     "@cloudflare/next-on-pages": "^1.13.16",
-    "@supabase/ssr": "^0.10.3",
-    "@supabase/supabase-js": "^2.106.2",
+    "@supabase/ssr": "catalog:",
+    "@supabase/supabase-js": "catalog:",
     "file-saver": "^2.0.5",
     "framer-motion": "^12.40.0",
     "jszip": "^3.10.1",
