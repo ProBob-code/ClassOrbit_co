@@ -73,10 +73,16 @@ CREATE TABLE IF NOT EXISTS prompt_shares (
 CREATE TABLE IF NOT EXISTS user_profiles (
   user_id TEXT PRIMARY KEY,
   plan_type TEXT DEFAULT 'free',
+  razorpay_order_id TEXT,
+  razorpay_payment_id TEXT,
   subscription_status TEXT DEFAULT 'active',
   plan_expires_at DATETIME,
   has_seeded_workspace INTEGER DEFAULT 0,
-  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+  email TEXT,
+  name TEXT,
+  is_blocked INTEGER DEFAULT 0,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 CREATE TABLE IF NOT EXISTS prompt_usage (
