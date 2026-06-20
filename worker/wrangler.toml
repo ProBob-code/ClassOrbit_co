@@ -1,7 +1,13 @@
 name = "classorbit-api"
 main = "src/index.ts"
+account_id = "7d520ea32c454956ef6e5d6f5a35e5f0"
 compatibility_date = "2024-09-23"
 compatibility_flags = ["nodejs_compat"]
+
+# Capture logs/traces so failures are visible in the dashboard and `wrangler tail`
+# instead of being silently swallowed (see the "paid but shows FREE" incident).
+[observability]
+enabled = true
 
 routes = [
   { pattern = "classorbit.co/api/*", zone_name = "classorbit.co" },

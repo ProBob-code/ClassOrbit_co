@@ -1,5 +1,25 @@
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
+## Architecture & deployment
+
+ClassOrbit is **two Cloudflare deployments** that share the `classorbit.co` domain:
+
+| Part | Code | Hosting | Deploys when |
+| --- | --- | --- | --- |
+| Frontend (Next.js UI) | repo root, `src/` | Cloudflare **Pages** | **Automatically** on push to `main` |
+| API (`/api/*`, Hono) | [`worker/`](./worker/) | Cloudflare **Worker** (`classorbit-api`) | **Automatically** via [`.github/workflows/deploy-worker.yml`](./.github/workflows/deploy-worker.yml) when `worker/**` changes on `main` |
+
+> Both halves ship on push. If you change `worker/**`, the GitHub Action redeploys
+> the worker — you no longer need a manual `wrangler deploy`. The action requires a
+> `CLOUDFLARE_API_TOKEN` repo secret (Workers Scripts: Edit + D1: Edit).
+
+- **Frontend build vars** live in the root [`wrangler.toml`](./wrangler.toml) `[vars]`
+  (only `NEXT_PUBLIC_*` / non-secret values — these are inlined at build time).
+- **Worker secrets** (`RAZORPAY_KEY_SECRET`, `ADMIN_*`, `GROQ_API_KEY`, …) are set with
+  `wrangler secret put` on the worker — never in Pages.
+- **Database:** Cloudflare D1 (`classorbit-db`). Schema and the exact migration apply
+  order are documented in [`supabase/MIGRATIONS.md`](./supabase/MIGRATIONS.md).
+
 ## Getting Started
 
 First, run the development server:

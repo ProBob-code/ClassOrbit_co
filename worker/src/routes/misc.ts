@@ -66,10 +66,19 @@ router.get('/me/plan', async (c) => {
 
   const db = getDB(c);
 
-  // Get plan
-  let profile = await db.prepare(
-    'SELECT plan_type, subscription_status, plan_expires_at, is_blocked, email, name FROM user_profiles WHERE user_id = ?'
-  ).bind(user.id).first<{ plan_type: string; subscription_status: string; plan_expires_at: string | null; is_blocked: number; email: string | null; name: string | null }>();
+  // Get plan. Wrap the read so a DB/schema error surfaces loudly in logs and
+  // returns an error — instead of throwing into a generic 500 that the client
+  // silently treats as "free" (the "paid but shows FREE" failure mode).
+  type Profile = { plan_type: string; subscription_status: string; plan_expires_at: string | null; is_blocked: number; email: string | null; name: string | null };
+  let profile: Profile | null = null;
+  try {
+    profile = await db.prepare(
+      'SELECT plan_type, subscription_status, plan_expires_at, is_blocked, email, name FROM user_profiles WHERE user_id = ?'
+    ).bind(user.id).first<Profile>();
+  } catch (err) {
+    console.error('[/me/plan] Failed to read user_profiles for user', user.id, err);
+    return c.json({ error: 'Could not load your plan. Please try again.' }, 500);
+  }
 
   const email = user.email || null;
   const name = user.user_metadata?.full_name || user.user_metadata?.name || null;
