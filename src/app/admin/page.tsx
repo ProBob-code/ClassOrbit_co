@@ -243,6 +243,32 @@ export default function AdminDashboard() {
     finally { setUsersLoading(false); }
   }, []);
 
+  /* ─── Manually set a user's plan (after validating payment proof) ─── */
+  const setUserPlan = useCallback(async (
+    userId: string,
+    planType: 'pro' | 'free',
+    billingCycle?: 'monthly' | 'yearly',
+  ) => {
+    const label = planType === 'pro' ? `Pro · ${billingCycle === 'yearly' ? 'Yearly' : 'Monthly'}` : 'Free';
+    if (!confirm(`Set this user to ${label}?`)) return;
+    try {
+      const res = await fetch(`/api/admin/users/${userId}/plan`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan_type: planType, billing_cycle: billingCycle }),
+      });
+      if (res.ok) {
+        toast.success(`User set to ${label}`);
+        loadUsers();
+      } else {
+        const data = (await res.json().catch(() => ({}))) as any;
+        toast.error(data.error || 'Failed to update plan');
+      }
+    } catch {
+      toast.error('Failed to update plan');
+    }
+  }, [loadUsers]);
+
   /* ─── Load tickets ─── */
   const loadTickets = useCallback(async () => {
     setTicketsLoading(true);
@@ -1393,31 +1419,53 @@ export default function AdminDashboard() {
                                 </p>
                               )}
                             </td>
-                            <td className="px-6 py-4 text-right">
-                              <button
-                                onClick={async () => {
-                                  try {
-                                    const res = await fetch(`/api/admin/users/${u.user_id}/block`, {
-                                      method: 'POST',
-                                      headers: { 'Content-Type': 'application/json' },
-                                      body: JSON.stringify({ is_blocked: !u.is_blocked }),
-                                    });
-                                    if (res.ok) {
-                                      toast.success(`User ${!u.is_blocked ? 'blocked' : 'unblocked'}`);
-                                      loadUsers();
+                            <td className="px-6 py-4">
+                              <div className="flex flex-wrap items-center justify-end gap-2">
+                                <button
+                                  onClick={() => setUserPlan(u.user_id, 'pro', 'monthly')}
+                                  className="px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors cursor-pointer border bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20"
+                                >
+                                  Pro · Monthly
+                                </button>
+                                <button
+                                  onClick={() => setUserPlan(u.user_id, 'pro', 'yearly')}
+                                  className="px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors cursor-pointer border bg-amber-500/10 text-amber-400 border-amber-500/20 hover:bg-amber-500/20"
+                                >
+                                  Pro · Yearly
+                                </button>
+                                {u.plan_type === 'pro' && (
+                                  <button
+                                    onClick={() => setUserPlan(u.user_id, 'free')}
+                                    className="px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors cursor-pointer border bg-white/5 text-text-muted border-border hover:bg-white/10"
+                                  >
+                                    Revoke
+                                  </button>
+                                )}
+                                <button
+                                  onClick={async () => {
+                                    try {
+                                      const res = await fetch(`/api/admin/users/${u.user_id}/block`, {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ is_blocked: !u.is_blocked }),
+                                      });
+                                      if (res.ok) {
+                                        toast.success(`User ${!u.is_blocked ? 'blocked' : 'unblocked'}`);
+                                        loadUsers();
+                                      }
+                                    } catch {
+                                      toast.error('Failed to update block status');
                                     }
-                                  } catch {
-                                    toast.error('Failed to update block status');
-                                  }
-                                }}
-                                className={`px-4 py-1.5 rounded-lg text-[12px] font-bold transition-colors cursor-pointer border ${
-                                  u.is_blocked
-                                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
-                                    : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
-                                }`}
-                              >
-                                {u.is_blocked ? 'Unblock' : 'Block User'}
-                              </button>
+                                  }}
+                                  className={`px-3 py-1.5 rounded-lg text-[12px] font-bold transition-colors cursor-pointer border ${
+                                    u.is_blocked
+                                      ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 hover:bg-emerald-500/20'
+                                      : 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20'
+                                  }`}
+                                >
+                                  {u.is_blocked ? 'Unblock' : 'Block User'}
+                                </button>
+                              </div>
                             </td>
                           </tr>
                         ))}

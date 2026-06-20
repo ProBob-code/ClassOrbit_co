@@ -190,6 +190,37 @@ router.post('/admin/:action{.+}', async (c) => {
     }
   }
 
+  // Manually set a user's plan (e.g. after the admin validates offline payment proof).
+  if (segments.length === 3 && segments[0] === 'users' && segments[2] === 'plan') {
+    const id = segments[1];
+    const body = await c.req.json();
+    const planType = body.plan_type === 'pro' ? 'pro' : 'free';
+    try {
+      if (planType === 'free') {
+        const res = await db.prepare(
+          "UPDATE user_profiles SET plan_type = 'free', subscription_status = 'active', plan_expires_at = NULL, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?"
+        ).bind(id).run();
+        if (!res.meta.changes) return c.json({ error: 'User not found' }, 404);
+        return c.json({ success: true, plan_type: 'free' });
+      }
+
+      const cycle = body.billing_cycle === 'yearly' ? 'yearly' : 'monthly';
+      const expires = new Date();
+      if (cycle === 'yearly') expires.setFullYear(expires.getFullYear() + 1);
+      else expires.setDate(expires.getDate() + 30);
+
+      const res = await db.prepare(
+        "UPDATE user_profiles SET plan_type = 'pro', subscription_status = 'active', plan_expires_at = ?, updated_at = CURRENT_TIMESTAMP WHERE user_id = ?"
+      ).bind(expires.toISOString(), id).run();
+      if (!res.meta.changes) return c.json({ error: 'User not found' }, 404);
+
+      return c.json({ success: true, plan_type: 'pro', billing_cycle: cycle, plan_expires_at: expires.toISOString() });
+    } catch (error: any) {
+      console.error('Failed to update user plan:', error);
+      return c.json({ error: 'Failed to update user plan' }, 500);
+    }
+  }
+
   if (path === 'blogs') {
     const { title, slug, content, excerpt, author, published, cover_image_url } = await c.req.json();
     if (!title?.trim() || !slug?.trim() || !content?.trim()) {
