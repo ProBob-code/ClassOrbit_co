@@ -1,9 +1,7 @@
-name: Deploy Worker
+name: Worker CI
 
-# The Cloudflare *Pages* (frontend) build deploys automatically on push.
-# The *Worker* (worker/) does NOT — it used to require a manual `wrangler deploy`,
-# which is how the frontend and backend kept drifting (broken payment/admin).
-# This workflow ships the worker whenever its code changes on main.
+# Tests + typecheck run on every worker change (push or PR). The worker only
+# deploys after tests pass, and only on a push to main — never from a PR.
 
 on:
   push:
@@ -12,29 +10,49 @@ on:
       - 'worker/**'
       - 'pnpm-lock.yaml'
       - '.github/workflows/deploy-worker.yml'
+  pull_request:
+    paths:
+      - 'worker/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/deploy-worker.yml'
   workflow_dispatch: {}
 
 concurrency:
-  group: deploy-worker
+  group: worker-ci-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
-  deploy:
+  test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
       - uses: pnpm/action-setup@v4
         with:
           version: 10
-
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: pnpm
-
       - run: pnpm install --frozen-lockfile
+      - name: Typecheck worker
+        run: pnpm --filter classorbit-api typecheck
+      - name: Test worker
+        run: pnpm --filter classorbit-api test
 
+  deploy:
+    needs: test
+    if: ${{ github.event_name != 'pull_request' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
       - name: Deploy worker to Cloudflare
         working-directory: worker
         run: pnpm exec wrangler deploy

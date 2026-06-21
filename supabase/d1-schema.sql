@@ -104,3 +104,22 @@ CREATE TABLE IF NOT EXISTS blogs (
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Maps a Razorpay order to a user/plan so the webhook can grant Pro server-side.
+CREATE TABLE IF NOT EXISTS payment_orders (
+  order_id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  plan TEXT NOT NULL,
+  amount INTEGER,
+  status TEXT NOT NULL DEFAULT 'created',
+  razorpay_payment_id TEXT,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+CREATE INDEX IF NOT EXISTS idx_payment_orders_user ON payment_orders(user_id);
+
+-- Throttle table for admin alert emails.
+CREATE TABLE IF NOT EXISTS alert_log (
+  alert_key TEXT PRIMARY KEY,
+  last_sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

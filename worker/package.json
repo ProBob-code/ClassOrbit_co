@@ -5,7 +5,10 @@
   "scripts": {
     "dev": "wrangler dev --persist-to=../.wrangler/state",
     "deploy": "wrangler deploy",
-    "cf-typegen": "wrangler types"
+    "cf-typegen": "wrangler types",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
   },
   "dependencies": {
     "@supabase/ssr": "catalog:",
@@ -15,6 +18,7 @@
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260609.1",
     "typescript": "^5",
+    "vitest": "^2.1.8",
     "wrangler": "^4.95.0"
   }
 }

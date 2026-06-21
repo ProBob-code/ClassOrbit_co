@@ -23,6 +23,7 @@ wrangler d1 execute $DB --remote --file=supabase/d1-migration-005-ticket-chat.sq
 wrangler d1 execute $DB --remote --file=supabase/d1-migration-006-blogs.sql
 wrangler d1 execute $DB --remote --file=supabase/d1-migration-007-blog-images.sql
 wrangler d1 execute $DB --remote --file=supabase/migrations/002-payments.sql
+wrangler d1 execute $DB --remote --file=supabase/migrations/004-payment-orders-and-alerts.sql
 # Optional seed/content:
 # wrangler d1 execute $DB --remote --file=supabase/d1-seed-blogs.sql
 # wrangler d1 execute $DB --remote --file=supabase/d1-seed-images.sql

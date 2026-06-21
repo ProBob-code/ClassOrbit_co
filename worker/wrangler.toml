@@ -11,6 +11,9 @@ routes = [
 
 [vars]
 ADMIN_EMAILS = "probob.in.git@gmail.com,bobinjacob46@gmail.com"
+# Where monitoring/alert emails go. The Resend API key is a secret:
+#   wrangler secret put ALERTS_RESEND_API_KEY
+ALERT_EMAIL = "probob.in.git@gmail.com"
 
 [[d1_databases]]
 binding = "DB"
