@@ -35,7 +35,7 @@ export default function PrivacyPage() {
             <section className="space-y-3">
               <h2 className="font-display text-headline-md font-bold text-text-main">1. Introduction</h2>
               <p className="text-body-md text-text-muted leading-relaxed">
-                Welcome to ClassOrbit.co (the &quot;Service&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). We are committed to protecting the privacy and personal data of the educators, teachers, and school administrators who use our Service. This Privacy Policy explains how we collect, use, and protect your information when you use our AI Prompt Studio.
+                Welcome to ClassOrbit.co (the &quot;Service&quot;, &quot;we&quot;, &quot;us&quot;, or &quot;our&quot;). We are committed to protecting the privacy and personal data of the educators, teachers, and school administrators who use our Service. This Privacy Policy explains how we collect, use, and protect your information when you use the Service.
               </p>
             </section>
 
@@ -112,7 +112,7 @@ export default function PrivacyPage() {
             </span>
           </div>
           <p className="text-label-sm text-text-muted font-bold">
-            © 2026 ClassOrbit.co. The AI Prompt Studio for Educators.
+            © 2026 ClassOrbit.co. The AI Command Center for Teachers.
           </p>
           <div className="flex gap-4">
             <Link href="/privacy" className="text-text-muted hover:text-text-main font-label-sm font-bold transition-colors">

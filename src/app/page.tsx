@@ -113,12 +113,12 @@ export default function LandingPage() {
             </div>
 
             <h1 className="font-display text-[42px] sm:text-[56px] md:text-[72px] font-extrabold leading-[1.1] tracking-tight text-white drop-shadow-2xl">
-              Build Perfect Prompts. <br />
-              <span className="text-gradient-gold italic font-serif leading-none pr-2">Launch to Any AI Platform.</span>
+              Meet the CEO of every classroom. <br />
+              <span className="text-gradient-gold italic font-serif leading-none pr-2">The Teacher.</span>
             </h1>
 
             <p className="text-[18px] md:text-[20px] text-text-muted max-w-2xl mx-auto leading-relaxed mt-4">
-              ClassOrbit helps teachers craft optimized prompts effortlessly, then sends you straight to ChatGPT, Claude, Gamma, Canva, or any AI tool. <strong className="text-white font-medium">Zero prompt engineering required.</strong>
+              ClassOrbit is your AI-powered classroom command center — helping teachers plan lessons, create resources, save time, and lead their classroom like never before. <strong className="text-white font-medium">Zero prompt engineering required.</strong>
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-6 w-full sm:w-auto">
@@ -128,12 +128,12 @@ export default function LandingPage() {
               >
                 <span className="absolute inset-[-1000%] animate-[spin_3s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#F59E0B_0%,#F97316_50%,#F59E0B_100%)]" />
                 <span className="inline-flex h-full w-full cursor-pointer items-center justify-center rounded-full bg-surface px-8 py-1 text-[16px] font-bold text-white backdrop-blur-3xl group-hover:bg-surface/80 transition-colors gap-2">
-                  Get Started Free
+                  🚀 Launch My Command Center
                   <span className="group-hover:translate-x-1 transition-transform">→</span>
                 </span>
               </Link>
               <Link href="#how-it-works" className="w-full sm:w-auto glass-card text-white px-8 py-4 rounded-full text-[16px] font-bold transition-all active:scale-95 flex items-center justify-center gap-2 hover:bg-white/10">
-                See How It Works
+                See Teacher Powers
               </Link>
             </div>
 
@@ -216,12 +216,12 @@ export default function LandingPage() {
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-secondary/5 blur-[200px] rounded-full pointer-events-none" />
           <div className="max-w-7xl mx-auto relative z-10">
             <AnimatedContainer className="text-center mb-16">
-              <span className="text-[14px] font-bold text-primary tracking-[0.2em] uppercase mb-4 block">How It Works</span>
+              <span className="text-[14px] font-bold text-primary tracking-[0.2em] uppercase mb-4 block">Teacher Powers</span>
               <h2 className="font-display text-[40px] md:text-[56px] text-white font-extrabold leading-[1.1] tracking-tight">
-                Three Steps to <br className="hidden md:block" /> Better Teaching
+                Your Classroom. <br className="hidden md:block" /> Your Orbit.
               </h2>
               <p className="text-[18px] text-text-muted max-w-2xl mx-auto mt-4 leading-relaxed">
-                Your teaching ideas orbit seamlessly between AI platforms. We handle the prompt engineering so you don&apos;t have to.
+                Your personalized command center for planning, creating, and leading — powered by the AI tools you already love.
               </p>
             </AnimatedContainer>
 
@@ -229,9 +229,9 @@ export default function LandingPage() {
               <AnimatedContainer delay={0.1}>
                 <div className="glass-card p-10 rounded-[32px] h-full flex flex-col items-start relative overflow-hidden group">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-primary/20 transition-colors" />
-                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner relative z-10 text-primary">✍️</div>
-                  <h3 className="font-display text-[24px] font-bold mb-3 text-white relative z-10">Tell Us What You Need</h3>
-                  <p className="text-[16px] text-text-muted leading-relaxed relative z-10">Type freely or use our guided builder. Describe your lesson plan, quiz, worksheet, or any teaching resource. No prompt skills needed.</p>
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner relative z-10 text-primary">👑</div>
+                  <h3 className="font-display text-[24px] font-bold mb-3 text-white relative z-10">Take Command</h3>
+                  <p className="text-[16px] text-text-muted leading-relaxed relative z-10">Your personalized AI workspace, built around your teaching style and your classroom.</p>
                 </div>
               </AnimatedContainer>
 
@@ -240,9 +240,9 @@ export default function LandingPage() {
                   <div className="absolute bottom-0 right-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -mr-20 -mb-20 group-hover:bg-secondary/20 transition-colors" />
                   <div className="flex flex-col md:flex-row gap-8 items-center md:items-start relative z-10">
                     <div className="flex-1">
-                      <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner text-secondary-hover">⚡</div>
-                      <h3 className="font-display text-[28px] font-bold mb-3 text-white">We Build Your Prompt</h3>
-                      <p className="text-[16px] text-text-muted leading-relaxed max-w-md">Our engine transforms your input into platform-optimized prompts: structured, formatted, and ready for each AI tool. No guesswork required.</p>
+                      <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner text-secondary-hover">🪄</div>
+                      <h3 className="font-display text-[28px] font-bold mb-3 text-white">Create Instantly</h3>
+                      <p className="text-[16px] text-text-muted leading-relaxed max-w-md">Lesson plans, quizzes, worksheets, and activities — created in seconds, structured and ready for each AI tool. No guesswork required.</p>
                     </div>
 
                   </div>
@@ -263,8 +263,8 @@ export default function LandingPage() {
                     </div>
                     <div className="flex-1">
                       <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner text-pink-400">🚀</div>
-                      <h3 className="font-display text-[28px] font-bold mb-3 text-white">Launch to Your AI Tool</h3>
-                      <p className="text-[16px] text-text-muted leading-relaxed">One click copies your prompt and opens ChatGPT, Claude, Gamma, Canva, or any supported platform. Start generating immediately, no more copy-pasting or formatting.</p>
+                      <h3 className="font-display text-[28px] font-bold mb-3 text-white">Launch Anywhere</h3>
+                      <p className="text-[16px] text-text-muted leading-relaxed">Send your ideas straight to ChatGPT, Claude, Gamma, Canva, or any supported platform in one click. Start generating immediately, no more copy-pasting or formatting.</p>
                     </div>
                   </div>
                 </div>
@@ -273,9 +273,9 @@ export default function LandingPage() {
               <AnimatedContainer delay={0.4}>
                 <div className="glass-card p-10 rounded-[32px] h-full flex flex-col items-start relative overflow-hidden group">
                   <div className="absolute bottom-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl -mr-10 -mb-10 group-hover:bg-emerald-500/20 transition-colors" />
-                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner text-emerald-400">📚</div>
-                  <h3 className="font-display text-[24px] font-bold mb-3 text-white relative z-10">Save & Reuse</h3>
-                  <p className="text-[16px] text-text-muted leading-relaxed relative z-10">Keep your best prompts in your library. Organize in folders, export as a package, and reuse anytime across different classes and terms.</p>
+                  <div className="w-14 h-14 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center text-2xl mb-8 shadow-inner text-emerald-400">🏆</div>
+                  <h3 className="font-display text-[24px] font-bold mb-3 text-white relative z-10">Build Your Teaching Legacy</h3>
+                  <p className="text-[16px] text-text-muted leading-relaxed relative z-10">Save your best resources and grow your classroom intelligence — reuse anytime across different classes and terms.</p>
                 </div>
               </AnimatedContainer>
             </div>
@@ -300,15 +300,15 @@ export default function LandingPage() {
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[400px] h-[400px] bg-primary/20 blur-[150px] rounded-full pointer-events-none" />
             <span className="text-[56px] mb-6 block select-none filter drop-shadow relative z-10">🚀</span>
             <h2 className="font-display text-[40px] md:text-[56px] font-extrabold text-white mb-6 tracking-tight relative z-10">
-              Ready to simplify your AI workflow?
+              Ready to take command of your classroom?
             </h2>
             <p className="text-body-md text-text-muted mb-8 max-w-xl mx-auto relative z-10">
-              Join educators already building smarter prompts and launching to their favorite AI platforms in seconds.
+              Join the teachers running their classroom like a command center — planning, creating, and launching in seconds.
             </p>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 relative z-10">
               <Link href="/login?next=/builder" className="bg-primary text-white px-8 py-4 rounded-full text-body-md font-bold shadow-md hover:scale-[1.03] transition-all active:scale-98 shadow-glow">
-                Get Started Free
+                🚀 Launch My Command Center
               </Link>
               <Link href="#pricing" className="glass-card text-white px-8 py-4 rounded-full text-body-md font-bold hover:bg-white/10 transition-all">
                 View Pricing
@@ -380,7 +380,7 @@ export default function LandingPage() {
           </div>
 
           <div className="flex flex-col md:flex-row justify-between items-center gap-4 border-t border-border pt-6">
-            <p className="text-label-sm text-text-muted font-bold">© 2026 ClassOrbit.co · The AI Prompt Studio for Educators.</p>
+            <p className="text-label-sm text-text-muted font-bold">© 2026 ClassOrbit.co · The AI Command Center for Teachers.</p>
             <p className="text-[12px] text-text-subtle">Made with ♥ for teachers everywhere.</p>
           </div>
         </div>
