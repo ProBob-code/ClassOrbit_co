@@ -13,9 +13,9 @@
 # testing
 /coverage
 
-# next.js
-/.next/
-/out/
+# next.js (un-anchored so nested build dirs, e.g. a stale api/.next, are ignored too)
+.next/
+out/
 
 # production
 /build
