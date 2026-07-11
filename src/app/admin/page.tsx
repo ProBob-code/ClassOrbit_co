@@ -11,9 +11,11 @@ import {
   ExternalLink, X, Rocket, Mail, Clock, BarChart3,
   UserCheck, Crown, ListOrdered, Search, ShieldAlert, CheckCircle2,
   Star, MessageSquare, LifeBuoy,
-  Bot, User, Send, ArrowLeft, BookOpen, Eye, Pencil
+  Bot, User, Send, ArrowLeft, BookOpen, Eye, Pencil, ImagePlus, LayoutList
 } from 'lucide-react';
 import BlogContent from '@/components/blog/BlogContent';
+import ImageCropModal, { type CroppedImage } from '@/components/admin/ImageCropModal';
+import BlogArrangeBoard from '@/components/admin/BlogArrangeBoard';
 
 
 /* ─── Types ─── */
@@ -171,7 +173,16 @@ export default function AdminDashboard() {
   const [editBlogId, setEditBlogId] = useState<string | null>(null);
   const [blogForm, setBlogForm] = useState<Partial<Blog>>({});
   const [savingBlog, setSavingBlog] = useState(false);
-  const [blogModalTab, setBlogModalTab] = useState<'edit' | 'preview'>('edit');
+  const [blogModalTab, setBlogModalTab] = useState<'edit' | 'arrange' | 'preview'>('edit');
+  // Image upload + crop (cover picture and body images inserted into content)
+  const [cropTarget, setCropTarget] = useState<{ src: string; mime: string; name: string; mode: 'cover' | 'body' } | null>(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const coverFileRef = useRef<HTMLInputElement>(null);
+  const bodyFileRef = useRef<HTMLInputElement>(null);
+  const blogContentRef = useRef<HTMLTextAreaElement>(null);
+  // Block index the next body image should be inserted at (Arrange tab);
+  // null means "insert at the textarea cursor" (Edit tab).
+  const bodyInsertIndexRef = useRef<number | null>(null);
 
   // Search & Filter state for tools registry
   const [searchQuery, setSearchQuery] = useState('');
@@ -305,8 +316,71 @@ export default function AdminDashboard() {
     }
   }, [authed, loadStats, loadTools, loadUsers, loadTickets, loadBlogs]);
 
+  /* ─── Blog images (upload + crop) ─── */
+  const startImageCrop = (file: File, mode: 'cover' | 'body') => {
+    if (!file.type.startsWith('image/')) { toast.error('Please choose an image file'); return; }
+    setCropTarget({ src: URL.createObjectURL(file), mime: file.type, name: file.name, mode });
+  };
+
+  const pickBlogImage = (mode: 'cover' | 'body') => (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = ''; // allow re-picking the same file
+    if (!file) return;
+    startImageCrop(file, mode);
+  };
+
+  const closeCropModal = () => {
+    if (cropTarget) URL.revokeObjectURL(cropTarget.src);
+    setCropTarget(null);
+    bodyInsertIndexRef.current = null;
+  };
+
+  const handleCroppedImage = async (r: CroppedImage) => {
+    if (!cropTarget) return;
+    setUploadingImage(true);
+    try {
+      const res = await fetch('/api/admin/images', {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ filename: cropTarget.name, mime: r.mime, data_base64: r.dataBase64 }),
+      });
+      const data = (await res.json()) as { url?: string; error?: string };
+      if (!res.ok || !data.url) throw new Error(data.error || 'Upload failed');
+      const url = data.url;
+
+      if (cropTarget.mode === 'cover') {
+        setBlogForm(f => ({ ...f, cover_image_url: url }));
+        toast.success('Cover image uploaded');
+      } else {
+        const placement = r.placement ?? 'full';
+        const tag = `![${r.caption ?? ''}${placement !== 'full' ? `|${placement}` : ''}](${url})`;
+        const insertAt = bodyInsertIndexRef.current;
+        bodyInsertIndexRef.current = null;
+        setBlogForm(f => {
+          const content = f.content ?? '';
+          if (insertAt !== null) {
+            // Insert as its own block at the requested position (Arrange tab).
+            const blocks = content.split(/\n{2,}/).map(t => t.trim()).filter(Boolean);
+            blocks.splice(Math.min(insertAt, blocks.length), 0, tag);
+            return { ...f, content: blocks.join('\n\n') };
+          }
+          // Insert the image markdown at the cursor position in the content box.
+          const pos = blogContentRef.current?.selectionStart ?? content.length;
+          const before = content.slice(0, pos).replace(/\n*$/, '');
+          const after = content.slice(pos).replace(/^\n*/, '');
+          return { ...f, content: `${before}${before ? '\n\n' : ''}${tag}\n\n${after}` };
+        });
+        toast.success('Image inserted into the content');
+      }
+      closeCropModal();
+    } catch (err) {
+      toast.error(err instanceof Error && err.message ? err.message : 'Failed to upload image');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   /* ─── Blog CRUD ─── */
-  const openAddBlog = () => { setEditBlogId(null); setBlogForm({ title: '', slug: '', content: '', excerpt: '', author: '', published: 0 }); setBlogModalTab('edit'); setShowBlogModal(true); };
+  const openAddBlog = () => { setEditBlogId(null); setBlogForm({ title: '', slug: '', content: '', excerpt: '', author: '', published: 0, cover_image_url: null }); setBlogModalTab('edit'); setShowBlogModal(true); };
   const openEditBlog = (b: Blog) => {
     setEditBlogId(b.id);
     setBlogForm({
@@ -1804,6 +1878,10 @@ export default function AdminDashboard() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                   {blogs.map(b => (
                     <div key={b.id} className="glass-panel border border-border rounded-3xl p-6 relative overflow-hidden shadow-soft hover:border-primary/30 transition-all flex flex-col">
+                      {b.cover_image_url && (
+                        /* eslint-disable-next-line @next/next/no-img-element */
+                        <img src={b.cover_image_url} alt="" className="w-full h-28 object-cover rounded-2xl border border-border mb-4" />
+                      )}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <h3 className="font-bold text-[16px] text-text-main line-clamp-2">{b.title}</h3>
@@ -1847,14 +1925,14 @@ export default function AdminDashboard() {
       {/* ── Add/Edit Tool Modal ── */}
       <AnimatePresence>
         {showModal && (
-          <div className="fixed inset-0 bg-[#06040F]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-[#06040F]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-hidden">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-surface border border-border rounded-[28px] w-full max-w-[620px] p-7 md:p-8 shadow-2xl relative my-8 text-left"
+              className="bg-surface border border-border rounded-[28px] w-full max-w-[620px] p-7 md:p-8 shadow-2xl relative flex flex-col max-h-full text-left"
             >
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-6 shrink-0">
                 <h3 className="font-display text-[20px] font-bold text-text-main flex items-center gap-2">
                   <Rocket size={20} className="text-primary animate-float" />
                   {editId ? 'Modify System Integration' : 'Register New AI Tool'}
@@ -1957,7 +2035,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
 
-              <div className="mt-8 flex justify-end gap-3 border-t border-border pt-5">
+              <div className="mt-auto flex justify-end gap-3 border-t border-border pt-5 shrink-0">
                 <button onClick={() => setShowModal(false)} className="px-5 py-2.5 rounded-xl font-bold text-[13px] text-text-muted hover:bg-white/[0.04] transition-colors cursor-pointer">
                   Cancel
                 </button>
@@ -1978,14 +2056,14 @@ export default function AdminDashboard() {
       {/* ── Add/Edit Blog Modal ── */}
       <AnimatePresence>
         {showBlogModal && (
-          <div className="fixed inset-0 bg-[#06040F]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+          <div className="fixed inset-0 bg-[#06040F]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-hidden">
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className="bg-surface border border-border rounded-[28px] w-full max-w-[800px] p-7 md:p-8 shadow-2xl relative my-8 text-left"
+              className="bg-surface border border-border rounded-[28px] w-full max-w-[800px] p-7 md:p-8 shadow-2xl relative flex flex-col max-h-full text-left"
             >
-              <div className="flex justify-between items-center mb-6">
+              <div className="flex justify-between items-center mb-6 shrink-0">
                 <h3 className="font-display text-[20px] font-bold text-text-main flex items-center gap-2">
                   <BookOpen size={20} className="text-primary" />
                   {editBlogId ? 'Edit Blog' : 'Create New Blog'}
@@ -1995,28 +2073,27 @@ export default function AdminDashboard() {
                 </button>
               </div>
 
-              {/* Edit / Preview tabs */}
-              <div className="flex gap-1 bg-background/60 border border-border rounded-xl p-1 w-fit mb-5">
-                <button
-                  onClick={() => setBlogModalTab('edit')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
-                    blogModalTab === 'edit' ? 'bg-primary text-white shadow-glow' : 'text-text-muted hover:text-text-main'
-                  }`}
-                >
-                  <Pencil size={14} /> Edit
-                </button>
-                <button
-                  onClick={() => setBlogModalTab('preview')}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
-                    blogModalTab === 'preview' ? 'bg-primary text-white shadow-glow' : 'text-text-muted hover:text-text-main'
-                  }`}
-                >
-                  <Eye size={14} /> Preview
-                </button>
+              {/* Edit / Arrange / Preview tabs */}
+              <div className="flex gap-1 bg-background/60 border border-border rounded-xl p-1 w-fit mb-5 shrink-0">
+                {([
+                  { id: 'edit', label: 'Edit', icon: <Pencil size={14} /> },
+                  { id: 'arrange', label: 'Arrange', icon: <LayoutList size={14} /> },
+                  { id: 'preview', label: 'Preview', icon: <Eye size={14} /> },
+                ] as const).map(t => (
+                  <button
+                    key={t.id}
+                    onClick={() => setBlogModalTab(t.id)}
+                    className={`flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold transition-all cursor-pointer ${
+                      blogModalTab === t.id ? 'bg-primary text-white shadow-glow' : 'text-text-muted hover:text-text-main'
+                    }`}
+                  >
+                    {t.icon} {t.label}
+                  </button>
+                ))}
               </div>
 
               {blogModalTab === 'preview' ? (
-                <div className="max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-0">
                   {!blogForm.title?.trim() && !blogForm.content?.trim() ? (
                     <div className="text-center py-20 text-text-muted text-[13px] border border-dashed border-border rounded-2xl">
                       Nothing to preview yet, add a title and content in the Edit tab.
@@ -2032,12 +2109,27 @@ export default function AdminDashboard() {
                           {blogForm.title || 'Untitled Post'}
                         </h1>
                       </div>
+                      {blogForm.cover_image_url && (
+                        <div className="mb-8 rounded-2xl overflow-hidden border border-border">
+                          {/* eslint-disable-next-line @next/next/no-img-element */}
+                          <img src={blogForm.cover_image_url} alt="Cover" className="w-full h-auto block" />
+                        </div>
+                      )}
                       <BlogContent content={blogForm.content ?? ''} />
                     </div>
                   )}
                 </div>
+              ) : blogModalTab === 'arrange' ? (
+                <div className="overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-0">
+                  <BlogArrangeBoard
+                    content={blogForm.content ?? ''}
+                    onChange={(content) => setBlogForm(f => ({ ...f, content }))}
+                    onInsertImage={(index) => { bodyInsertIndexRef.current = index; bodyFileRef.current?.click(); }}
+                    onDropFile={(file, index) => { bodyInsertIndexRef.current = index; startImageCrop(file, 'body'); }}
+                  />
+                </div>
               ) : (
-              <div className="space-y-5 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="space-y-5 overflow-y-auto pr-2 custom-scrollbar flex-1 min-h-0">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
                     <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-2">Blog Title *</label>
@@ -2055,8 +2147,60 @@ export default function AdminDashboard() {
                 </div>
 
                 <div>
-                  <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-2">Content (HTML/Markdown) *</label>
-                  <textarea value={blogForm.content ?? ''} onChange={e => setBlogForm(f => ({ ...f, content: e.target.value }))} placeholder="Write your blog content here..." rows={12} className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[14px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all resize-y font-mono" />
+                  <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider block mb-2">Cover Image</label>
+                  <div className="flex items-start gap-4">
+                    {blogForm.cover_image_url ? (
+                      /* eslint-disable-next-line @next/next/no-img-element */
+                      <img src={blogForm.cover_image_url} alt="Cover preview" className="w-44 h-24 shrink-0 object-cover rounded-xl border border-border" />
+                    ) : (
+                      <div className="w-44 h-24 shrink-0 rounded-xl border border-dashed border-border bg-background flex items-center justify-center text-text-subtle">
+                        <ImagePlus size={20} />
+                      </div>
+                    )}
+                    <div className="flex-1 space-y-2">
+                      <div className="flex flex-wrap gap-2">
+                        <button onClick={() => coverFileRef.current?.click()} className="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-border text-text-main px-4 py-2 rounded-xl text-[12px] font-bold transition-colors cursor-pointer">
+                          <ImagePlus size={14} /> {blogForm.cover_image_url ? 'Change (upload & crop)' : 'Upload & crop'}
+                        </button>
+                        {blogForm.cover_image_url && (
+                          <button onClick={() => setBlogForm(f => ({ ...f, cover_image_url: null }))} className="flex items-center gap-2 bg-red-500/10 hover:bg-red-500/20 text-red-400 px-4 py-2 rounded-xl text-[12px] font-bold transition-colors cursor-pointer">
+                            <Trash2 size={14} /> Remove
+                          </button>
+                        )}
+                      </div>
+                      <input value={blogForm.cover_image_url ?? ''} onChange={e => setBlogForm(f => ({ ...f, cover_image_url: e.target.value || null }))} placeholder="…or paste an image URL (e.g. /assets/cover.png)" className="w-full bg-background border border-border rounded-xl px-4 py-2 text-[13px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all" />
+                      <p className="text-[11px] text-text-subtle">Shown on the blog listing cards and as the hero banner at the top of the post.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Content (HTML/Markdown) *</label>
+                    <button onClick={() => { bodyInsertIndexRef.current = null; bodyFileRef.current?.click(); }} className="flex items-center gap-1.5 bg-white/5 hover:bg-white/10 border border-border text-text-main px-3 py-1.5 rounded-lg text-[11px] font-bold transition-colors cursor-pointer">
+                      <ImagePlus size={13} /> Insert Image at Cursor
+                    </button>
+                  </div>
+                  <textarea
+                    ref={blogContentRef}
+                    value={blogForm.content ?? ''}
+                    onChange={e => setBlogForm(f => ({ ...f, content: e.target.value }))}
+                    onDragOver={e => { if (e.dataTransfer.types.includes('Files')) e.preventDefault(); }}
+                    onDrop={e => {
+                      const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+                      if (!file) return;
+                      e.preventDefault();
+                      bodyInsertIndexRef.current = null;
+                      startImageCrop(file, 'body');
+                    }}
+                    placeholder="Write your blog content here..."
+                    rows={12}
+                    className="w-full bg-background border border-border rounded-xl px-4 py-2.5 text-[14px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all resize-y font-mono"
+                  />
+                  <p className="text-[11px] text-text-subtle mt-1.5">
+                    Add as many body images as you like — drop an image file straight onto the box, or use the button above.
+                    Then switch to the <span className="text-primary/80 font-bold">Arrange</span> tab to drag images (and any paragraph) to the exact spot you want, and set full-width / float-left / float-right placement. Text flows around floats and never overlaps.
+                  </p>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -2083,7 +2227,7 @@ export default function AdminDashboard() {
               </div>
               )}
 
-              <div className="mt-8 flex justify-end gap-3 border-t border-border pt-5">
+              <div className="mt-auto flex justify-end gap-3 border-t border-border pt-5 shrink-0">
                 <button onClick={() => setShowBlogModal(false)} className="px-5 py-2.5 rounded-xl font-bold text-[13px] text-text-muted hover:bg-white/[0.04] transition-colors cursor-pointer">
                   Cancel
                 </button>
@@ -2100,6 +2244,25 @@ export default function AdminDashboard() {
           </div>
         )}
       </AnimatePresence>
+
+      {/* Hidden pickers for blog image uploads (cover + body) */}
+      <input ref={coverFileRef} type="file" accept="image/*" className="hidden" onChange={pickBlogImage('cover')} />
+      <input ref={bodyFileRef} type="file" accept="image/*" className="hidden" onChange={pickBlogImage('body')} />
+
+      {/* Crop dialog for blog images */}
+      {cropTarget && (
+        <ImageCropModal
+          src={cropTarget.src}
+          title={cropTarget.mode === 'cover' ? 'Crop Cover Image' : 'Crop Body Image'}
+          aspects={cropTarget.mode === 'cover'
+            ? [{ label: '21:9', value: 21 / 9 }, { label: '16:9', value: 16 / 9 }]
+            : [{ label: '16:9', value: 16 / 9 }, { label: '4:3', value: 4 / 3 }, { label: '1:1', value: 1 }, { label: '3:4', value: 3 / 4 }]}
+          withPlacement={cropTarget.mode === 'body'}
+          busy={uploadingImage}
+          onCancel={closeCropModal}
+          onApply={handleCroppedImage}
+        />
+      )}
     </div>
   );
 }

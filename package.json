@@ -5,7 +5,9 @@
   "scripts": {
     "dev": "next dev -p 2020",
     "dev:api": "pnpm --filter classorbit-api dev",
-    "dev:all": "pnpm run -r --parallel dev",
+    "dev:all": "pnpm run -r --parallel --include-workspace-root dev",
+    "db:init:local": "pnpm --filter classorbit-api db:init:local",
+    "assets:upload": "pnpm --filter classorbit-api assets:upload",
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
@@ -24,6 +26,7 @@
     "next": "16.2.6",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "react-easy-crop": "^6.1.0",
     "react-hot-toast": "^2.6.0"
   },
   "devDependencies": {

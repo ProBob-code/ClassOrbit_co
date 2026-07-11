@@ -39,20 +39,36 @@ export default function FAQ() {
   const [open, setOpen] = useState<number | null>(0);
 
   return (
-    <section className="py-24 px-margin-mobile md:px-margin-page relative border-t border-white/5">
-      <div className="max-w-3xl mx-auto relative z-10">
-        <div className="text-center mb-12">
-          <span className="text-[14px] font-bold text-primary tracking-[0.2em] uppercase mb-4 block">FAQ</span>
-          <h2 className="font-display text-[40px] md:text-[52px] text-white font-extrabold leading-[1.1] tracking-tight">
+    <section className="py-24 px-margin-mobile md:px-margin-page relative z-10">
+      <div className="max-w-[1500px] mx-auto relative z-10 grid grid-cols-1 lg:grid-cols-[1fr_1.6fr] gap-10 lg:gap-16 items-start">
+        {/* Left rail — sticky intro + contact card */}
+        <div className="lg:sticky lg:top-28 text-center lg:text-left">
+          <span className="text-[13px] font-bold text-primary tracking-[0.2em] uppercase mb-3 block">FAQ</span>
+          <h2 className="font-display text-[34px] md:text-[46px] text-white font-extrabold leading-tight tracking-tight">
             Common questions
           </h2>
+          <p className="text-[16px] text-text-muted mt-4 leading-relaxed max-w-md mx-auto lg:mx-0">
+            Everything you need to know about ClassOrbit, plans, and how it fits into your classroom.
+          </p>
+          <div className="glass-card rounded-[24px] p-6 mt-8 text-left hidden lg:block">
+            <p className="text-[15px] font-bold text-white mb-1.5">Still have a question?</p>
+            <p className="text-[13px] text-text-muted leading-relaxed mb-4">
+              We answer every email from educators, usually within a day.
+            </p>
+            <a
+              href="mailto:hello@classorbit.co"
+              className="inline-flex items-center gap-2 text-[14px] font-bold text-primary hover:text-primary-hover transition-colors"
+            >
+              hello@classorbit.co →
+            </a>
+          </div>
         </div>
 
         <div className="space-y-3">
           {faqs.map((faq, i) => (
             <div
               key={i}
-              className={`glass-card rounded-2xl overflow-hidden transition-all ${open === i ? 'border-primary/30' : ''}`}
+              className={`bg-white/[0.03] backdrop-blur-xl border rounded-2xl overflow-hidden transition-all ${open === i ? 'border-primary/40 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]' : 'border-white/10'}`}
             >
               <button
                 onClick={() => setOpen(open === i ? null : i)}
@@ -77,7 +93,7 @@ export default function FAQ() {
                     transition={{ duration: 0.22 }}
                   >
                     <div className="px-6 pb-6">
-                      <div className="border-t border-white/5 pt-4">
+                      <div className="border-t border-white/10 pt-4">
                         <p className="text-[15px] text-text-muted leading-relaxed">{faq.a}</p>
                       </div>
                     </div>

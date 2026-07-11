@@ -105,6 +105,19 @@ CREATE TABLE IF NOT EXISTS blogs (
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
+-- Blog images uploaded from the admin panel (cover + body images). Bytes
+-- live in R2 (binding IMAGES, key = r2_key); this row is just metadata,
+-- served via GET /api/images/:id. Uploads are cropped/compressed
+-- client-side before hitting the worker.
+CREATE TABLE IF NOT EXISTS blog_images (
+  id TEXT PRIMARY KEY,
+  filename TEXT,
+  mime TEXT NOT NULL,
+  r2_key TEXT NOT NULL,
+  size INTEGER,
+  created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
 -- Maps a Razorpay order to a user/plan so the webhook can grant Pro server-side.
 CREATE TABLE IF NOT EXISTS payment_orders (
   order_id TEXT PRIMARY KEY,

@@ -8,7 +8,7 @@ router.get('/blogs', async (c) => {
   const db = getDB(c);
   try {
     const result = await db.prepare(
-      'SELECT id, title, slug, excerpt, author, cover_image_url, published, created_at, updated_at FROM blogs WHERE published = 1 ORDER BY created_at DESC'
+      'SELECT id, title, slug, excerpt, author, cover_image_url, published, created_at, updated_at, LENGTH(content) AS content_length FROM blogs WHERE published = 1 ORDER BY created_at DESC'
     ).all();
     return c.json({ blogs: result.results || [] });
   } catch (error: any) {

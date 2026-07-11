@@ -25,11 +25,16 @@ function LoginContent() {
   const floatingIcons = [GraduationCap, BookOpen, PenTool, FlaskConical, Calculator];
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-margin-mobile relative overflow-hidden bg-mesh-gradient">
-      {/* Background blurs */}
+    <div className="min-h-screen flex items-center justify-center px-margin-mobile relative overflow-hidden galaxy-bg">
+      {/* Galaxy backdrop */}
       <div className="absolute inset-0 pointer-events-none">
+        <div className="aurora" />
+        <div className="nebula" />
+        <div className="starfield" />
+        <div className="starfield starfield-far" />
+        <div className="shooting-star top-[12%] right-[14%]" />
         <div className="absolute top-[10%] left-[20%] w-[300px] h-[300px] bg-primary opacity-10 blur-[100px] rounded-full" />
-        <div className="absolute bottom-[10%] right-[20%] w-[400px] h-[400px] bg-indigo-500 opacity-5 blur-[120px] rounded-full" />
+        <div className="absolute bottom-[10%] right-[20%] w-[400px] h-[400px] bg-secondary opacity-10 blur-[120px] rounded-full" />
       </div>
 
       {/* Floating educational icons */}
@@ -61,7 +66,7 @@ function LoginContent() {
         transition={{ duration: 0.6 }}
         className="relative z-10 w-full max-w-md"
       >
-        <div className="glass-panel rounded-[32px] p-8 md:p-10 text-center shadow-2xl border-white/60 relative overflow-hidden">
+        <div className="glass-panel rounded-[32px] p-8 md:p-10 text-center relative overflow-hidden">
           {/* Internal gradient glow */}
           <div className="absolute -top-24 -right-24 w-48 h-48 bg-primary/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -86,7 +91,7 @@ function LoginContent() {
           {/* Google Sign In */}
           <button
             onClick={handleGoogleSignIn}
-            className="w-full flex items-center justify-center gap-3 bg-surface border border-border rounded-xl px-6 py-4.5 text-body-md font-semibold text-text-main hover:bg-background hover:border-primary transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.98]"
+            className="w-full flex items-center justify-center gap-3 bg-surface border border-border rounded-xl px-6 py-4.5 text-body-md font-semibold text-white hover:bg-background hover:border-primary transition-all duration-200 cursor-pointer shadow-sm active:scale-[0.98]"
           >
             <svg className="w-5 h-5" viewBox="0 0 24 24">
               <path
@@ -130,7 +135,7 @@ function LoginContent() {
 export default function LoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-mesh-gradient text-white">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center galaxy-bg text-white">Loading...</div>
     }>
       <LoginContent />
     </Suspense>

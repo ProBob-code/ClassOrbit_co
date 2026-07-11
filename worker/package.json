@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "wrangler dev --persist-to=../.wrangler/state",
+    "db:init:local": "node scripts/init-local-db.mjs",
+    "assets:upload": "node scripts/compress-and-upload-assets.mjs",
     "deploy": "wrangler deploy",
     "cf-typegen": "wrangler types",
     "typecheck": "tsc --noEmit",
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260609.1",
+    "sharp": "^0.33.5",
     "typescript": "^5",
     "vitest": "^2.1.8",
     "wrangler": "^4.95.0"

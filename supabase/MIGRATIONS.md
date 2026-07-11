@@ -24,6 +24,7 @@ wrangler d1 execute $DB --remote --file=supabase/d1-migration-006-blogs.sql
 wrangler d1 execute $DB --remote --file=supabase/d1-migration-007-blog-images.sql
 wrangler d1 execute $DB --remote --file=supabase/migrations/002-payments.sql
 wrangler d1 execute $DB --remote --file=supabase/migrations/004-payment-orders-and-alerts.sql
+wrangler d1 execute $DB --remote --file=supabase/migrations/005-blog-body-images.sql
 # Optional seed/content:
 # wrangler d1 execute $DB --remote --file=supabase/d1-seed-blogs.sql
 # wrangler d1 execute $DB --remote --file=supabase/d1-seed-images.sql
@@ -32,6 +33,23 @@ wrangler d1 execute $DB --remote --file=supabase/migrations/004-payment-orders-a
 Because `d1-schema.sql` already contains the complete `user_profiles`, a fresh
 DB does **not** need `migrations/003-user-profile-columns.sql` (running it would
 fail with `duplicate column name`).
+
+## Local dev database — one command
+
+The **local** D1 that `wrangler dev` uses lives in `.wrangler/state` (the `dev`
+script passes `--persist-to=../.wrangler/state`). A fresh clone starts empty, so
+the admin dashboard's non-blog tabs 500 until the tables exist. Apply the whole
+order above against the local DB with:
+
+```bash
+pnpm db:init:local        # from repo root (alias) or from worker/
+```
+
+This runs [`worker/scripts/init-local-db.mjs`](../worker/scripts/init-local-db.mjs),
+which executes the same files with `--local --persist-to=../.wrangler/state`.
+Every migration is idempotent, so it is safe to re-run any time the local DB is
+missing a table (it fills in only what's absent). No worker restart is needed
+afterward — miniflare reads the SQLite file live; just reload the app.
 
 ## One-time patches already applied to the live DB
 

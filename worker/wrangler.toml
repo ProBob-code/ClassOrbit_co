@@ -20,6 +20,10 @@ binding = "DB"
 database_name = "classorbit-db"
 database_id = "f2885e0a-53d0-4a1f-ad38-b50cd89b4948"
 
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "classorbit-images"
+
 # Capture logs/traces so failures are visible in the dashboard and `wrangler tail`
 # instead of being silently swallowed (see the "paid but shows FREE" incident).
 # Keep this table LAST: in TOML every key after a [table] header belongs to that

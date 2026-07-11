@@ -60,25 +60,10 @@ interface PricingCardProps {
 function PricingCard({ icon, tier, badge, price, priceNote, yearlyPrice, features, cta, ctaHref, highlight, isYearly, ctaVariant = 'outline', customCta }: PricingCardProps) {
   const displayPrice = isYearly && yearlyPrice ? yearlyPrice : price;
 
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className={`relative rounded-[28px] p-7 flex flex-col ${
-        highlight
-          ? 'bg-gradient-to-b from-primary/15 to-primary/5 border-2 border-primary shadow-[0_0_60px_-15px_rgba(245,158,11,0.4)]'
-          : 'glass-card'
-      }`}
-    >
-      {badge && (
-        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-white text-[11px] font-bold px-4 py-1 rounded-full shadow-glow whitespace-nowrap uppercase tracking-wider">
-          {badge}
-        </div>
-      )}
-
+  const inner = (
+    <>
       <div className="mb-6">
-        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 ${highlight ? 'bg-primary/20 text-primary' : 'bg-white/5 border border-white/10 text-text-muted'}`}>
+        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center mb-5 ${highlight ? 'bg-primary/15 text-primary' : 'bg-white/5 text-text-muted'}`}>
           {icon}
         </div>
         <h3 className="font-display text-[22px] font-bold text-white mb-1">{tier}</h3>
@@ -105,7 +90,7 @@ function PricingCard({ icon, tier, badge, price, priceNote, yearlyPrice, feature
           href={ctaHref}
           className={`w-full py-3.5 rounded-xl font-bold text-[15px] flex items-center justify-center gap-2 transition-all active:scale-[0.98] ${
             ctaVariant === 'primary'
-              ? 'bg-primary text-white hover:bg-primary-hover shadow-glow'
+              ? 'bg-primary text-white hover:bg-primary-hover shadow-[0_10px_24px_-8px_rgba(245,158,11,0.6)]'
               : ctaVariant === 'outline'
               ? 'border-2 border-primary text-primary hover:bg-primary/10'
               : 'bg-white/5 border border-white/10 text-white hover:bg-white/10'
@@ -114,6 +99,43 @@ function PricingCard({ icon, tier, badge, price, priceNote, yearlyPrice, feature
           {cta}
         </Link>
       )}
+    </>
+  );
+
+  if (highlight) {
+    // Featured plan gets the rotating border-beam treatment
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        className="relative h-full"
+      >
+        {badge && (
+          <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-white text-[11px] font-bold px-4 py-1 rounded-full shadow-[0_8px_20px_-8px_rgba(245,158,11,0.7)] whitespace-nowrap uppercase tracking-wider z-20">
+            {badge}
+          </div>
+        )}
+        <div className="border-beam h-full shadow-[0_20px_50px_-20px_rgba(245,158,11,0.4)]">
+          <div className="border-beam-inner p-7 flex flex-col">{inner}</div>
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true }}
+      className="relative rounded-[28px] p-7 flex flex-col bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_10px_30px_-10px_rgba(0,0,0,0.5)]"
+    >
+      {badge && (
+        <div className="absolute -top-3.5 left-1/2 -translate-x-1/2 bg-primary text-white text-[11px] font-bold px-4 py-1 rounded-full shadow-[0_8px_20px_-8px_rgba(245,158,11,0.7)] whitespace-nowrap uppercase tracking-wider">
+          {badge}
+        </div>
+      )}
+      {inner}
     </motion.div>
   );
 }
@@ -123,33 +145,32 @@ export default function PricingSection() {
   const { user } = useUser();
 
   return (
-    <section id="pricing" className="py-24 px-margin-mobile md:px-margin-page relative border-t border-white/5">
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-secondary/5 blur-[180px] rounded-full pointer-events-none" />
-
-      <div className="max-w-7xl mx-auto relative z-10">
+    <section id="pricing" className="py-24 px-margin-mobile md:px-margin-page relative z-10">
+      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-primary/5 blur-[180px] rounded-full pointer-events-none" />
+      <div className="max-w-[1400px] mx-auto relative z-10">
         <div className="text-center mb-12">
-          <span className="text-[14px] font-bold text-primary tracking-[0.2em] uppercase mb-4 block">Pricing</span>
-          <h2 className="font-display text-[40px] md:text-[52px] text-white font-extrabold leading-[1.1] tracking-tight">
+          <span className="text-[13px] font-bold text-primary tracking-[0.2em] uppercase mb-3 block">Pricing</span>
+          <h2 className="font-display text-[34px] md:text-[46px] text-white font-extrabold leading-tight tracking-tight">
             Simple, honest pricing
           </h2>
-          <p className="text-[18px] text-text-muted max-w-xl mx-auto mt-4">
+          <p className="text-[17px] text-text-muted max-w-xl mx-auto mt-3">
             Start free. Upgrade when you love it. Cancel anytime.
           </p>
 
           {/* Billing toggle */}
-          <div className="inline-flex items-center gap-3 mt-8 bg-surface border border-border rounded-full px-2 py-2">
+          <div className="inline-flex items-center gap-3 mt-8 bg-white/5 border border-white/10 rounded-full px-2 py-2 backdrop-blur-xl">
             <button
               onClick={() => setIsYearly(false)}
-              className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all ${!isYearly ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text-main'}`}
+              className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all ${!isYearly ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-white'}`}
             >
               Monthly
             </button>
             <button
               onClick={() => setIsYearly(true)}
-              className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all flex items-center gap-1.5 ${isYearly ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-text-main'}`}
+              className={`px-5 py-2 rounded-full text-[13px] font-bold transition-all flex items-center gap-1.5 ${isYearly ? 'bg-primary text-white shadow-sm' : 'text-text-muted hover:text-white'}`}
             >
               Yearly
-              <span className="text-[10px] bg-emerald-500/20 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">−10%</span>
+              <span className="text-[10px] bg-emerald-500/15 text-emerald-400 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">−10%</span>
             </button>
           </div>
         </div>
@@ -201,7 +222,7 @@ export default function PricingSection() {
           />
         </div>
 
-        <p className="text-center text-[13px] text-text-subtle mt-8 font-medium">
+        <p className="text-center text-[13px] text-text-muted mt-8 font-medium">
           All plans include Google SSO · No credit card required to start · Cancel anytime
         </p>
       </div>

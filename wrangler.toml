@@ -11,6 +11,8 @@ ADMIN_EMAILS = "probob.in.git@gmail.com,bobinjacob46@gmail.com"
 # Razorpay publishable key id (public by design — inlined into the browser bundle at build time).
 # Swap to the rzp_live_... id when going to production.
 NEXT_PUBLIC_RAZORPAY_KEY_ID = "rzp_test_SzAuC3qxxEhMHT"
+# Custom domain connected to the classorbit-images R2 bucket (static site assets + admin-uploaded blog images).
+NEXT_PUBLIC_ASSETS_BASE_URL = "https://images.classorbit.co"
 
 [[d1_databases]]
 binding = "DB"

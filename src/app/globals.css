@@ -14,8 +14,8 @@
   --color-secondary-hover: #9333EA;
   --color-secondary-light: rgba(139, 92, 246, 0.15);
   
-  --color-background: #06040F; /* Deepest Space Navy (Darker than before) */
-  --color-surface: #0D0822; /* Sleek Deep Purple-Navy Panel */
+  --color-background: #080314; /* Deep Space Purple-Black */
+  --color-surface: #120A2A; /* Sleek Deep Purple Panel */
   
   --color-text-main: #FFFFFF; /* Pure White */
   --color-text-muted: #A1A1AA; /* Zinc 400 */
@@ -64,18 +64,20 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* Glassmorphism 2.0 */
+/* Backdrop blurs are kept small — every glass element re-filters its backdrop on
+   each scrolled frame, and large radii make scrolling visibly janky */
 .glass-panel {
   background: rgba(13, 8, 34, 0.5);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
   border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 .glass-card {
   background: rgba(255, 255, 255, 0.02);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
@@ -86,6 +88,423 @@ h1, h2, h3, h4, h5, h6 {
   border-color: rgba(255, 255, 255, 0.15);
   transform: translateY(-4px);
   box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.7);
+}
+
+/* Opaque-ish chip for text floating over bright photos — glass-card is too
+   transparent there and the white labels wash out */
+.glass-chip {
+  background: rgba(13, 8, 34, 0.82);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  box-shadow: 0 10px 30px -8px rgba(0, 0, 0, 0.65);
+}
+
+/* ===== Light Marketing Theme (Preply-style, gold accent) ===== */
+/* Scoped helpers used ONLY on public marketing pages. The logged-in app stays dark. */
+.marketing-bg {
+  background-color: #ffffff;
+  background-image:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(245, 158, 11, 0.10) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 50% at 100% 0%, rgba(245, 158, 11, 0.05) 0%, transparent 55%);
+  color: #0f172a; /* slate-900 */
+}
+
+/* Warm off-white band, for alternating sections */
+.marketing-band {
+  background-color: #fdfaf3;
+}
+
+/* Light card — the airy analog of .glass-card */
+.card-light {
+  background: #ffffff;
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 24px;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 8px 24px -12px rgba(15, 23, 42, 0.12);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.card-light:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  transform: translateY(-4px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 20px 40px -16px rgba(15, 23, 42, 0.18);
+}
+
+.text-gradient-gold-solid {
+  background: linear-gradient(135deg, #F59E0B 0%, #F97316 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ===== Galaxy Theme (dark marketing pages) ===== */
+/* Deep-space purple base with nebula glows. Pair with .starfield layers inside a relative container. */
+.galaxy-bg {
+  background-color: #080314;
+  background-image:
+    radial-gradient(ellipse 70% 55% at 18% -10%, rgba(139, 92, 246, 0.16) 0%, transparent 60%),
+    radial-gradient(ellipse 55% 45% at 88% 8%, rgba(245, 158, 11, 0.07) 0%, transparent 55%),
+    radial-gradient(ellipse 90% 60% at 50% 115%, rgba(88, 28, 135, 0.22) 0%, transparent 65%);
+}
+
+/* Slightly lifted purple band for alternating sections on galaxy pages */
+.galaxy-band {
+  background-color: rgba(139, 92, 246, 0.045);
+}
+
+/* Twinkling starfield — layered depths. Usage inside a relative parent:
+   <div class="starfield" /> + <div class="starfield starfield-far" /> + <div class="starfield starfield-near" /> */
+.starfield {
+  position: absolute;
+  /* Extend one drift-loop width (880px) past the right edge so the transform-based
+     drift never reveals a gap — 880 is a whole number of tiles for every layer */
+  inset: 0 -880px 0 0;
+  pointer-events: none;
+  will-change: transform, opacity;
+  background-repeat: repeat;
+  background-image:
+    radial-gradient(2px 2px at 22px 34px, rgba(255, 255, 255, 0.95), transparent),
+    radial-gradient(1.4px 1.4px at 118px 152px, rgba(255, 255, 255, 0.7), transparent),
+    radial-gradient(1.8px 1.8px at 195px 66px, rgba(253, 230, 138, 0.9), transparent),
+    radial-gradient(1.3px 1.3px at 268px 204px, rgba(196, 181, 253, 0.8), transparent),
+    radial-gradient(2.2px 2.2px at 341px 98px, rgba(255, 255, 255, 0.9), transparent),
+    radial-gradient(1.2px 1.2px at 60px 245px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(1.6px 1.6px at 310px 262px, rgba(147, 197, 253, 0.75), transparent),
+    radial-gradient(1.2px 1.2px at 160px 292px, rgba(255, 255, 255, 0.55), transparent),
+    radial-gradient(1.5px 1.5px at 415px 180px, rgba(253, 230, 138, 0.6), transparent);
+  background-size: 440px 320px;
+  animation: twinkle 7s ease-in-out infinite, star-drift 240s linear infinite;
+}
+
+.starfield-far {
+  background-image:
+    radial-gradient(1px 1px at 60px 90px, rgba(255, 255, 255, 0.6), transparent),
+    radial-gradient(0.9px 0.9px at 170px 30px, rgba(196, 181, 253, 0.55), transparent),
+    radial-gradient(1px 1px at 240px 160px, rgba(255, 255, 255, 0.45), transparent),
+    radial-gradient(0.9px 0.9px at 320px 70px, rgba(253, 230, 138, 0.5), transparent),
+    radial-gradient(0.8px 0.8px at 100px 200px, rgba(255, 255, 255, 0.4), transparent),
+    radial-gradient(1px 1px at 280px 230px, rgba(147, 197, 253, 0.4), transparent);
+  background-size: 440px 260px;
+  animation: twinkle 9s ease-in-out infinite reverse, star-drift 360s linear infinite reverse;
+  animation-delay: 2s;
+}
+
+/* A few big, bright, glowing stars up close */
+.starfield-near {
+  background-image:
+    radial-gradient(3px 3px at 130px 80px, rgba(255, 255, 255, 1), rgba(255, 255, 255, 0.3) 40%, transparent),
+    radial-gradient(2.6px 2.6px at 420px 300px, rgba(253, 230, 138, 0.95), rgba(253, 230, 138, 0.25) 45%, transparent),
+    radial-gradient(2.8px 2.8px at 640px 140px, rgba(196, 181, 253, 0.95), rgba(196, 181, 253, 0.25) 45%, transparent),
+    radial-gradient(3.2px 3.2px at 300px 420px, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.2) 45%, transparent);
+  background-size: 880px 520px;
+  animation: twinkle 5s ease-in-out infinite, star-drift 180s linear infinite;
+  animation-delay: 1s;
+}
+
+@keyframes twinkle {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* Very slow sideways drift — a whole number of tile-widths per loop keeps it
+   seamless. Animating transform (not background-position) lets the compositor
+   move the layer without repainting it every frame. */
+@keyframes star-drift {
+  from { transform: translateX(0); }
+  to { transform: translateX(-880px); }
+}
+
+/* Animated nebula clouds — breathing color fields over the galaxy base */
+.nebula {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(ellipse 45% 35% at 22% 18%, rgba(139, 92, 246, 0.30), transparent 70%),
+    radial-gradient(ellipse 35% 30% at 78% 10%, rgba(217, 70, 239, 0.16), transparent 70%),
+    radial-gradient(ellipse 50% 40% at 60% 88%, rgba(88, 28, 135, 0.34), transparent 70%),
+    radial-gradient(ellipse 30% 25% at 90% 55%, rgba(245, 158, 11, 0.12), transparent 70%),
+    radial-gradient(ellipse 28% 22% at 8% 65%, rgba(59, 130, 246, 0.10), transparent 70%);
+  animation: nebula-breathe 16s ease-in-out infinite;
+}
+
+@keyframes nebula-breathe {
+  0%, 100% { opacity: 0.75; }
+  50% { opacity: 1; }
+}
+
+/* Soft diagonal milky-way band */
+.milky-way {
+  position: absolute;
+  left: -25%;
+  right: -25%;
+  top: 6%;
+  height: 46%;
+  transform: rotate(-14deg);
+  background: linear-gradient(
+    180deg,
+    transparent,
+    rgba(196, 181, 253, 0.07) 30%,
+    rgba(255, 255, 255, 0.055) 50%,
+    rgba(196, 181, 253, 0.07) 70%,
+    transparent
+  );
+  filter: blur(20px);
+  pointer-events: none;
+}
+
+/* Infinite horizontal marquee (duplicate the track content twice) */
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 32s linear infinite;
+}
+
+.animate-marquee:hover {
+  animation-play-state: paused;
+}
+
+/* Slower marquee row + reverse direction — for full-bleed testimonial rows */
+.animate-marquee-slow {
+  animation: marquee 55s linear infinite;
+}
+
+.animate-marquee-reverse {
+  animation: marquee 65s linear infinite reverse;
+}
+
+.animate-marquee-slow:hover,
+.animate-marquee-reverse:hover {
+  animation-play-state: paused;
+}
+
+/* The duplicated copy of marquee content — participates in the flex track
+   for the seamless loop, but is invisible to layout as a box */
+.marquee-clone {
+  display: contents;
+}
+
+/* ===== 2026 Motion Kit ===== */
+
+/* Aurora ribbons — huge blurred conic sweeps drifting behind hero content */
+.aurora {
+  position: absolute;
+  inset: -20%;
+  pointer-events: none;
+  filter: blur(90px);
+  opacity: 0.5;
+  will-change: transform;
+  background:
+    conic-gradient(from 180deg at 30% 30%, transparent 0deg, rgba(139, 92, 246, 0.28) 60deg, transparent 140deg),
+    conic-gradient(from 0deg at 75% 60%, transparent 0deg, rgba(245, 158, 11, 0.14) 50deg, transparent 120deg),
+    conic-gradient(from 90deg at 50% 90%, transparent 0deg, rgba(217, 70, 239, 0.16) 70deg, transparent 160deg);
+  animation: aurora-drift 26s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-drift {
+  0% { transform: rotate(0deg) scale(1); }
+  50% { transform: rotate(6deg) scale(1.08); }
+  100% { transform: rotate(-4deg) scale(1.02); }
+}
+
+/* Animated shimmer sweep over gradient text — apply on top of a bg-clip:text element */
+.text-shimmer {
+  background: linear-gradient(
+    110deg,
+    #FDE68A 20%,
+    #F59E0B 38%,
+    #FFF7DB 50%,
+    #F59E0B 62%,
+    #FDE68A 80%
+  );
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  animation: shimmer-sweep 5s ease-in-out infinite;
+}
+
+@keyframes shimmer-sweep {
+  0%, 100% { background-position: 110% 0; }
+  50% { background-position: -10% 0; }
+}
+
+/* Rotating border beam — wrap card in .border-beam, content in .border-beam-inner */
+.border-beam {
+  position: relative;
+  border-radius: 28px;
+  padding: 1.5px;
+  overflow: hidden;
+  isolation: isolate;
+}
+
+.border-beam::before {
+  content: '';
+  position: absolute;
+  inset: -150%;
+  background: conic-gradient(
+    from var(--beam-angle, 0deg),
+    transparent 0deg,
+    transparent 300deg,
+    rgba(245, 158, 11, 0.9) 330deg,
+    rgba(139, 92, 246, 0.9) 350deg,
+    transparent 360deg
+  );
+  animation: beam-spin 6s linear infinite;
+  z-index: -1;
+}
+
+@keyframes beam-spin {
+  to { transform: rotate(360deg); }
+}
+
+.border-beam-inner {
+  border-radius: 26.5px;
+  background: #0E0724;
+  height: 100%;
+}
+
+/* Faint dot-grid texture band, fades out at edges */
+.dot-grid {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.14) 1px, transparent 1px);
+  background-size: 26px 26px;
+  mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, black 0%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse 65% 55% at 50% 50%, black 0%, transparent 75%);
+}
+
+/* Gentle levitation with a slight tilt — for badges/chips floating over imagery */
+@keyframes levitate {
+  0%, 100% { transform: translateY(0) rotate(-1.2deg); }
+  50% { transform: translateY(-12px) rotate(1.2deg); }
+}
+
+.animate-levitate {
+  animation: levitate 7s ease-in-out infinite;
+}
+
+/* Soft pop-glow pulse for CTA emphasis */
+@keyframes cta-pulse {
+  0%, 100% { box-shadow: 0 0 40px -10px rgba(245, 158, 11, 0.4); }
+  50% { box-shadow: 0 0 70px -8px rgba(245, 158, 11, 0.65); }
+}
+
+.animate-cta-pulse {
+  animation: cta-pulse 3.2s ease-in-out infinite;
+}
+
+/* 3D tilt-on-hover card (pure CSS approximation) */
+.tilt-card {
+  transform-style: preserve-3d;
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.tilt-card:hover {
+  transform: perspective(900px) rotateX(3deg) rotateY(-3deg) translateY(-6px);
+}
+
+/* A single occasional shooting star — one element, long idle between streaks */
+.shooting-star {
+  position: absolute;
+  width: 130px;
+  height: 2px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.9), rgba(253, 230, 138, 0.4), transparent);
+  opacity: 0;
+  pointer-events: none;
+  animation: shoot 11s ease-in infinite;
+}
+
+@keyframes shoot {
+  0%, 84% { opacity: 0; transform: translate3d(0, 0, 0) rotate(-32deg); }
+  86% { opacity: 1; }
+  93%, 100% { opacity: 0; transform: translate3d(-52vw, 34vh, 0) rotate(-32deg); }
+}
+
+/* Plain rotation (for orbit rings that are already centered) */
+@keyframes rotate-slow {
+  to { transform: rotate(360deg); }
+}
+
+.animate-rotate-slow {
+  animation: rotate-slow 46s linear infinite;
+}
+
+.animate-rotate-reverse {
+  animation: rotate-slow 60s linear infinite reverse;
+}
+
+/* ===== Blog index ===== */
+
+/* Cards float up as the page loads; stagger via --rise-delay set inline per card */
+.blog-rise {
+  opacity: 0;
+  animation: blog-rise 0.7s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  animation-delay: var(--rise-delay, 0s);
+}
+
+@keyframes blog-rise {
+  from { opacity: 0; transform: translateY(26px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Horizontal article rail — native scroll, custom chrome (arrows + progress thumb) */
+.blog-rail {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.blog-rail::-webkit-scrollbar {
+  display: none;
+}
+
+/* Featured post — glass card with a faint gold edge that wakes up on hover */
+.featured-card {
+  position: relative;
+  background: linear-gradient(120deg, rgba(245, 158, 11, 0.07), rgba(13, 8, 34, 0.55) 40%, rgba(139, 92, 246, 0.08));
+  border: 1px solid rgba(245, 158, 11, 0.22);
+  box-shadow: 0 24px 60px -14px rgba(0, 0, 0, 0.8);
+  transition: border-color 0.5s ease, box-shadow 0.5s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.featured-card:hover {
+  border-color: rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 60px -12px rgba(245, 158, 11, 0.35), 0 30px 70px -14px rgba(0, 0, 0, 0.85);
+  transform: translateY(-4px);
+}
+
+/* Respect users who prefer less motion — the galaxy goes still, nothing breaks */
+@media (prefers-reduced-motion: reduce) {
+  .starfield,
+  .starfield-far,
+  .starfield-near,
+  .nebula,
+  .shooting-star,
+  .aurora,
+  .text-shimmer,
+  .animate-rotate-slow,
+  .animate-rotate-reverse,
+  .animate-float,
+  .animate-pulse-glow,
+  .animate-marquee,
+  .animate-marquee-slow,
+  .animate-marquee-reverse,
+  .animate-levitate,
+  .animate-cta-pulse {
+    animation: none;
+  }
+  .border-beam::before { animation: none; }
+  .shooting-star { opacity: 0; }
+  .blog-rise { animation: none; opacity: 1; }
+  /* Marquees go still: drop the loop clones (no visible repeats)
+     and let the row be swiped/scrolled by hand instead */
+  .marquee-clone { display: none; }
+  .marquee-viewport { overflow-x: auto; }
 }
 
 /* Dynamic Gradients for Backgrounds */
@@ -229,4 +648,5 @@ h1, h2, h3, h4, h5, h6 {
 ::-webkit-scrollbar-thumb:hover {
   background-color: rgba(255, 255, 255, 0.3);
 }
+
 

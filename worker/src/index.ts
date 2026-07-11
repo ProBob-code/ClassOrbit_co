@@ -10,6 +10,7 @@ import support from './routes/support';
 import payment from './routes/payment';
 import admin from './routes/admin';
 import blogs from './routes/blogs';
+import images from './routes/images';
 
 const app = new Hono<AppEnv>();
 
@@ -39,6 +40,7 @@ api.route('/', support);
 api.route('/', payment);
 api.route('/', admin);
 api.route('/', blogs);
+api.route('/', images);
 
 app.route('/api', api);
 

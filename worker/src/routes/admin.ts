@@ -40,14 +40,14 @@ router.get('/admin/:action{.+}', async (c) => {
       feedbackList,
       openTickets,
     ] = await Promise.all([
-      db.prepare('SELECT COUNT(*) as count FROM saved_prompts').first<{ count: number }>(),
-      db.prepare('SELECT COUNT(*) as count FROM user_profiles').first<{ count: number }>(),
+      db.prepare('SELECT COUNT(*) as count FROM saved_prompts').first<{ count: number }>().catch(() => ({ count: 0 })),
+      db.prepare('SELECT COUNT(*) as count FROM user_profiles').first<{ count: number }>().catch(() => ({ count: 0 })),
       db.prepare("SELECT COUNT(*) as count FROM user_profiles WHERE plan_type = 'pro'").first<{ count: number }>().catch(() => ({ count: 0 })),
-      db.prepare('SELECT COUNT(*) as count FROM waitlist').first<{ count: number }>(),
-      db.prepare('SELECT COUNT(*) as count FROM system_tools WHERE active = 1').first<{ count: number }>(),
-      db.prepare('SELECT COUNT(*) as count FROM system_tools').first<{ count: number }>(),
-      db.prepare('SELECT user_id, topic, content_type, created_at FROM saved_prompts ORDER BY created_at DESC LIMIT 10').all(),
-      db.prepare('SELECT email, name, created_at FROM waitlist ORDER BY created_at DESC LIMIT 10').all(),
+      db.prepare('SELECT COUNT(*) as count FROM waitlist').first<{ count: number }>().catch(() => ({ count: 0 })),
+      db.prepare('SELECT COUNT(*) as count FROM system_tools WHERE active = 1').first<{ count: number }>().catch(() => ({ count: 0 })),
+      db.prepare('SELECT COUNT(*) as count FROM system_tools').first<{ count: number }>().catch(() => ({ count: 0 })),
+      db.prepare('SELECT user_id, topic, content_type, created_at FROM saved_prompts ORDER BY created_at DESC LIMIT 10').all().catch(() => ({ results: [] })),
+      db.prepare('SELECT email, name, created_at FROM waitlist ORDER BY created_at DESC LIMIT 10').all().catch(() => ({ results: [] })),
       db.prepare('SELECT tool_id, tool_name, is_custom, COUNT(*) as count, MAX(created_at) as last_used FROM tool_usage GROUP BY tool_id, tool_name, is_custom ORDER BY count DESC LIMIT 20').all().catch(() => ({ results: [] })),
       db.prepare('SELECT c.id, c.user_id, c.tool_name, c.tool_url, c.description, c.category, c.is_free, c.created_at, p.email as user_email FROM custom_tools c LEFT JOIN user_profiles p ON c.user_id = p.user_id ORDER BY c.created_at DESC LIMIT 50').all().catch(() => ({ results: [] })),
       db.prepare('SELECT AVG(rating) as avg, COUNT(*) as count FROM platform_feedback').first<{ avg: number; count: number }>().catch(() => ({ avg: 0, count: 0 })),
@@ -221,6 +221,32 @@ router.post('/admin/:action{.+}', async (c) => {
     }
   }
 
+  if (path === 'images') {
+    const { filename, mime, data_base64 } = await c.req.json();
+    if (!mime?.startsWith('image/') || typeof data_base64 !== 'string' || !data_base64) {
+      return c.json({ error: 'mime (image/*) and data_base64 required' }, 400);
+    }
+    // Client compresses crops before upload; this is just a sanity cap
+    // against abuse now that bytes go to R2 instead of a D1 row.
+    if (data_base64.length > 11_000_000) {
+      return c.json({ error: 'Image too large. Max ~8MB after compression.' }, 413);
+    }
+    const id = nanoid();
+    const ext = mime.split('/')[1]?.split('+')[0] || 'bin';
+    const r2Key = `blog/${id}.${ext}`;
+    try {
+      const bytes = Uint8Array.from(atob(data_base64), (ch) => ch.charCodeAt(0));
+      await c.env.IMAGES.put(r2Key, bytes, { httpMetadata: { contentType: mime } });
+      await db.prepare(
+        'INSERT INTO blog_images (id, filename, mime, r2_key, size) VALUES (?, ?, ?, ?, ?)'
+      ).bind(id, filename ?? null, mime, r2Key, bytes.byteLength).run();
+      return c.json({ id, url: `/api/images/${id}` });
+    } catch (error: any) {
+      console.error('Failed to store image:', error);
+      return c.json({ error: 'Failed to store image' }, 500);
+    }
+  }
+
   if (path === 'blogs') {
     const { title, slug, content, excerpt, author, published, cover_image_url } = await c.req.json();
     if (!title?.trim() || !slug?.trim() || !content?.trim()) {
@@ -325,6 +351,19 @@ router.delete('/admin/:action{.+}', async (c) => {
     } catch (error: any) {
       console.error('Failed to delete blog:', error);
       return c.json({ error: 'Failed to delete blog' }, 500);
+    }
+  }
+
+  if (segments.length === 2 && segments[0] === 'images') {
+    const id = segments[1];
+    try {
+      const row = await db.prepare('SELECT r2_key FROM blog_images WHERE id = ?').bind(id).first<{ r2_key: string }>();
+      if (row) await c.env.IMAGES.delete(row.r2_key);
+      await db.prepare('DELETE FROM blog_images WHERE id = ?').bind(id).run();
+      return c.json({ ok: true });
+    } catch (error: any) {
+      console.error('Failed to delete image:', error);
+      return c.json({ error: 'Failed to delete image' }, 500);
     }
   }
 

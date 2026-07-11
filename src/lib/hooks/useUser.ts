@@ -19,7 +19,8 @@ export function useUser() {
   useEffect(() => {
     const supabase = createClient();
 
-    // Get initial session
+    // Get initial session — a failed network call (offline, Supabase unreachable)
+    // must degrade to "signed out", not surface as an unhandled rejection
     supabase.auth.getUser().then(({ data: { user } }) => {
       setUser(user);
       if (user) {
@@ -30,6 +31,10 @@ export function useUser() {
           avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
         });
       }
+      setLoading(false);
+    }).catch(() => {
+      setUser(null);
+      setProfile(null);
       setLoading(false);
     });
 
@@ -54,7 +59,7 @@ export function useUser() {
 
   const signOut = useCallback(async () => {
     const supabase = createClient();
-    await supabase.auth.signOut();
+    await supabase.auth.signOut().catch(() => {});
     setUser(null);
     setProfile(null);
     // Redirect to home after sign out
