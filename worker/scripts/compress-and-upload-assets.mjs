@@ -40,7 +40,7 @@ try {
     console.log(`Uploading ${key}...`);
     execFileSync('npx', [
       'wrangler', 'r2', 'object', 'put', `${BUCKET}/${key}`,
-      `--file=${outPath}`, '--content-type=image/webp',
+      `--file=${outPath}`, '--content-type=image/webp', '--remote',
     ], { stdio: 'inherit', shell: true });
   }
   console.log('Done. Verify objects in the R2 dashboard under the "site/" prefix.');
