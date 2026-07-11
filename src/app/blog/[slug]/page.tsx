@@ -10,7 +10,7 @@ export const runtime = 'edge';
 
 async function getBlogBySlug(slug: string) {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/api/blogs/${slug}`, { next: { revalidate: 60 } });
+    const res = await fetch(`${getApiBaseUrl()}/api/blogs/${slug}`, { cache: 'no-store' });
     if (!res.ok) return null;
     const data = await res.json();
     return data.blog;
@@ -28,7 +28,7 @@ interface RelatedPost {
 
 async function getRelatedPosts(currentSlug: string): Promise<RelatedPost[]> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/api/blogs`, { next: { revalidate: 60 } });
+    const res = await fetch(`${getApiBaseUrl()}/api/blogs`, { cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
     return ((data.blogs || []) as RelatedPost[]).filter((p) => p.slug !== currentSlug).slice(0, 3);

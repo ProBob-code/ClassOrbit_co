@@ -14,7 +14,7 @@ export const runtime = 'edge';
 
 async function getBlogs(): Promise<BlogPost[]> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/api/blogs`, { next: { revalidate: 60 } });
+    const res = await fetch(`${getApiBaseUrl()}/api/blogs`, { cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
     return data.blogs || [];
