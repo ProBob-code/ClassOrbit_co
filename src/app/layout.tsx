@@ -53,9 +53,6 @@ export const metadata: Metadata = {
     images: ['/og-image.png'],
     creator: '@classorbit',
   },
-  icons: {
-    apple: '/logo_transparent.png',
-  },
   manifest: undefined,
   alternates: {
     canonical: BASE_URL,
