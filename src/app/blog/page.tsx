@@ -12,19 +12,23 @@ export const metadata: Metadata = {
 
 export const runtime = 'edge';
 
-async function getBlogs(): Promise<BlogPost[]> {
+async function getBlogs(): Promise<{ posts: BlogPost[]; debug?: string }> {
+  const url = `${getApiBaseUrl()}/api/blogs`;
   try {
-    const res = await fetch(`${getApiBaseUrl()}/api/blogs`, { cache: 'no-store' });
-    if (!res.ok) return [];
+    const res = await fetch(url, { cache: 'no-store' });
+    if (!res.ok) {
+      const body = await res.text().catch(() => '');
+      return { posts: [], debug: `GET ${url} -> ${res.status}: ${body.slice(0, 300)}` };
+    }
     const data = await res.json();
-    return data.blogs || [];
-  } catch {
-    return [];
+    return { posts: data.blogs || [] };
+  } catch (err) {
+    return { posts: [], debug: `fetch ${url} threw: ${err instanceof Error ? err.stack || err.message : String(err)}` };
   }
 }
 
 export default async function BlogPage() {
-  const posts = await getBlogs();
+  const { posts, debug } = await getBlogs();
 
   return (
     <>
@@ -58,6 +62,11 @@ export default async function BlogPage() {
               <p className="text-text-muted">
                 Our first guides are in orbit and landing soon. Check back shortly.
               </p>
+              {debug && (
+                <p className="mt-4 text-left text-xs text-red-400 whitespace-pre-wrap break-all font-mono">
+                  DEBUG: {debug}
+                </p>
+              )}
             </div>
           ) : (
             <BlogShowcase posts={posts} />
