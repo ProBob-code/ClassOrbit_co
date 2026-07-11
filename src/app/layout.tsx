@@ -54,8 +54,6 @@ export const metadata: Metadata = {
     creator: '@classorbit',
   },
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon.ico',
     apple: '/logo_transparent.png',
   },
   manifest: undefined,
