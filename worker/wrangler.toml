@@ -6,7 +6,11 @@ compatibility_flags = ["nodejs_compat"]
 
 routes = [
   { pattern = "classorbit.co/api/*", zone_name = "classorbit.co" },
-  { pattern = "www.classorbit.co/api/*", zone_name = "classorbit.co" }
+  { pattern = "www.classorbit.co/api/*", zone_name = "classorbit.co" },
+  # Custom Domain (not a route) so the Next.js Worker can call this API server-side.
+  # Same-zone Worker-to-Worker fetch() is blocked when the target is a route
+  # (Cloudflare error 1042); Custom Domains are exempt from that restriction.
+  { pattern = "api.classorbit.co", custom_domain = true }
 ]
 
 [vars]
