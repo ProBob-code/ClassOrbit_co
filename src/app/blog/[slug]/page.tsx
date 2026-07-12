@@ -7,10 +7,11 @@ import BlogContent, { extractHeadings } from '@/components/blog/BlogContent';
 import TocNav from '@/components/blog/TocNav';
 
 export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
 
 async function getBlogBySlug(slug: string) {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/api/blogs/${slug}`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/api/blogs/${slug}`);
     if (!res.ok) return null;
     const data = await res.json();
     return data.blog;
@@ -28,7 +29,7 @@ interface RelatedPost {
 
 async function getRelatedPosts(currentSlug: string): Promise<RelatedPost[]> {
   try {
-    const res = await fetch(`${getApiBaseUrl()}/api/blogs`, { cache: 'no-store' });
+    const res = await fetch(`${getApiBaseUrl()}/api/blogs`);
     if (!res.ok) return [];
     const data = await res.json();
     return ((data.blogs || []) as RelatedPost[]).filter((p) => p.slug !== currentSlug).slice(0, 3);
