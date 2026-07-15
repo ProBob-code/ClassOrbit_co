@@ -39,6 +39,7 @@ router.get('/admin/:action{.+}', async (c) => {
       feedbackStats,
       feedbackList,
       openTickets,
+      paymentGatewayMode,
     ] = await Promise.all([
       db.prepare('SELECT COUNT(*) as count FROM saved_prompts').first<{ count: number }>().catch(() => ({ count: 0 })),
       db.prepare('SELECT COUNT(*) as count FROM user_profiles').first<{ count: number }>().catch(() => ({ count: 0 })),
@@ -53,6 +54,7 @@ router.get('/admin/:action{.+}', async (c) => {
       db.prepare('SELECT AVG(rating) as avg, COUNT(*) as count FROM platform_feedback').first<{ avg: number; count: number }>().catch(() => ({ avg: 0, count: 0 })),
       db.prepare('SELECT user_email, rating, feedback, created_at FROM platform_feedback ORDER BY created_at DESC LIMIT 50').all().catch(() => ({ results: [] })),
       db.prepare("SELECT COUNT(*) as count FROM support_tickets WHERE status = 'open'").first<{ count: number }>().catch(() => ({ count: 0 })),
+      db.prepare("SELECT value FROM platform_settings WHERE key = 'payment_gateway_mode'").first<{ value: string }>().catch(() => ({ value: 'test' })),
     ]);
 
     return c.json({
@@ -70,6 +72,7 @@ router.get('/admin/:action{.+}', async (c) => {
       feedback_count: feedbackStats?.count ?? 0,
       feedback_list: feedbackList?.results ?? [],
       open_tickets_count: openTickets?.count ?? 0,
+      payment_gateway_mode: paymentGatewayMode?.value ?? 'test',
     });
   }
 
@@ -277,6 +280,34 @@ router.patch('/admin/:action{.+}', async (c) => {
   const denied = await requireAdmin(c);
   if (denied) return denied;
   const db = getDB(c);
+
+  if (path === 'payment-mode') {
+    const { mode, password } = await c.req.json();
+    if (mode !== 'test' && mode !== 'live') {
+      return c.json({ error: 'Invalid mode' }, 400);
+    }
+  
+    // Re-confirm with the admin password (a worker secret). Never hardcode a
+    // password here — this repo is public.
+    if (!c.env.ADMIN_PASSWORD || password !== c.env.ADMIN_PASSWORD) {
+      return c.json({ error: 'Invalid admin password' }, 403);
+    }
+    // Refuse to enter live mode unless the live Razorpay secrets exist on this
+    // worker — otherwise every checkout would fail with an auth error.
+    if (mode === 'live' && (!c.env.RAZORPAY_KEY_ID_LIVE || !c.env.RAZORPAY_KEY_SECRET_LIVE)) {
+      return c.json({ error: 'Live Razorpay keys are not configured. Set RAZORPAY_KEY_ID_LIVE and RAZORPAY_KEY_SECRET_LIVE with `wrangler secret put` first.' }, 500);
+    }
+
+    try {
+      await db.prepare(
+        "INSERT INTO platform_settings (key, value) VALUES ('payment_gateway_mode', ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value"
+      ).bind(mode).run();
+      return c.json({ ok: true, mode });
+    } catch (err: any) {
+      console.error('Failed to update payment mode:', err);
+      return c.json({ error: 'Failed to update payment mode' }, 500);
+    }
+  }
 
   if (segments.length === 2 && segments[0] === 'tools') {
     const id = segments[1];

@@ -1,4 +1,4 @@
-import { Hono } from 'hono';
+import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../types';
 import { getDB } from '../lib/d1';
 import { getSupabase } from '../lib/supabase';
@@ -13,6 +13,28 @@ import {
 } from '../lib/billing';
 
 const router = new Hono<AppEnv>();
+
+async function getRazorpayKeys(c: Context<AppEnv>) {
+  let mode = 'test';
+  try {
+    const db = getDB(c);
+    const row = await db.prepare("SELECT value FROM platform_settings WHERE key = 'payment_gateway_mode'").first<{ value: string }>();
+    if (row?.value) mode = row.value;
+  } catch (err) {
+    // Ignore if table doesn't exist yet
+  }
+  
+  if (mode === 'live') {
+    return {
+      keyId: c.env.RAZORPAY_KEY_ID_LIVE,
+      keySecret: c.env.RAZORPAY_KEY_SECRET_LIVE,
+    };
+  }
+  return {
+    keyId: c.env.RAZORPAY_KEY_ID,
+    keySecret: c.env.RAZORPAY_KEY_SECRET,
+  };
+}
 
 /**
  * Upserts a user to Pro and records the payment. Idempotent — safe to call from
@@ -68,7 +90,8 @@ router.post('/create-order', async (c) => {
   const { amount, description } = PLANS[plan];
   const receipt = `co_${user.id.slice(0, 8)}_${Date.now()}`;
 
-  const auth = btoa(`${c.env.RAZORPAY_KEY_ID}:${c.env.RAZORPAY_KEY_SECRET}`);
+  const { keyId, keySecret } = await getRazorpayKeys(c);
+  const auth = btoa(`${keyId}:${keySecret}`);
   const rzpRes = await fetch('https://api.razorpay.com/v1/orders', {
     method: 'POST',
     headers: { Authorization: `Basic ${auth}`, 'Content-Type': 'application/json' },
@@ -99,7 +122,7 @@ router.post('/create-order', async (c) => {
     console.error('[payment] could not record payment_orders for', order.id, err);
   }
 
-  return c.json({ order_id: order.id, amount: order.amount, currency: order.currency, description, plan });
+  return c.json({ order_id: order.id, amount: order.amount, currency: order.currency, description, plan, key_id: keyId });
 });
 
 router.post('/verify-payment', async (c) => {
@@ -116,11 +139,12 @@ router.post('/verify-payment', async (c) => {
     return c.json({ error: 'Invalid plan' }, 400);
   }
 
+  const { keySecret } = await getRazorpayKeys(c);
   const valid = await verifyPaymentSignature(
     razorpay_order_id,
     razorpay_payment_id,
     razorpay_signature,
-    c.env.RAZORPAY_KEY_SECRET,
+    keySecret,
   );
   if (!valid) {
     return c.json({ error: 'Invalid payment signature' }, 400);

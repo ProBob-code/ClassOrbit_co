@@ -77,14 +77,14 @@ export default function CheckoutButton({ plan, label, className, onSuccess }: Pr
       return;
     }
 
-    if (!process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID) {
+    if (!orderData?.key_id) {
       toast.error('Payment is not configured. Please contact support.');
       setLoading(false);
       return;
     }
 
     const options = {
-      key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+      key: orderData.key_id,
       amount: orderData.amount,
       currency: orderData.currency,
       name: 'ClassOrbit',

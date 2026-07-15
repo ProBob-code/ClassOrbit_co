@@ -25,6 +25,7 @@ wrangler d1 execute $DB --remote --file=supabase/d1-migration-007-blog-images.sq
 wrangler d1 execute $DB --remote --file=supabase/migrations/002-payments.sql
 wrangler d1 execute $DB --remote --file=supabase/migrations/004-payment-orders-and-alerts.sql
 wrangler d1 execute $DB --remote --file=supabase/migrations/005-blog-body-images.sql
+wrangler d1 execute $DB --remote --file=supabase/migrations/006-platform-settings.sql
 # Optional seed/content:
 # wrangler d1 execute $DB --remote --file=supabase/d1-seed-blogs.sql
 # wrangler d1 execute $DB --remote --file=supabase/d1-seed-images.sql
@@ -59,7 +60,7 @@ afterward — miniflare reads the SQLite file live; just reload the app.
 
 ## Adding a new migration
 
-1. Create `migrations/00N-short-name.sql` (next number after 003).
+1. Create `migrations/00N-short-name.sql` (next number after 006).
 2. Make it forward-only and, where practical, idempotent.
 3. Run it with `wrangler d1 execute classorbit-db --remote --file=...`.
 4. If it changes a base table, also update `d1-schema.sql` so fresh DBs match.

@@ -136,3 +136,8 @@ CREATE TABLE IF NOT EXISTS alert_log (
   alert_key TEXT PRIMARY KEY,
   last_sent_at DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE IF NOT EXISTS platform_settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL
+);

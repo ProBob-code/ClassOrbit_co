@@ -11,7 +11,7 @@ import {
   ExternalLink, X, Rocket, Mail, Clock, BarChart3,
   UserCheck, Crown, ListOrdered, Search, ShieldAlert, CheckCircle2,
   Star, MessageSquare, LifeBuoy,
-  Bot, User, Send, ArrowLeft, BookOpen, Eye, Pencil, ImagePlus, LayoutList
+  Bot, User, Send, ArrowLeft, BookOpen, Eye, EyeOff, Pencil, ImagePlus, LayoutList
 } from 'lucide-react';
 import BlogContent from '@/components/blog/BlogContent';
 import ImageCropModal, { type CroppedImage } from '@/components/admin/ImageCropModal';
@@ -34,6 +34,7 @@ interface Stats {
   feedback_count: number;
   feedback_list: { user_email: string; rating: number; feedback: string; created_at: string }[];
   open_tickets_count?: number;
+  payment_gateway_mode?: 'test' | 'live';
 }
 
 interface Ticket {
@@ -149,6 +150,12 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [authed, setAuthed] = useState(false);
   const [checking, setChecking] = useState(true);
+
+  // Payment mode toggle modal
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [paymentModalPassword, setPaymentModalPassword] = useState('');
+  const [showPaymentPassword, setShowPaymentPassword] = useState(false);
+  const [isSwitchingPayment, setIsSwitchingPayment] = useState(false);
 
   const [activeTab, setActiveTab] = useState<Tab>('overview');
   const [stats, setStats] = useState<Stats | null>(null);
@@ -679,6 +686,40 @@ export default function AdminDashboard() {
     router.replace('/admin/login');
   };
 
+  const handleTogglePaymentMode = () => {
+    setPaymentModalPassword('');
+    setIsPaymentModalOpen(true);
+  };
+
+  const submitPaymentToggle = async () => {
+    if (!paymentModalPassword) return;
+
+    const currentMode = stats?.payment_gateway_mode || 'test';
+    const targetMode = currentMode === 'test' ? 'live' : 'test';
+
+    setIsSwitchingPayment(true);
+    try {
+      const res = await fetch('/api/admin/payment-mode', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mode: targetMode, password: paymentModalPassword })
+      });
+      const data = await res.json() as any;
+      
+      if (res.ok) {
+        toast.success(`Payment gateway switched to ${targetMode.toUpperCase()} mode!`);
+        await loadStats();
+        setIsPaymentModalOpen(false);
+      } else {
+        toast.error(data.error || 'Failed to switch payment mode');
+      }
+    } catch {
+      toast.error('Failed to communicate with server');
+    } finally {
+      setIsSwitchingPayment(false);
+    }
+  };
+
   // Maps a tool to prep, teach, or support phase (aligned with user launcher page)
   const getToolPhase = (tool: AdminTool): string => {
     if (tool.category === 'text' || tool.category === 'research' || tool.id === 'notebooklm') return 'prep';
@@ -768,6 +809,22 @@ export default function AdminDashboard() {
               >
                 <RefreshCw size={14} className="text-primary" />
                 Refresh
+              </button>
+              
+              <button
+                onClick={handleTogglePaymentMode}
+                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 cursor-pointer shadow-sm border ${
+                  stats?.payment_gateway_mode === 'live' 
+                    ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20' 
+                    : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
+                }`}
+                title="Toggle Payment Gateway Mode"
+              >
+                {stats?.payment_gateway_mode === 'live' ? (
+                  <><ToggleRight size={16} /> Live PG</>
+                ) : (
+                  <><ToggleLeft size={16} /> Test PG</>
+                )}
               </button>
               <button
                 onClick={handleLogout}
@@ -2263,6 +2320,66 @@ export default function AdminDashboard() {
           onApply={handleCroppedImage}
         />
       )}
+
+      {/* Payment Gateway Toggle Modal */}
+      <AnimatePresence>
+        {isPaymentModalOpen && (
+          <div className="fixed inset-0 bg-[#06040F]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className="bg-surface border border-border rounded-2xl w-full max-w-sm p-6 shadow-2xl relative"
+            >
+              <h3 className="font-display text-[18px] font-bold text-text-main mb-2">Switch Payment Mode</h3>
+              <p className="text-[13px] text-text-muted mb-5">
+                Enter your admin password to switch the payment gateway to 
+                <span className="font-bold text-text-main ml-1">
+                  {(stats?.payment_gateway_mode === 'test' ? 'LIVE' : 'TEST')}
+                </span>.
+              </p>
+
+              <div className="mb-6 relative">
+                <input
+                  type={showPaymentPassword ? "text" : "password"}
+                  value={paymentModalPassword}
+                  onChange={(e) => setPaymentModalPassword(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') submitPaymentToggle();
+                  }}
+                  placeholder="Enter password"
+                  autoFocus
+                  className="w-full bg-background border border-border rounded-xl px-4 py-2.5 pr-10 text-[14px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPaymentPassword(!showPaymentPassword)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-main transition-colors cursor-pointer"
+                >
+                  {showPaymentPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <button
+                  onClick={() => setIsPaymentModalOpen(false)}
+                  className="px-4 py-2 rounded-xl font-bold text-[13px] text-text-muted hover:bg-white/[0.04] transition-colors cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={submitPaymentToggle}
+                  disabled={isSwitchingPayment || !paymentModalPassword}
+                  className="bg-primary hover:bg-primary-hover text-white px-5 py-2 rounded-xl font-bold text-[13px] transition-colors shadow-glow flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  {isSwitchingPayment && <Loader2 size={16} className="animate-spin" />}
+                  Confirm Switch
+                </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

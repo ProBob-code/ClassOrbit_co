@@ -523,7 +523,7 @@ export default function LandingPage() {
                   volume pricing for your teachers.
                 </p>
 
-                {!user && waitlistStatus !== 'done' && (
+                {waitlistStatus !== 'done' && (
                   <form onSubmit={handleWaitlistSubmit} className="flex flex-col sm:flex-row items-center gap-3 justify-center md:justify-start max-w-lg">
                     <div className="relative flex-1 w-full">
                       <Mail size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-text-subtle" />

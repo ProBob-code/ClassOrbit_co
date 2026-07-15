@@ -9,6 +9,8 @@ export interface Env {
   NEXT_PUBLIC_SUPABASE_ANON_KEY: string;
   RAZORPAY_KEY_ID: string;
   RAZORPAY_KEY_SECRET: string;
+  RAZORPAY_KEY_ID_LIVE: string;
+  RAZORPAY_KEY_SECRET_LIVE: string;
   RAZORPAY_WEBHOOK_SECRET: string;
   GROQ_API_KEY: string;
   // Alerting (optional — alerting no-ops if unset)
