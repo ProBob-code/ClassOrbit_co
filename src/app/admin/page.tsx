@@ -533,6 +533,28 @@ export default function AdminDashboard() {
     setChatMessages([]);
   };
 
+  /* ─── Deep link from notification emails: /admin?tab=tickets&ticket=tkt_... ─── */
+  const deepLinkDone = useRef(false);
+  /* eslint-disable react-hooks/set-state-in-effect -- one-shot deep link: applies URL params as state once auth + tickets are ready */
+  useEffect(() => {
+    if (!authed || deepLinkDone.current) return;
+    const params = new URLSearchParams(window.location.search);
+    const tab = params.get('tab');
+    const ticketId = params.get('ticket');
+    if (!tab && !ticketId) { deepLinkDone.current = true; return; }
+    if (tab && ['overview', 'tools', 'activity', 'waitlist', 'feedback', 'users', 'tickets', 'blogs'].includes(tab)) {
+      setActiveTab(tab as Tab);
+    }
+    if (ticketId) {
+      if (tickets.length === 0) return; // tickets still loading — effect re-runs when they arrive
+      setActiveTab('tickets');
+      const ticket = tickets.find((t) => t.id === ticketId);
+      if (ticket) openAdminChat(ticket);
+    }
+    deepLinkDone.current = true;
+  }, [authed, tickets]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
   // Cleanup on unmount
   useEffect(() => {
     return () => {

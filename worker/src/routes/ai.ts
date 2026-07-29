@@ -1,7 +1,7 @@
 import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../types';
 import { getDB } from '../lib/d1';
-import { getSupabase } from '../lib/supabase';
+import { getSessionUser } from '../lib/user-auth';
 import { getMockChatbotReply } from '../lib/support-ai-fallback';
 import { CHATBOT_SYSTEM_PROMPT } from '../lib/ai-prompts';
 
@@ -44,8 +44,7 @@ async function checkAndIncrementUsage(c: Context<AppEnv>, userId: string): Promi
 
 router.post('/groq', async (c) => {
   try {
-    const supabase = getSupabase(c);
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser(c);
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
     const { allowed, used } = await checkAndIncrementUsage(c, user.id);

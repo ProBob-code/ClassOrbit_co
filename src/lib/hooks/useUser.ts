@@ -1,8 +1,13 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import type { User } from '@supabase/supabase-js';
+
+export interface AuthUser {
+  id: string;
+  email: string | null;
+  name: string | null;
+  avatar_url: string | null;
+}
 
 export interface UserProfile {
   id: string;
@@ -12,54 +17,29 @@ export interface UserProfile {
 }
 
 export function useUser() {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AuthUser | null>(null);
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const supabase = createClient();
-
-    // Get initial session — a failed network call (offline, Supabase unreachable)
-    // must degrade to "signed out", not surface as an unhandled rejection
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      setUser(user);
-      if (user) {
-        setProfile({
-          id: user.id,
-          name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-          email: user.email || null,
-          avatar_url: user.user_metadata?.avatar_url || user.user_metadata?.picture || null,
-        });
-      }
-      setLoading(false);
-    }).catch(() => {
-      setUser(null);
-      setProfile(null);
-      setLoading(false);
-    });
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      const currentUser = session?.user ?? null;
-      setUser(currentUser);
-      if (currentUser) {
-        setProfile({
-          id: currentUser.id,
-          name: currentUser.user_metadata?.full_name || currentUser.user_metadata?.name || null,
-          email: currentUser.email || null,
-          avatar_url: currentUser.user_metadata?.avatar_url || currentUser.user_metadata?.picture || null,
-        });
-      } else {
+    // A failed network call (offline, API unreachable) must degrade to
+    // "signed out", not surface as an unhandled rejection
+    fetch('/api/auth/me')
+      .then((res) => (res.ok ? res.json() : { user: null }))
+      .then(({ user }: { user: AuthUser | null }) => {
+        setUser(user);
+        setProfile(user ? { id: user.id, name: user.name, email: user.email, avatar_url: user.avatar_url } : null);
+        setLoading(false);
+      })
+      .catch(() => {
+        setUser(null);
         setProfile(null);
-      }
-    });
-
-    return () => subscription.unsubscribe();
+        setLoading(false);
+      });
   }, []);
 
   const signOut = useCallback(async () => {
-    const supabase = createClient();
-    await supabase.auth.signOut().catch(() => {});
+    await fetch('/api/auth/signout', { method: 'POST' }).catch(() => {});
     setUser(null);
     setProfile(null);
     // Redirect to home after sign out

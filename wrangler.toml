@@ -1,4 +1,6 @@
-name = "classorbit-app"
+# Must match the production Pages project in the Cloudflare dashboard —
+# a wrong name here makes `wrangler pages deploy` create a NEW project.
+name = "classorbit-co"
 pages_build_output_dir = ".vercel/output/static"
 
 compatibility_date = "2024-09-23"

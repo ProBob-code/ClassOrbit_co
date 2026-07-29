@@ -11,7 +11,6 @@ export default function robots(): MetadataRoute.Robots {
         '/admin',
         '/admin/*',
         '/api/',
-        '/callback',
         '/builder',
         '/workspace',
         '/tools',

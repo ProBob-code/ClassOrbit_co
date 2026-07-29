@@ -1,7 +1,7 @@
 import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../types';
 import { getDB } from '../lib/d1';
-import { getSupabase } from '../lib/supabase';
+import { getSessionUser } from '../lib/user-auth';
 import { alertAdmin } from '../lib/alert';
 import {
   PLANS,
@@ -77,8 +77,7 @@ async function markPaid(
 }
 
 router.post('/create-order', async (c) => {
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const body = await c.req.json();
@@ -126,8 +125,7 @@ router.post('/create-order', async (c) => {
 });
 
 router.post('/verify-payment', async (c) => {
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan } = await c.req.json();

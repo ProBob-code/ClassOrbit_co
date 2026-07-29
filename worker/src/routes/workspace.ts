@@ -1,14 +1,13 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../types';
 import { getDB, nanoid } from '../lib/d1';
-import { getSupabase } from '../lib/supabase';
+import { getSessionUser } from '../lib/user-auth';
 
 const router = new Hono<AppEnv>();
 
 router.get('/workspace', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   // Ensure tables exist (handles fresh/local D1 databases)
@@ -96,8 +95,7 @@ router.get('/workspace', async (c) => {
 
 router.post('/workspace', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const body = await c.req.json();
@@ -132,8 +130,7 @@ router.post('/workspace', async (c) => {
 
 router.patch('/workspace/:id', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const id = c.req.param('id');
@@ -160,8 +157,7 @@ router.patch('/workspace/:id', async (c) => {
 
 router.delete('/workspace/:id', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const id = c.req.param('id');

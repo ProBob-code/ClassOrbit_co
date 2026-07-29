@@ -14,6 +14,15 @@ routes = [
 ]
 
 [vars]
+APP_URL = "https://classorbit.co"
+# Google OAuth web client (Google Cloud console → APIs & Services → Credentials).
+# Authorized redirect URIs must include:
+#   https://classorbit.co/api/auth/callback
+#   http://localhost:3000/api/auth/callback   (for local dev)
+# The client secret and session-signing secret are Worker secrets:
+#   wrangler secret put GOOGLE_CLIENT_SECRET
+#   wrangler secret put AUTH_JWT_SECRET        (e.g. `openssl rand -base64 48`)
+GOOGLE_CLIENT_ID = "368273861096-8pvs41v665khtshgo85e4usav995c6rj.apps.googleusercontent.com"
 ADMIN_EMAILS = "probob.in.git@gmail.com,bobinjacob46@gmail.com"
 # Where monitoring/alert emails go. The Resend API key is a secret:
 #   wrangler secret put ALERTS_RESEND_API_KEY

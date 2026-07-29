@@ -1,7 +1,7 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../types';
 import { getDB, nanoid } from '../lib/d1';
-import { getSupabase } from '../lib/supabase';
+import { getSessionUser } from '../lib/user-auth';
 
 const router = new Hono<AppEnv>();
 
@@ -34,8 +34,7 @@ router.get('/waitlist/count', async (c) => {
 
 router.post('/feedback', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const { rating, feedback } = await c.req.json();
@@ -60,8 +59,7 @@ router.post('/feedback', async (c) => {
 });
 
 router.get('/me/plan', async (c) => {
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const db = getDB(c);
@@ -81,7 +79,7 @@ router.get('/me/plan', async (c) => {
   }
 
   const email = user.email || null;
-  const name = user.user_metadata?.full_name || user.user_metadata?.name || null;
+  const name = user.name || null;
 
   if (!profile) {
     // Auto-create profile for new users
@@ -141,8 +139,7 @@ router.get('/me/plan', async (c) => {
 });
 
 router.post('/me/cancel-plan', async (c) => {
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const db = getDB(c);

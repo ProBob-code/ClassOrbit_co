@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import type { AppEnv } from './types';
 import { alertAdmin } from './lib/alert';
+import auth from './routes/auth';
 import misc from './routes/misc';
 import prompts from './routes/prompts';
 import tools from './routes/tools';
@@ -31,6 +32,7 @@ const api = new Hono<AppEnv>();
 
 api.get('/__health', (c) => c.json({ ok: true }));
 
+api.route('/', auth);
 api.route('/', misc);
 api.route('/', prompts);
 api.route('/', tools);

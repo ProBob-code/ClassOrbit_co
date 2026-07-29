@@ -1,14 +1,13 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../types';
 import { getDB, nanoid } from '../lib/d1';
-import { getSupabase } from '../lib/supabase';
+import { getSessionUser } from '../lib/user-auth';
 
 const router = new Hono<AppEnv>();
 
 router.get('/prompts', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const result = await db.prepare(
@@ -26,8 +25,7 @@ router.get('/prompts', async (c) => {
 
 router.post('/prompts', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const { content_type, grade, subject, topic, tools = [], is_favorite = false, prompt_text } = await c.req.json();
@@ -42,8 +40,7 @@ router.post('/prompts', async (c) => {
 
 router.patch('/prompts/:id', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const id = c.req.param('id');
@@ -58,8 +55,7 @@ router.patch('/prompts/:id', async (c) => {
 
 router.delete('/prompts/:id', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const id = c.req.param('id');
@@ -70,8 +66,7 @@ router.delete('/prompts/:id', async (c) => {
 
 router.post('/share', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
 
   const { tool_name, tool_url, prompt_text, topic, content_type, grade, subject } = await c.req.json();
   if (!prompt_text?.trim() || !tool_name?.trim()) {

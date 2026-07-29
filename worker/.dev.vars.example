@@ -1,0 +1,6 @@
+# Copy to .dev.vars for `wrangler dev` (values in .dev.vars are gitignored by wrangler convention).
+# Login flow goes through the Next dev server (localhost:3000), which proxies /api/* to this worker.
+APP_URL=http://localhost:3000
+GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
+GOOGLE_CLIENT_SECRET=your-client-secret
+AUTH_JWT_SECRET=any-long-random-string-for-dev

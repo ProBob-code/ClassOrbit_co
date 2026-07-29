@@ -13,8 +13,6 @@
     "test:watch": "vitest"
   },
   "dependencies": {
-    "@supabase/ssr": "catalog:",
-    "@supabase/supabase-js": "catalog:",
     "hono": "^4.6.14"
   },
   "devDependencies": {

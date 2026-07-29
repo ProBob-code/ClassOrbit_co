@@ -1,6 +1,5 @@
 'use client';
 
-import { createClient } from '@/lib/supabase/client';
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -12,14 +11,10 @@ function LoginContent() {
   const searchParams = useSearchParams();
   const next = searchParams.get('next') || '/builder';
 
-  const handleGoogleSignIn = async () => {
-    const supabase = createClient();
-    await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/callback?next=${encodeURIComponent(next)}`,
-      },
-    });
+  const handleGoogleSignIn = () => {
+    // The worker runs the whole OAuth flow (see worker/src/routes/auth.ts) and
+    // redirects back to `next` with our session cookie set.
+    window.location.href = `/api/auth/google?next=${encodeURIComponent(next)}`;
   };
 
   const floatingIcons = [GraduationCap, BookOpen, PenTool, FlaskConical, Calculator];

@@ -1,12 +1,46 @@
 import { Hono } from 'hono';
-import type { AppEnv } from '../types';
+import type { AppEnv, Env } from '../types';
 import { getDB, nanoid } from '../lib/d1';
-import { getSupabase } from '../lib/supabase';
+import { getSessionUser } from '../lib/user-auth';
 import { isAdminRequest } from '../lib/admin-auth';
+import { alertAdmin } from '../lib/alert';
 import { getMockAiAgentReply } from '../lib/support-ai-fallback';
 import { TICKET_AI_SYSTEM_PROMPT } from '../lib/ai-prompts';
 
 const router = new Hono<AppEnv>();
+
+// A customer asking the AI agent for a human — the AI's prompt promises to
+// escalate, so these words trigger a real admin notification.
+const ESCALATION_RE = /\b(admin|human|agent|escalate|manager|real person)\b/i;
+
+/**
+ * Email the admin about a ticket that needs attention, with a link straight
+ * into that chat in the portal. Throttled per key by alertAdmin (15 min), so
+ * message bursts on one ticket collapse into a single email.
+ */
+async function notifyAdmin(
+  env: Env,
+  key: string,
+  ticket: { id: string; name?: string | null; email?: string | null },
+  query: string,
+) {
+  const base = (env.APP_URL || 'https://classorbit.co').replace(/\/$/, '');
+  const who = ticket.name || ticket.email || 'A customer';
+  await alertAdmin(
+    env,
+    key,
+    `Support: ${who} is waiting for an admin (${ticket.id})`,
+    [
+      `Customer: ${ticket.name || 'Unknown'} <${ticket.email || 'no email'}>`,
+      `Ticket: ${ticket.id}`,
+      '',
+      'Query:',
+      `"${query}"`,
+      '',
+      `Open the chat: ${base}/admin?tab=tickets&ticket=${ticket.id}`,
+    ].join('\n'),
+  );
+}
 
 router.get('/support/tickets', async (c) => {
   const db = getDB(c);
@@ -25,8 +59,7 @@ router.get('/support/tickets', async (c) => {
     }
   }
 
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   try {
@@ -42,8 +75,7 @@ router.get('/support/tickets', async (c) => {
 
 router.post('/support/tickets', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   try {
@@ -56,7 +88,7 @@ router.post('/support/tickets', async (c) => {
 
     const ticketId = 'tkt_' + nanoid();
     const email = user.email || null;
-    const name = user.user_metadata?.full_name || user.user_metadata?.name || null;
+    const name = user.name || null;
 
     await db.prepare(
       'INSERT INTO support_tickets (id, user_id, user_email, user_name, message, status, chat_status, assigned_to) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
@@ -66,6 +98,8 @@ router.post('/support/tickets', async (c) => {
     await db.prepare(
       'INSERT INTO ticket_messages (id, ticket_id, sender, sender_name, text, type) VALUES (?, ?, ?, ?, ?, ?)'
     ).bind(msgId, ticketId, 'user', name || 'User', message.trim(), 'message').run();
+
+    await notifyAdmin(c.env, `support-new:${ticketId}`, { id: ticketId, name, email }, message.trim());
 
     const ticket = await db.prepare(
       'SELECT * FROM support_tickets WHERE id = ?'
@@ -109,9 +143,7 @@ router.get('/support/tickets/:id/:action', async (c) => {
 
     let user = null;
     if (!isAdmin) {
-      const supabase = getSupabase(c);
-      const { data } = await supabase.auth.getUser();
-      user = data.user;
+      user = await getSessionUser(c);
 
       if (!user) return c.json({ error: 'Unauthorized' }, 401);
     }
@@ -152,9 +184,7 @@ router.post('/support/tickets/:id/:action', async (c) => {
 
     let user = null;
     if (!isAdmin) {
-      const supabase = getSupabase(c);
-      const { data } = await supabase.auth.getUser();
-      user = data.user;
+      user = await getSessionUser(c);
       if (!user) return c.json({ error: 'Unauthorized' }, 401);
     }
 
@@ -212,13 +242,11 @@ router.post('/support/tickets/:id/:action', async (c) => {
 
       let user = null;
       if (!isAdmin) {
-        const supabase = getSupabase(c);
-        const { data } = await supabase.auth.getUser();
-        user = data.user;
+        user = await getSessionUser(c);
         if (!user) return c.json({ error: 'Unauthorized' }, 401);
       }
 
-      const ticket = await db.prepare('SELECT user_id, status FROM support_tickets WHERE id = ?').bind(ticketId).first<{ user_id: string, status: string }>();
+      const ticket = await db.prepare('SELECT user_id, status, chat_status, user_email, user_name FROM support_tickets WHERE id = ?').bind(ticketId).first<{ user_id: string, status: string, chat_status: string, user_email: string | null, user_name: string | null }>();
       if (!ticket) return c.json({ error: 'Ticket not found' }, 404);
 
       if (!isAdmin && ticket.user_id !== user?.id) {
@@ -246,6 +274,12 @@ router.post('/support/tickets/:id/:action', async (c) => {
         ).bind(ticketId).run();
       }
 
+      // Customer wrote while no AI agent is handling the chat → the admin is
+      // the one who has to respond, so ping them.
+      if (!isAdmin && sender === 'user' && ticket.chat_status !== 'ai_agent_active') {
+        await notifyAdmin(c.env, `support-msg:${ticketId}`, { id: ticketId, name: ticket.user_name, email: ticket.user_email }, text.trim());
+      }
+
       return c.json({ success: true, id: msgId });
     } catch {
       return c.json({ error: 'Failed to post message' }, 500);
@@ -253,8 +287,7 @@ router.post('/support/tickets/:id/:action', async (c) => {
   }
 
   if (action === 'ai-respond') {
-    const supabase = getSupabase(c);
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser(c);
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
     const body = await c.req.json();
@@ -265,7 +298,7 @@ router.post('/support/tickets/:id/:action', async (c) => {
     }
 
     try {
-      const ticket = await db.prepare('SELECT user_id, user_name, chat_status FROM support_tickets WHERE id = ?').bind(ticketId).first<{ user_id: string, user_name: string, chat_status: string }>();
+      const ticket = await db.prepare('SELECT user_id, user_name, user_email, chat_status FROM support_tickets WHERE id = ?').bind(ticketId).first<{ user_id: string, user_name: string, user_email: string | null, chat_status: string }>();
       if (!ticket) return c.json({ error: 'Ticket not found' }, 404);
       if (ticket.user_id !== user.id) return c.json({ error: 'Unauthorized' }, 401);
 
@@ -277,6 +310,10 @@ router.post('/support/tickets/:id/:action', async (c) => {
       await db.prepare(
         'INSERT INTO ticket_messages (id, ticket_id, sender, sender_name, text, type) VALUES (?, ?, ?, ?, ?, ?)'
       ).bind(userMsgId, ticketId, 'user', ticket.user_name || 'User', userMessage.trim(), 'message').run();
+
+      if (ESCALATION_RE.test(userMessage)) {
+        await notifyAdmin(c.env, `support-escalate:${ticketId}`, { id: ticketId, name: ticket.user_name, email: ticket.user_email }, userMessage.trim());
+      }
 
       const messages = await db.prepare(
         'SELECT * FROM ticket_messages WHERE ticket_id = ? ORDER BY created_at ASC'
@@ -419,8 +456,7 @@ router.post('/support/tickets/:id/:action', async (c) => {
   }
 
   if (action === 'reopen') {
-    const supabase = getSupabase(c);
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await getSessionUser(c);
 
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
 

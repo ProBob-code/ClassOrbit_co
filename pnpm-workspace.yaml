@@ -2,8 +2,6 @@ packages:
   - '.'
   - 'worker'
 catalog:
-  '@supabase/ssr': ^0.10.3
-  '@supabase/supabase-js': ^2.106.2
 allowBuilds:
   '@firebase/util': true
   esbuild: true

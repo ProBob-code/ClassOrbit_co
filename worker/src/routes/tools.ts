@@ -1,14 +1,13 @@
 import { Hono } from 'hono';
 import type { AppEnv } from '../types';
 import { getDB, nanoid } from '../lib/d1';
-import { getSupabase } from '../lib/supabase';
+import { getSessionUser } from '../lib/user-auth';
 
 const router = new Hono<AppEnv>();
 
 router.get('/tools', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const result = await db.prepare(
@@ -20,8 +19,7 @@ router.get('/tools', async (c) => {
 
 router.post('/tools', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const { tool_name, tool_url, description, category = 'text', is_free = true } = await c.req.json();
@@ -39,8 +37,7 @@ router.post('/tools', async (c) => {
 
 router.delete('/tools/:id', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const id = c.req.param('id');
@@ -70,8 +67,7 @@ router.get('/tools/system', async (c) => {
 
 router.post('/tools/usage', async (c) => {
   const db = getDB(c);
-  const supabase = getSupabase(c);
-  const { data: { user } } = await supabase.auth.getUser();
+  const user = await getSessionUser(c);
   if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
   const { tool_id, tool_name, is_custom = false, action_type } = await c.req.json();
