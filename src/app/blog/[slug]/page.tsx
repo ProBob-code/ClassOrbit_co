@@ -136,7 +136,7 @@ export default async function BlogPostPage({ params }: Props) {
                   <p className="text-[11px] font-bold text-text-subtle uppercase tracking-[0.18em] mb-4">More from the blog</p>
                   <div className="space-y-4">
                     {related.map((p) => (
-                      <Link key={p.slug} href={`/blog/${p.slug}`} className="flex items-start gap-3 group">
+                      <Link key={p.slug} href={`/blog/${p.slug}`} prefetch={false} className="flex items-start gap-3 group">
                         {p.cover_image_url ? (
                           /* eslint-disable-next-line @next/next/no-img-element */
                           <img src={p.cover_image_url} alt="" className="w-16 h-12 shrink-0 rounded-lg object-cover border border-border" loading="lazy" />
