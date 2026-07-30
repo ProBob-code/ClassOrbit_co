@@ -12,6 +12,7 @@ import payment from './routes/payment';
 import admin from './routes/admin';
 import blogs from './routes/blogs';
 import images from './routes/images';
+import analytics from './routes/analytics';
 
 const app = new Hono<AppEnv>();
 
@@ -43,6 +44,7 @@ api.route('/', payment);
 api.route('/', admin);
 api.route('/', blogs);
 api.route('/', images);
+api.route('/', analytics);
 
 app.route('/api', api);
 

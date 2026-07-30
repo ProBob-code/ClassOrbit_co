@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import ToastProvider from '@/components/ui/Toast';
+import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 
 const BASE_URL = 'https://classorbit.co';
 
@@ -76,6 +77,7 @@ export default function RootLayout({
       <body className="min-h-full flex flex-col bg-background text-on-surface font-body overflow-x-hidden" suppressHydrationWarning>
         {children}
         <ToastProvider />
+        <AnalyticsBeacon />
       </body>
     </html>
   );

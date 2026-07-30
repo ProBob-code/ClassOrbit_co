@@ -117,6 +117,35 @@ interface AdminUser {
   created_at: string;
 }
 
+/** Full prompt record from GET /api/admin/prompts (joined with the users table). */
+interface AdminPrompt {
+  id: string;
+  user_id: string;
+  user_name: string | null;
+  user_email: string | null;
+  content_type: string | null;
+  grade: string | null;
+  subject: string | null;
+  topic: string | null;
+  tools: string | null;      // JSON array of platform ids, as saved by the builder
+  prompt_text: string | null;
+  is_favorite: number;
+  created_at: string;
+}
+
+/** `tools` is stored as a JSON array; tolerate legacy comma-separated values. */
+function parseTools(tools: string | null): string[] {
+  if (!tools) return [];
+  try {
+    const parsed = JSON.parse(tools);
+    if (Array.isArray(parsed)) return parsed.map(String);
+    if (typeof parsed === 'string') return [parsed];
+  } catch {
+    return tools.split(',').map(t => t.trim()).filter(Boolean);
+  }
+  return [];
+}
+
 /* ─── Stat Card ─── */
 function StatCard({ icon, label, value, color = 'primary', onClick }: { icon: React.ReactNode; label: string; value: string | number; color?: string; onClick?: () => void }) {
   const colorMap: Record<string, string> = {
@@ -164,6 +193,12 @@ export default function AdminDashboard() {
   // Users state
   const [users, setUsers] = useState<AdminUser[]>([]);
   const [usersLoading, setUsersLoading] = useState(false);
+
+  // Prompt operations (Activity tab) + the detail modal
+  const [prompts, setPrompts] = useState<AdminPrompt[]>([]);
+  const [promptsLoading, setPromptsLoading] = useState(false);
+  const [activePrompt, setActivePrompt] = useState<AdminPrompt | null>(null);
+  const [promptSearch, setPromptSearch] = useState('');
 
   // Tools state
   const [tools, setTools] = useState<AdminTool[]>([]);
@@ -287,6 +322,19 @@ export default function AdminDashboard() {
     }
   }, [loadUsers]);
 
+  /* ─── Load prompt operations (full detail incl. prompt text) ─── */
+  const loadPrompts = useCallback(async () => {
+    setPromptsLoading(true);
+    try {
+      const res = await fetch('/api/admin/prompts');
+      if (res.ok) {
+        const data = (await res.json()) as any;
+        setPrompts(data.prompts ?? []);
+      }
+    } catch { toast.error('Failed to load prompts'); }
+    finally { setPromptsLoading(false); }
+  }, []);
+
   /* ─── Load tickets ─── */
   const loadTickets = useCallback(async () => {
     setTicketsLoading(true);
@@ -320,8 +368,9 @@ export default function AdminDashboard() {
       loadUsers();
       loadTickets();
       loadBlogs();
+      loadPrompts();
     }
-  }, [authed, loadStats, loadTools, loadUsers, loadTickets, loadBlogs]);
+  }, [authed, loadStats, loadTools, loadUsers, loadTickets, loadBlogs, loadPrompts]);
 
   /* ─── Blog images (upload + crop) ─── */
   const startImageCrop = (file: File, mode: 'cover' | 'body') => {
@@ -786,6 +835,13 @@ export default function AdminDashboard() {
     { id: 'waitlist', label: 'Waitlist Registry', icon: <Mail size={16} /> },
   ];
 
+  const promptQuery = promptSearch.trim().toLowerCase();
+  const filteredPrompts = promptQuery
+    ? prompts.filter(p =>
+        [p.topic, p.user_name, p.user_email, p.user_id, p.prompt_text, p.subject, p.content_type]
+          .some(f => (f ?? '').toLowerCase().includes(promptQuery)))
+    : prompts;
+
   // Filtering tools logic
   const filteredTools = tools.filter(t => {
     const matchesSearch = t.tool_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -809,64 +865,64 @@ export default function AdminDashboard() {
       <div className="relative z-10 flex flex-col min-h-screen">
         {/* Top bar */}
         <header className="sticky top-0 z-40 bg-[#06040F]/70 backdrop-blur-xl border-b border-border">
-          <div className="max-w-[1400px] mx-auto px-6 h-16 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="relative w-10 h-10 rounded-full bg-surface border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-sm shadow-primary/20">
+          <div className="max-w-[1400px] mx-auto px-4 sm:px-6 py-2.5 sm:py-0 sm:h-16 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+              <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-full bg-surface border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-sm shadow-primary/20">
                 <Image src="/logo_transparent.png" alt="ClassOrbit Logo" width={40} height={40} className="w-full h-full object-contain" />
               </div>
-              <div>
-                <h1 className="text-[16px] font-bold text-text-main leading-tight flex items-center gap-1.5 font-display">
-                  ClassOrbit Admin
-                  <span className="text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+              <div className="min-w-0">
+                <h1 className="text-[14px] sm:text-[16px] font-bold text-text-main leading-tight flex items-center gap-1.5 font-display">
+                  <span className="truncate">ClassOrbit Admin</span>
+                  <span className="text-[10px] bg-primary/20 text-primary border border-primary/30 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider shrink-0">
                     Ops
                   </span>
                 </h1>
-                <p className="text-[11px] text-text-muted">Control Panel & Registry</p>
+                <p className="text-[11px] text-text-muted truncate">Control Panel & Registry</p>
               </div>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 sm:gap-3">
               <button
                 onClick={() => { loadStats(); loadTools(); }}
-                className="flex items-center gap-2 bg-surface hover:bg-background border border-border hover:border-primary/50 text-text-muted hover:text-text-main px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 cursor-pointer shadow-sm"
+                className="flex items-center gap-2 bg-surface hover:bg-background border border-border hover:border-primary/50 text-text-muted hover:text-text-main px-3 sm:px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 cursor-pointer shadow-sm"
               >
                 <RefreshCw size={14} className="text-primary" />
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
               </button>
-              
+
               <button
                 onClick={handleTogglePaymentMode}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 cursor-pointer shadow-sm border ${
-                  stats?.payment_gateway_mode === 'live' 
-                    ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20' 
+                className={`flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 cursor-pointer shadow-sm border ${
+                  stats?.payment_gateway_mode === 'live'
+                    ? 'bg-red-500/10 border-red-500/20 text-red-400 hover:bg-red-500/20'
                     : 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400 hover:bg-emerald-500/20'
                 }`}
                 title="Toggle Payment Gateway Mode"
               >
                 {stats?.payment_gateway_mode === 'live' ? (
-                  <><ToggleRight size={16} /> Live PG</>
+                  <><ToggleRight size={16} /> <span className="hidden sm:inline">Live PG</span></>
                 ) : (
-                  <><ToggleLeft size={16} /> Test PG</>
+                  <><ToggleLeft size={16} /> <span className="hidden sm:inline">Test PG</span></>
                 )}
               </button>
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 cursor-pointer shadow-sm"
+                className="flex items-center gap-2 bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 px-3 sm:px-3.5 py-2 rounded-xl text-[13px] font-semibold transition-all duration-200 cursor-pointer shadow-sm"
               >
                 <LogOut size={14} />
-                Logout
+                <span className="hidden sm:inline">Logout</span>
               </button>
             </div>
           </div>
         </header>
 
-        <main className="flex-1 max-w-[1400px] w-full mx-auto px-6 py-8">
+        <main className="flex-1 max-w-[1400px] w-full mx-auto px-4 sm:px-6 py-6 sm:py-8">
           {/* Tabs */}
-          <div className="flex gap-1 bg-surface/40 border border-border rounded-2xl p-1.5 w-fit mb-8 backdrop-blur-md overflow-x-auto max-w-full">
+          <div className="flex gap-1 bg-surface/40 border border-border rounded-2xl p-1.5 w-fit mb-6 sm:mb-8 backdrop-blur-md overflow-x-auto max-w-full">
             {tabs.map(tab => (
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-2 px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
+                className={`flex items-center gap-2 px-3.5 sm:px-5 py-2.5 rounded-xl text-[13px] font-semibold transition-all cursor-pointer whitespace-nowrap ${
                   activeTab === tab.id
                     ? 'bg-primary text-white shadow-glow'
                     : 'text-text-muted hover:text-text-main hover:bg-white/[0.02]'
@@ -1026,21 +1082,24 @@ export default function AdminDashboard() {
                         </button>
                       </div>
                       <div className="space-y-3">
-                        {stats.recent_prompts.slice(0, 5).map((p, i) => (
-                          <div key={i} className="flex items-center gap-3 bg-white/[0.02] border border-border/50 rounded-2xl px-4.5 py-3.5 hover:bg-white/[0.04] transition-colors">
+                        {prompts.slice(0, 5).map((p) => (
+                          <button key={p.id} onClick={() => setActivePrompt(p)}
+                            className="w-full text-left flex items-center gap-3 bg-white/[0.02] border border-border/50 rounded-2xl px-4.5 py-3.5 hover:bg-white/[0.04] hover:border-primary/40 transition-colors cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center text-[12px] text-primary font-bold shrink-0">
                               {p.content_type?.charAt(0).toUpperCase() || '?'}
                             </div>
                             <div className="flex-1 min-w-0">
                               <p className="text-[13px] font-semibold text-text-main truncate">{p.topic || 'Untitled Prompt'}</p>
-                              <p className="text-[11px] text-text-muted truncate mt-0.5">{p.content_type?.replace(/_/g, ' ')} · User: {p.user_id?.slice(0, 8)}...</p>
+                              <p className="text-[11px] text-text-muted truncate mt-0.5">
+                                {p.content_type?.replace(/_/g, ' ')} · {p.user_name || p.user_email || `${p.user_id?.slice(0, 8)}...`}
+                              </p>
                             </div>
                             <span className="text-[11px] text-text-subtle shrink-0">
                               {new Date(p.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
                             </span>
-                          </div>
+                          </button>
                         ))}
-                        {stats.recent_prompts.length === 0 && (
+                        {prompts.length === 0 && (
                           <p className="text-[13px] text-text-muted text-center py-6">No prompt statistics logged.</p>
                         )}
                       </div>
@@ -1462,47 +1521,106 @@ export default function AdminDashboard() {
           {activeTab === 'activity' && (
             <div className="space-y-6">
               <div>
-                <h2 className="text-[20px] font-bold text-text-main font-display">Recent System Actions</h2>
-                <p className="text-[13px] text-text-muted mt-1">Detailed logs of recent prompt optimization requests executed on the ClassOrbit core engine.</p>
+                <h2 className="text-[20px] font-bold text-text-main font-display">Prompt Operations</h2>
+                <p className="text-[13px] text-text-muted mt-1">
+                  Every prompt built on the platform. Tap any row to see the full prompt text, who created it, and which AI platforms it was launched to.
+                </p>
               </div>
 
-              {statsLoading ? (
+              <div className="relative max-w-md">
+                <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle" />
+                <input
+                  value={promptSearch}
+                  onChange={(e) => setPromptSearch(e.target.value)}
+                  placeholder="Search by topic, user, email, or prompt text..."
+                  className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-2.5 text-[13px] text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary/60"
+                />
+              </div>
+
+              {promptsLoading ? (
                 <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-primary" /></div>
-              ) : stats?.recent_prompts.length ? (
-                <div className="glass-panel border border-border rounded-2xl overflow-hidden shadow-soft">
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left border-collapse">
-                      <thead>
-                        <tr className="border-b border-border text-[11px] font-bold text-text-muted uppercase tracking-wider bg-white/[0.01]">
-                          <th className="px-6 py-4">User ID / Node Address</th>
-                          <th className="px-6 py-4">Topic / Parameter</th>
-                          <th className="px-6 py-4">Content Output Type</th>
-                          <th className="px-6 py-4">Timestamp (IST)</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {stats.recent_prompts.map((p, i) => (
-                          <tr key={i} className="border-b border-border/50 hover:bg-white/[0.01] transition-colors">
-                            <td className="px-6 py-4 text-[12px] text-text-muted font-mono">{p.user_id}</td>
-                            <td className="px-6 py-4 text-[13px] text-text-main font-semibold">{p.topic || 'Untitled Prompt Parameter'}</td>
-                            <td className="px-6 py-4">
-                              <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
-                                {p.content_type?.replace(/_/g, ' ')}
-                              </span>
-                            </td>
-                            <td className="px-6 py-4 text-[13px] text-text-muted">
-                              {new Date(p.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
+              ) : filteredPrompts.length ? (
+                <>
+                  {/* Phones: stacked tappable cards */}
+                  <div className="sm:hidden space-y-3">
+                    {filteredPrompts.map((p) => (
+                      <button key={p.id} onClick={() => setActivePrompt(p)}
+                        className="w-full text-left glass-panel border border-border rounded-2xl p-4 hover:border-primary/40 transition-colors cursor-pointer">
+                        <div className="flex items-start justify-between gap-2">
+                          <p className="text-[13px] font-bold text-text-main truncate">{p.topic || 'Untitled Prompt'}</p>
+                          <span className="text-[11px] text-text-subtle shrink-0">
+                            {new Date(p.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                          </span>
+                        </div>
+                        <p className="text-[12px] text-text-muted truncate mt-1">{p.user_name || p.user_email || p.user_id}</p>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-2">
+                          <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-2 py-0.5 rounded-full font-bold uppercase tracking-wider">
+                            {p.content_type?.replace(/_/g, ' ') || 'prompt'}
+                          </span>
+                          {parseTools(p.tools).slice(0, 3).map(t => (
+                            <span key={t} className="text-[10px] bg-white/[0.04] text-text-muted border border-border px-2 py-0.5 rounded-full font-semibold">{t}</span>
+                          ))}
+                        </div>
+                      </button>
+                    ))}
                   </div>
-                </div>
+
+                  {/* Tablet/desktop: table, whole row opens the detail */}
+                  <div className="hidden sm:block glass-panel border border-border rounded-2xl overflow-hidden shadow-soft">
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left border-collapse">
+                        <thead>
+                          <tr className="border-b border-border text-[11px] font-bold text-text-muted uppercase tracking-wider bg-white/[0.01]">
+                            <th className="px-5 py-4">User</th>
+                            <th className="px-5 py-4">Topic</th>
+                            <th className="px-5 py-4">Type</th>
+                            <th className="px-5 py-4">Launched to</th>
+                            <th className="px-5 py-4">Timestamp (IST)</th>
+                            <th className="px-5 py-4"></th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {filteredPrompts.map((p) => (
+                            <tr key={p.id} onClick={() => setActivePrompt(p)}
+                              className="border-b border-border/50 hover:bg-white/[0.03] transition-colors cursor-pointer">
+                              <td className="px-5 py-4">
+                                <p className="text-[13px] text-text-main font-semibold truncate max-w-[180px]">{p.user_name || 'Unknown'}</p>
+                                <p className="text-[11px] text-text-muted truncate max-w-[180px]">{p.user_email || p.user_id}</p>
+                              </td>
+                              <td className="px-5 py-4 text-[13px] text-text-main font-semibold max-w-[200px] truncate">{p.topic || 'Untitled Prompt'}</td>
+                              <td className="px-5 py-4">
+                                <span className="text-[10px] bg-primary/10 text-primary border border-primary/20 px-2.5 py-1 rounded-full font-bold uppercase tracking-wider whitespace-nowrap">
+                                  {p.content_type?.replace(/_/g, ' ') || '—'}
+                                </span>
+                              </td>
+                              <td className="px-5 py-4">
+                                <div className="flex items-center gap-1 flex-wrap max-w-[200px]">
+                                  {parseTools(p.tools).length === 0 ? (
+                                    <span className="text-[12px] text-text-subtle">—</span>
+                                  ) : parseTools(p.tools).map(t => (
+                                    <span key={t} className="text-[10px] bg-white/[0.04] text-text-muted border border-border px-2 py-0.5 rounded-full font-semibold whitespace-nowrap">{t}</span>
+                                  ))}
+                                </div>
+                              </td>
+                              <td className="px-5 py-4 text-[13px] text-text-muted whitespace-nowrap">
+                                {new Date(p.created_at).toLocaleString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                              </td>
+                              <td className="px-5 py-4 text-right">
+                                <span className="text-[12px] text-primary font-semibold whitespace-nowrap">View →</span>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </>
               ) : (
                 <div className="text-center py-20 bg-surface/30 border border-border rounded-3xl">
                   <Clock size={32} className="text-text-subtle mx-auto mb-3" />
-                  <p className="text-text-muted text-[14px]">No prompt operations logged yet.</p>
+                  <p className="text-text-muted text-[14px]">
+                    {promptSearch ? 'No prompts match your search.' : 'No prompt operations logged yet.'}
+                  </p>
                 </div>
               )}
             </div>
@@ -2397,6 +2515,119 @@ export default function AdminDashboard() {
                   {isSwitchingPayment && <Loader2 size={16} className="animate-spin" />}
                   Confirm Switch
                 </button>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* ── PROMPT DETAIL ── full record behind any prompt row */}
+      <AnimatePresence>
+        {activePrompt && (
+          <div
+            className="fixed inset-0 bg-[#06040F]/80 backdrop-blur-sm z-50 flex items-start sm:items-center justify-center p-3 sm:p-4 overflow-y-auto"
+            onClick={() => setActivePrompt(null)}
+          >
+            <motion.div
+              initial={{ scale: 0.96, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.96, opacity: 0 }}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-surface border border-border rounded-2xl w-full max-w-2xl my-4 sm:my-0 shadow-2xl relative max-h-[92vh] flex flex-col"
+            >
+              {/* Header */}
+              <div className="flex items-start justify-between gap-3 p-5 border-b border-border">
+                <div className="min-w-0">
+                  <h3 className="font-display text-[17px] font-bold text-text-main truncate">
+                    {activePrompt.topic || 'Untitled Prompt'}
+                  </h3>
+                  <p className="text-[12px] text-text-muted mt-0.5">
+                    {new Date(activePrompt.created_at).toLocaleString('en-IN', {
+                      weekday: 'short', day: 'numeric', month: 'short', year: 'numeric',
+                      hour: '2-digit', minute: '2-digit',
+                    })} IST
+                  </p>
+                </div>
+                <button onClick={() => setActivePrompt(null)}
+                  className="text-text-muted hover:text-text-main transition-colors cursor-pointer shrink-0">
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className="p-5 space-y-5 overflow-y-auto">
+                {/* Who built it */}
+                <div>
+                  <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-2">Created by</p>
+                  <div className="bg-white/[0.02] border border-border/50 rounded-xl p-3.5">
+                    <div className="flex items-center gap-3">
+                      <div className="w-9 h-9 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-[13px] text-primary font-bold shrink-0">
+                        {(activePrompt.user_name || activePrompt.user_email || '?').charAt(0).toUpperCase()}
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-[13px] font-semibold text-text-main truncate">{activePrompt.user_name || 'Unknown user'}</p>
+                        <p className="text-[12px] text-text-muted truncate">{activePrompt.user_email || 'no email on record'}</p>
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-text-subtle font-mono mt-2.5 break-all">User ID: {activePrompt.user_id}</p>
+                  </div>
+                </div>
+
+                {/* Parameters */}
+                <div>
+                  <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-2">Parameters</p>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
+                    {[
+                      { label: 'Content type', value: activePrompt.content_type?.replace(/_/g, ' ') },
+                      { label: 'Subject', value: activePrompt.subject },
+                      { label: 'Grade', value: activePrompt.grade },
+                    ].map(f => (
+                      <div key={f.label} className="bg-white/[0.02] border border-border/50 rounded-xl px-3 py-2.5">
+                        <p className="text-[10px] text-text-muted uppercase tracking-wider font-bold">{f.label}</p>
+                        <p className="text-[13px] text-text-main font-semibold capitalize truncate mt-0.5">{f.value || '—'}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Platforms it was generated for */}
+                <div>
+                  <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider mb-2">Launched to</p>
+                  {parseTools(activePrompt.tools).length === 0 ? (
+                    <p className="text-[13px] text-text-muted">No platforms recorded for this prompt.</p>
+                  ) : (
+                    <div className="flex flex-wrap gap-2">
+                      {parseTools(activePrompt.tools).map(t => {
+                        const tool = tools.find(x => x.id === t || x.tool_name.toLowerCase() === t.toLowerCase());
+                        return (
+                          <span key={t} className="flex items-center gap-1.5 text-[12px] bg-white/[0.03] text-text-main border border-border px-2.5 py-1.5 rounded-lg font-semibold">
+                            <Rocket size={12} className="text-primary" />
+                            {tool?.tool_name ?? t}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* The prompt itself */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="text-[11px] font-bold text-text-muted uppercase tracking-wider">Full prompt</p>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(activePrompt.prompt_text ?? '');
+                        toast.success('Prompt copied');
+                      }}
+                      disabled={!activePrompt.prompt_text}
+                      className="text-[12px] text-primary font-semibold hover:underline cursor-pointer disabled:opacity-40 disabled:no-underline disabled:cursor-not-allowed"
+                    >
+                      Copy
+                    </button>
+                  </div>
+                  <pre className="bg-background border border-border rounded-xl p-3.5 text-[12.5px] text-text-main whitespace-pre-wrap break-words font-mono leading-relaxed max-h-[40vh] overflow-y-auto">
+                    {activePrompt.prompt_text || 'No prompt text was stored for this record.'}
+                  </pre>
+                </div>
               </div>
             </motion.div>
           </div>

@@ -7,6 +7,7 @@ import NewToolWalkthrough from '@/components/ui/NewToolWalkthrough';
 import { ToolsProvider } from '@/context/ToolsContext';
 import ProReminderNotification from '@/components/ui/ProReminderNotification';
 import FeedbackModal from '@/components/ui/FeedbackModal';
+import CommunityModal from '@/components/ui/CommunityModal';
 import BlockedShield from '@/components/ui/BlockedShield';
 import SupportChatWidget from '@/components/ui/SupportChatWidget';
 
@@ -29,6 +30,7 @@ export default function DashboardLayout({
       <NewToolWalkthrough />
       <ProReminderNotification />
       <FeedbackModal />
+      <CommunityModal />
       <BlockedShield />
       <SupportChatWidget />
       {/* Background embellishments */}

@@ -108,6 +108,14 @@ const extractPdfText = async (file: File): Promise<string> => {
   });
 };
 
+// Content types listed here are usable on the Free plan; anything missing shows
+// a Pro lock. Every type is currently free — remove ids to re-enable locks.
+const FREE_CONTENT_TYPES = [
+  'quiz', 'ppt', 'lesson_plan', 'question_paper', 'worksheet', 'story',
+  'homework', 'flashcards', 'classroom_activity', 'debate',
+  'interactive_game', 'video_script', 'rubric', 'notes',
+];
+
 const enforcePlatformLimits = (prompt: string, toolId: string, formData: TeacherInput, mode: BuilderMode, freePrompt: string): string => {
   const topicText = mode === 'free' ? freePrompt.split('\n')[0] : formData.topic;
   
@@ -1172,7 +1180,7 @@ function BuilderContent() {
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
                   {contentTypes.slice(0, 12).map((c) => {
                     const isSelected = formData.contentType === c.id;
-                    const isPremium = userPlan === 'free' && !['quiz', 'lesson_plan', 'worksheet', 'homework', 'flashcards'].includes(c.id);
+                    const isPremium = userPlan === 'free' && !FREE_CONTENT_TYPES.includes(c.id);
                     const Icon = iconMap[c.icon] || FileText;
                     return (
                       <button

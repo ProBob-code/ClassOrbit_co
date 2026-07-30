@@ -3,10 +3,12 @@
 import { useUser } from '@/lib/hooks/useUser';
 import { usePlan } from '@/lib/hooks/usePlan';
 import { motion, AnimatePresence } from 'framer-motion';
-import { User, Mail, Calendar, Sparkles, Star, LogOut, Shield, Crown, Zap, TrendingUp, CreditCard, AlertTriangle } from 'lucide-react';
+import { User, Mail, Calendar, Sparkles, Star, LogOut, Shield, Crown, Zap, TrendingUp, CreditCard, AlertTriangle, Check, ArrowUpRight } from 'lucide-react';
 import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import CheckoutButton from '@/components/ui/CheckoutButton';
+import { WhatsAppIcon } from '@/components/ui/CommunityModal';
+import { WHATSAPP_COMMUNITY_URL, COMMUNITY_BENEFITS } from '@/lib/community';
 
 export default function ProfilePage() {
   const { profile, loading: userLoading, signOut } = useUser();
@@ -344,6 +346,52 @@ export default function ProfilePage() {
               </div>
             </div>
           )}
+        </motion.div>
+
+        {/* WhatsApp community */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.25 }}
+          className="glass-card border border-emerald-500/20 rounded-2xl p-6 relative overflow-hidden"
+        >
+          <div className="absolute -top-20 -right-16 w-48 h-48 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative flex flex-col sm:flex-row sm:items-start gap-5">
+            <div className="w-12 h-12 rounded-2xl bg-[#25D366] text-white flex items-center justify-center shrink-0">
+              <WhatsAppIcon size={26} />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="font-display text-[16px] font-bold text-text-main flex items-center gap-2">
+                ClassOrbit Teacher Community
+                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full uppercase tracking-wider">
+                  Free
+                </span>
+              </h3>
+              <p className="text-[13px] text-text-muted mt-1.5 leading-relaxed">
+                A WhatsApp group where teachers share what actually works with AI in the classroom.
+              </p>
+              <ul className="grid sm:grid-cols-2 gap-x-5 gap-y-2 mt-4">
+                {COMMUNITY_BENEFITS.map((b) => (
+                  <li key={b} className="flex items-start gap-2 text-[12.5px] text-text-main">
+                    <span className="w-4 h-4 rounded-full bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center shrink-0 mt-0.5">
+                      <Check size={10} className="text-emerald-400" strokeWidth={3} />
+                    </span>
+                    {b}
+                  </li>
+                ))}
+              </ul>
+              <a
+                href={WHATSAPP_COMMUNITY_URL}
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-2 mt-5 bg-[#25D366] hover:bg-[#1eb855] text-white px-5 py-2.5 rounded-xl font-bold text-[13px] transition-all active:scale-95 cursor-pointer"
+              >
+                <WhatsAppIcon size={15} />
+                Join the community
+                <ArrowUpRight size={14} />
+              </a>
+            </div>
+          </div>
         </motion.div>
 
         {/* Actions Card */}

@@ -5,9 +5,12 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { X, Star, Heart, Loader2 } from 'lucide-react';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import { POPUP_KEYS, isToday } from '@/lib/community';
 
-const STORAGE_SUBMITTED = 'classorbit_feedback_submitted';
-const STORAGE_DISMISSED = 'classorbit_feedback_last_dismissed';
+// Keys live in lib/community.ts so the community popup can see whether this
+// one already used today's single-interruption slot.
+const STORAGE_SUBMITTED = POPUP_KEYS.feedbackSubmitted;
+const STORAGE_DISMISSED = POPUP_KEYS.feedbackDismissed;
 const THREE_DAYS_MS = 3 * 24 * 60 * 60 * 1000; // 3 days
 
 export default function FeedbackModal() {
@@ -33,15 +36,19 @@ export default function FeedbackModal() {
 
       // 3. Check if shown today already (once in a day rule)
       const todayStr = new Date().toDateString();
-      const lastShownToday = localStorage.getItem('classorbit_feedback_last_shown_today');
+      const lastShownToday = localStorage.getItem(POPUP_KEYS.feedbackShownToday);
       if (lastShownToday === todayStr) {
         return;
       }
 
       // Show rating reminder after initial loading delay
       const timer = setTimeout(() => {
+        // Never stack on the community invite, which fires a second earlier
+        // and writes its timestamp as it opens. Checked here (not above) so we
+        // see a showing that started after this effect ran.
+        if (isToday(localStorage.getItem(POPUP_KEYS.communityLastShown))) return;
         setOpen(true);
-        localStorage.setItem('classorbit_feedback_last_shown_today', todayStr);
+        localStorage.setItem(POPUP_KEYS.feedbackShownToday, todayStr);
       }, 6000); // 6 seconds delay (shows after onboarding/pro reminders settle)
       return () => clearTimeout(timer);
     };
