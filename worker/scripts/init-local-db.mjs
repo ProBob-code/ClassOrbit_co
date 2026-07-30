@@ -30,6 +30,7 @@ const FILES = [
   '../supabase/migrations/005-blog-body-images.sql',
   '../supabase/migrations/006-platform-settings.sql',
   '../supabase/migrations/007-users.sql',
+  '../supabase/migrations/008-analytics.sql',
 ];
 
 // On an already-populated DB some ADD COLUMN statements ("duplicate column

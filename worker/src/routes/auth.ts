@@ -145,7 +145,9 @@ router.get('/auth/callback', async (c) => {
     }
   }
 
+  let isNewUser = false;
   if (!row) {
+    isNewUser = true;
     row = { id: crypto.randomUUID() };
     await db
       .prepare('INSERT INTO users (id, google_sub, email, name, avatar_url) VALUES (?, ?, ?, ?, ?)')
@@ -159,6 +161,14 @@ router.get('/auth/callback', async (c) => {
     )
     .bind(email, name, picture, row.id)
     .run();
+
+  // Best-effort login audit for the admin Monitoring tab (migration 008).
+  const country = ((c.req.raw as any).cf?.country as string | undefined) ?? c.req.header('CF-IPCountry') ?? null;
+  await db
+    .prepare("INSERT INTO login_events (user_id, email, name, method, is_new_user, country) VALUES (?, ?, ?, 'google', ?, ?)")
+    .bind(row.id, email, name, isNewUser ? 1 : 0, country)
+    .run()
+    .catch((err) => console.error('[auth/callback] login_events insert failed', err));
 
   const user: SessionUser = { id: row.id, email, name, picture };
   c.header('Set-Cookie', sessionCookie(await signSession(c.env.AUTH_JWT_SECRET, user), origin), { append: true });

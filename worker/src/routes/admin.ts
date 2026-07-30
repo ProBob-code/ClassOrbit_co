@@ -101,6 +101,23 @@ router.get('/admin/:action{.+}', async (c) => {
     }
   }
 
+  // Full prompt operations for the Activity tab / detail modal: whole prompt
+  // text, owner identity, and the platforms it was generated for.
+  if (path === 'prompts') {
+    try {
+      const prompts = await db.prepare(`
+        SELECT p.id, p.user_id, p.content_type, p.grade, p.subject, p.topic, p.tools,
+               p.prompt_text, p.is_favorite, p.created_at, u.name AS user_name, u.email AS user_email
+        FROM saved_prompts p LEFT JOIN users u ON u.id = p.user_id
+        ORDER BY p.created_at DESC LIMIT 100
+      `).all();
+      return c.json({ prompts: prompts.results || [] });
+    } catch (error: any) {
+      console.error('Failed to fetch prompts:', error);
+      return c.json({ error: 'Failed to fetch prompts' }, 500);
+    }
+  }
+
   if (path === 'blogs') {
     try {
       const blogs = await db.prepare('SELECT * FROM blogs ORDER BY created_at DESC').all();
@@ -286,7 +303,7 @@ router.patch('/admin/:action{.+}', async (c) => {
     if (mode !== 'test' && mode !== 'live') {
       return c.json({ error: 'Invalid mode' }, 400);
     }
-  
+
     // Re-confirm with the admin password (a worker secret). Never hardcode a
     // password here — this repo is public.
     if (!c.env.ADMIN_PASSWORD || password !== c.env.ADMIN_PASSWORD) {
