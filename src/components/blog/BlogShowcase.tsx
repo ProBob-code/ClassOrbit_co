@@ -67,6 +67,10 @@ function FeaturedPost({ post }: { post: BlogPost }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
+      // /blog/[slug] is force-dynamic, so it has no prebuilt route segments for
+      // Next's segment prefetch to fetch — on Cloudflare Pages those prefetches
+      // resolve to /404. Skip them; the click-time fetch is what actually works.
+      prefetch={false}
       className="featured-card blog-rise rounded-[28px] overflow-hidden grid md:grid-cols-[1.15fr_1fr] group backdrop-blur-[8px]"
     >
       <div className="relative h-56 sm:h-72 md:h-auto md:min-h-[380px] overflow-hidden">
@@ -101,6 +105,7 @@ function PostCard({ post, index }: { post: BlogPost; index: number }) {
   return (
     <Link
       href={`/blog/${post.slug}`}
+      prefetch={false} // see FeaturedPost: dynamic route, prefetch 404s on Pages
       className="glass-card tilt-card blog-rise rounded-[24px] overflow-hidden flex flex-col group shrink-0 snap-start w-[78vw] max-w-[340px] sm:w-[340px]"
       style={{ '--rise-delay': `${Math.min(index, 8) * 90 + 120}ms` } as React.CSSProperties}
     >
