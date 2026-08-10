@@ -116,11 +116,15 @@ export interface Subject {
   id: string;
   label: string;
   icon: string;
+  /** Section header in the builder's Subject Area menu. */
+  group?: string;
 }
 
 export interface Grade {
   id: string;
   label: string;
+  /** Section header in the builder's Grade Level menu. */
+  group?: string;
 }
 
 export interface TeachingStyle {

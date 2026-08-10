@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, Suspense } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,13 +14,17 @@ import { TeacherInput, ToolPrompts } from '@/types';
 import toast from 'react-hot-toast';
 import JSZip from 'jszip';
 import {
-  Sparkles, CheckCircle2, ChevronDown, Rocket, Copy, ExternalLink, PenTool, Presentation,
+  Sparkles, CheckCircle2, Rocket, Copy, ExternalLink, PenTool, Presentation,
   BookOpen, FileText, ClipboardList, Book, Home, Layers, Users, MessageSquare, Gamepad2,
   Video, CheckSquare, File, Loader2, FlaskConical, Calculator, BookA, Globe,
-  Palette, History, Music, Binary, PenLine, SlidersHorizontal,
-  Send, Bookmark, RotateCcw, X, Plus, Share2, Lock
+  Palette, History, Music, PenLine, SlidersHorizontal,
+  Send, Bookmark, RotateCcw, X, Plus, Share2, Lock,
+  Briefcase, Brain, Stethoscope, Cog, TrendingUp, Landmark, Cpu, Leaf,
+  Languages, Dumbbell, Newspaper, Pill, GraduationCap, Sigma, Utensils, Gavel, Ruler
 } from 'lucide-react';
 import UpgradeModal from '@/components/ui/UpgradeModal';
+import SelectMenu, { SelectMenuOption } from '@/components/ui/SelectMenu';
+import { loadDraft, saveDraft, clearDraft, draftHasContent } from '@/lib/builder-draft';
 
 interface AttachedFile {
   name: string;
@@ -162,23 +166,52 @@ const iconMap: Record<string, any> = {
   'grading': CheckSquare, 'note': File
 };
 
+// Matched in order, most specific first — several labels contain a broader
+// term ("Computer Science", "Political Science", "Physical Education").
+const subjectIcons: [string, typeof BookOpen][] = [
+  ['computer', Cpu], ['data science', Cpu], ['information technology', Cpu],
+  ['psychology', Brain],
+  ['law', Gavel],
+  ['medicine', Stethoscope], ['nursing', Stethoscope], ['pharmacy', Pill],
+  ['engineering', Cog], ['architecture', Ruler],
+  ['mba', Briefcase], ['management', Briefcase], ['business', Briefcase], ['entrepreneur', Briefcase],
+  ['human resources', Users], ['sociology', Users],
+  ['account', Landmark], ['finance', Landmark], ['commerce', Landmark], ['political', Landmark],
+  ['economics', TrendingUp], ['marketing', TrendingUp], ['statistics', Sigma],
+  ['journalism', Newspaper], ['hospitality', Utensils],
+  ['agriculture', Leaf], ['environmental', Leaf],
+  ['physical education', Dumbbell], ['education', GraduationCap],
+  ['language', Languages], ['english', BookA], ['philosophy', BookOpen],
+  ['biology', FlaskConical], ['biotech', FlaskConical], ['chemistry', FlaskConical],
+  ['physics', FlaskConical], ['science', FlaskConical],
+  ['math', Calculator],
+  ['history', History], ['geography', Globe], ['social studies', Globe],
+  ['art', Palette], ['design', Palette], ['music', Music],
+];
+
 const getSubjectIcon = (label: string) => {
   const l = label.toLowerCase();
-  if (l.includes('science')) return FlaskConical;
-  if (l.includes('math')) return Calculator;
-  if (l.includes('english')) return BookA;
-  if (l.includes('history')) return History;
-  if (l.includes('geography')) return Globe;
-  if (l.includes('art')) return Palette;
-  if (l.includes('music')) return Music;
-  if (l.includes('computer')) return Binary;
-  return BookOpen;
+  return subjectIcons.find(([needle]) => l.includes(needle))?.[1] ?? BookOpen;
 };
+
+// Sentinel option value that swaps a menu for a free-text field.
+const CUSTOM = '__custom__';
+const customOption: SelectMenuOption = { value: CUSTOM, label: 'Other (type your own)', group: 'Custom' };
+
+const subjectOptions: SelectMenuOption[] = [
+  ...subjects.map(s => ({ value: s.label, label: s.label, group: s.group })),
+  customOption,
+];
+
+const gradeOptions: SelectMenuOption[] = [
+  ...grades.map(g => ({ value: g.label, label: g.label, group: g.group })),
+  customOption,
+];
 
 type BuilderMode = 'free' | 'guided';
 type ViewState = 'building' | 'ready';
 
-const curriculumOptions = [
+const curriculumOptions: SelectMenuOption[] = [
   { value: '', label: 'Select Curriculum (Optional)' },
   { value: 'CBSE', label: 'CBSE' },
   { value: 'ICSE / ISC', label: 'ICSE / ISC' },
@@ -186,18 +219,25 @@ const curriculumOptions = [
   { value: 'NIOS', label: 'NIOS (National Institute of Open Schooling)' },
   { value: 'IB Board', label: 'IB (International Baccalaureate)' },
   { value: 'IGCSE', label: 'IGCSE / Cambridge' },
-  { value: 'Other', label: 'Other (Type Custom)' }
+  { value: 'AICTE / UGC', label: 'AICTE / UGC (Higher Education)' },
+  { value: 'Autonomous / University', label: 'Autonomous / University Syllabus' },
+  customOption,
 ];
 
-const institutionOptions = [
+const institutionOptions: SelectMenuOption[] = [
   { value: '', label: 'Select Institution (Optional)' },
   { value: 'Public School', label: 'Public School' },
   { value: 'Private School', label: 'Private School' },
   { value: 'International School', label: 'International School' },
   { value: 'College', label: 'College' },
   { value: 'University', label: 'University' },
+  { value: 'Business School', label: 'Business School' },
+  { value: 'Engineering College', label: 'Engineering College' },
+  { value: 'Medical College', label: 'Medical College' },
+  { value: 'Coaching / Training Institute', label: 'Coaching / Training Institute' },
+  { value: 'Corporate / L&D Team', label: 'Corporate / L&D Team' },
   { value: 'Online/Homeschool', label: 'Online/Homeschool' },
-  { value: 'Other', label: 'Other (Type Custom)' }
+  customOption,
 ];
 
 export default function BuilderPage() {
@@ -294,6 +334,104 @@ function BuilderContent() {
 
   const [customCurriculumMode, setCustomCurriculumMode] = useState(false);
   const [customInstitutionMode, setCustomInstitutionMode] = useState(false);
+  // A deep link can carry a subject/grade that isn't in the list (it was typed
+  // as a custom value last time) — start those fields in free-text mode.
+  const [customSubjectMode, setCustomSubjectMode] = useState(() => {
+    const s = searchParams.get('subject');
+    return !!s && !subjects.some(x => x.label === s);
+  });
+  const [customGradeMode, setCustomGradeMode] = useState(() => {
+    const g = searchParams.get('grade');
+    return !!g && !grades.some(x => x.label === g);
+  });
+
+  /* ─── Draft persistence ───
+   * The work in progress survives navigating away, switching tabs and
+   * refreshing. Restoring happens in an effect rather than in the state
+   * initialisers because localStorage doesn't exist during the server render —
+   * reading it there would desync hydration. */
+  const [draftHydrated, setDraftHydrated] = useState(false);
+  // Guards the restore against React's double-invoked effects in development.
+  // A ref (not the state flag) because refs update synchronously — both passes
+  // would otherwise still see draftHydrated === false and restore twice.
+  const restoredRef = useRef(false);
+
+  /* eslint-disable react-hooks/set-state-in-effect -- one-shot restore: replays a saved draft into state once on mount */
+  useEffect(() => {
+    if (restoredRef.current) return;
+    restoredRef.current = true;
+
+    // "New Prompt" deliberately starts from a blank slate. Strip the flag
+    // afterwards so a later refresh doesn't wipe the new draft too.
+    if (searchParams.get('new') === '1') {
+      clearDraft();
+      window.history.replaceState({}, '', '/builder');
+      setDraftHydrated(true);
+      return;
+    }
+
+    const draft = loadDraft();
+    if (!draft || !draftHasContent(draft)) {
+      setDraftHydrated(true);
+      return;
+    }
+
+    setMode(draft.mode);
+    setViewState(draft.viewState);
+    setFreePrompt(draft.freePrompt);
+    setFreeTools(draft.freeTools);
+    setAttachments(draft.attachments);
+    setGeneratedPrompts(draft.generatedPrompts);
+    setActiveTab(draft.activeTab);
+    setCustomSubjectMode(draft.customSubjectMode);
+    setCustomGradeMode(draft.customGradeMode);
+    setCustomCurriculumMode(draft.customCurriculumMode);
+    setCustomInstitutionMode(draft.customInstitutionMode);
+
+    // An explicit deep link (?subject=Math from the landing page) states the
+    // user's intent for those fields, so it wins over what was saved.
+    setFormData({
+      ...draft.formData,
+      contentType: searchParams.get('type') || draft.formData.contentType,
+      grade: searchParams.get('grade') || draft.formData.grade,
+      subject: searchParams.get('subject') || draft.formData.subject,
+      topic: searchParams.get('topic') || draft.formData.topic,
+    });
+
+    setDraftHydrated(true);
+    toast('Picked up where you left off', { icon: '📝', duration: 5000 });
+  }, [searchParams]);
+  /* eslint-enable react-hooks/set-state-in-effect */
+
+  // Debounced so typing a topic doesn't hit localStorage on every keystroke.
+  useEffect(() => {
+    if (!draftHydrated) return;
+    const t = setTimeout(() => {
+      const draft = {
+        mode,
+        viewState,
+        formData,
+        freePrompt,
+        freeTools,
+        attachments,
+        generatedPrompts,
+        activeTab,
+        customSubjectMode,
+        customGradeMode,
+        customCurriculumMode,
+        customInstitutionMode,
+      };
+      // An untouched form isn't worth storing — and storing it would leave a
+      // stale key behind after "New Prompt" clears the draft.
+      if (draftHasContent(draft)) saveDraft(draft);
+      else clearDraft();
+    }, 400);
+    return () => clearTimeout(t);
+  }, [
+    draftHydrated, mode, viewState, formData, freePrompt, freeTools, attachments,
+    generatedPrompts, activeTab, customSubjectMode, customGradeMode,
+    customCurriculumMode, customInstitutionMode,
+  ]);
 
   // Upgrade modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
@@ -864,17 +1002,17 @@ function BuilderContent() {
                     
                     {!isCreatingNewFolder ? (
                       <div className="flex gap-2">
-                        <select
+                        <SelectMenu
+                          className="flex-1 min-w-0"
                           value={saveFolderId}
-                          onChange={(e) => setSaveFolderId(e.target.value)}
-                          className="flex-1 bg-background border border-border rounded-xl px-4 py-3 text-body-md text-text-main focus:outline-none focus:border-primary transition-all cursor-pointer"
-                        >
-                          {workspaceFolders.map((f: any) => (
-                            <option key={f.id} value={f.id} className="bg-surface text-text-main">
-                              {f.sticker} {f.name} ({f.fileCount} files)
-                            </option>
-                          ))}
-                        </select>
+                          onChange={setSaveFolderId}
+                          options={workspaceFolders.map((f: any) => ({
+                            value: f.id,
+                            label: `${f.sticker} ${f.name} (${f.fileCount} files)`,
+                          }))}
+                          placeholder="Choose a folder"
+                          ariaLabel="Folder / Category"
+                        />
                         <button
                           type="button"
                           onClick={() => setIsCreatingNewFolder(true)}
@@ -1219,35 +1357,73 @@ function BuilderContent() {
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-2 relative">
-                    <label className="text-label-sm font-semibold text-text-muted ml-1">Subject Area</label>
-                    <div className="relative">
-                      <select 
-                        value={formData.subject}
-                        onChange={(e) => updateField('subject', e.target.value)}
-                        className="w-full appearance-none bg-surface border border-border rounded-xl pl-10 pr-10 py-3.5 text-body-md text-text-main focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
-                      >
-                        {subjects.map(s => <option key={s.id} value={s.label}>{s.label}</option>)}
-                      </select>
-                      {(() => {
-                        const SubjectIcon = getSubjectIcon(formData.subject);
-                        return <SubjectIcon size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none" />;
-                      })()}
-                      <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-subtle" />
-                    </div>
+                    <label className="text-label-sm font-semibold text-text-muted ml-1 flex justify-between items-center">
+                      Subject Area
+                      {customSubjectMode && (
+                        <button type="button" onClick={() => { setCustomSubjectMode(false); updateField('subject', subjects[0].label); }} className="text-primary hover:underline text-[11px]">Choose from list</button>
+                      )}
+                    </label>
+                    {(() => {
+                      const SubjectIcon = getSubjectIcon(formData.subject);
+                      return !customSubjectMode ? (
+                        <SelectMenu
+                          value={formData.subject}
+                          onChange={(v) => {
+                            if (v === CUSTOM) { setCustomSubjectMode(true); updateField('subject', ''); }
+                            else updateField('subject', v);
+                          }}
+                          options={subjectOptions}
+                          placeholder="Select subject"
+                          ariaLabel="Subject Area"
+                          leadingIcon={<SubjectIcon size={20} />}
+                        />
+                      ) : (
+                        <div className="relative">
+                          <input
+                            type="text"
+                            value={formData.subject}
+                            onChange={(e) => updateField('subject', e.target.value)}
+                            placeholder="E.g. Aerospace Engineering, Taxation..."
+                            className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-3.5 text-body-md text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+                            autoFocus
+                          />
+                          <SubjectIcon size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none" />
+                        </div>
+                      );
+                    })()}
                   </div>
                   <div className="space-y-2 relative">
-                    <label className="text-label-sm font-semibold text-text-muted ml-1">Grade Level</label>
-                    <div className="relative">
-                      <select 
+                    <label className="text-label-sm font-semibold text-text-muted ml-1 flex justify-between items-center">
+                      Grade Level
+                      {customGradeMode && (
+                        <button type="button" onClick={() => { setCustomGradeMode(false); updateField('grade', 'Grade 5'); }} className="text-primary hover:underline text-[11px]">Choose from list</button>
+                      )}
+                    </label>
+                    {!customGradeMode ? (
+                      <SelectMenu
                         value={formData.grade}
-                        onChange={(e) => updateField('grade', e.target.value)}
-                        className="w-full appearance-none bg-surface border border-border rounded-xl pl-10 pr-10 py-3.5 text-body-md text-text-main focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
-                      >
-                        {grades.map(g => <option key={g.id} value={g.label}>{g.label}</option>)}
-                      </select>
-                      <Users size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none" />
-                      <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-subtle" />
-                    </div>
+                        onChange={(v) => {
+                          if (v === CUSTOM) { setCustomGradeMode(true); updateField('grade', ''); }
+                          else updateField('grade', v);
+                        }}
+                        options={gradeOptions}
+                        placeholder="Select grade level"
+                        ariaLabel="Grade Level"
+                        leadingIcon={<Users size={20} />}
+                      />
+                    ) : (
+                      <div className="relative">
+                        <input
+                          type="text"
+                          value={formData.grade}
+                          onChange={(e) => updateField('grade', e.target.value)}
+                          placeholder="E.g. MBA Semester 2, NEET Repeaters..."
+                          className="w-full bg-surface border border-border rounded-xl pl-10 pr-4 py-3.5 text-body-md text-text-main placeholder:text-text-subtle focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm"
+                          autoFocus
+                        />
+                        <Users size={20} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-text-subtle pointer-events-none" />
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -1307,23 +1483,20 @@ function BuilderContent() {
                       )}
                     </label>
                     {!customCurriculumMode ? (
-                      <div className="relative">
-                        <select
-                          value={curriculumOptions.find(o => o.value === formData.curriculum) ? formData.curriculum : ''}
-                          onChange={(e) => {
-                            if (e.target.value === 'Other') {
-                              setCustomCurriculumMode(true);
-                              updateField('curriculum', '');
-                            } else {
-                              updateField('curriculum', e.target.value);
-                            }
-                          }}
-                          className="w-full appearance-none bg-surface border border-border rounded-xl px-4 py-3 text-body-md text-text-main focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
-                        >
-                          {curriculumOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        </select>
-                        <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-subtle" />
-                      </div>
+                      <SelectMenu
+                        value={curriculumOptions.find(o => o.value === formData.curriculum) ? formData.curriculum ?? '' : ''}
+                        onChange={(v) => {
+                          if (v === CUSTOM) {
+                            setCustomCurriculumMode(true);
+                            updateField('curriculum', '');
+                          } else {
+                            updateField('curriculum', v);
+                          }
+                        }}
+                        options={curriculumOptions}
+                        placeholder="Select Curriculum (Optional)"
+                        ariaLabel="Curriculum / Board"
+                      />
                     ) : (
                       <input
                         type="text"
@@ -1343,23 +1516,20 @@ function BuilderContent() {
                       )}
                     </label>
                     {!customInstitutionMode ? (
-                      <div className="relative">
-                        <select
-                          value={institutionOptions.find(o => o.value === formData.institution) ? formData.institution : ''}
-                          onChange={(e) => {
-                            if (e.target.value === 'Other') {
-                              setCustomInstitutionMode(true);
-                              updateField('institution', '');
-                            } else {
-                              updateField('institution', e.target.value);
-                            }
-                          }}
-                          className="w-full appearance-none bg-surface border border-border rounded-xl px-4 py-3 text-body-md text-text-main focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm cursor-pointer"
-                        >
-                          {institutionOptions.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
-                        </select>
-                        <ChevronDown size={20} className="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-text-subtle" />
-                      </div>
+                      <SelectMenu
+                        value={institutionOptions.find(o => o.value === formData.institution) ? formData.institution ?? '' : ''}
+                        onChange={(v) => {
+                          if (v === CUSTOM) {
+                            setCustomInstitutionMode(true);
+                            updateField('institution', '');
+                          } else {
+                            updateField('institution', v);
+                          }
+                        }}
+                        options={institutionOptions}
+                        placeholder="Select Institution (Optional)"
+                        ariaLabel="Institution / University / City"
+                      />
                     ) : (
                       <input
                         type="text"

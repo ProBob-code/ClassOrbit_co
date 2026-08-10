@@ -1790,9 +1790,9 @@ export default function AdminDashboard() {
               {ticketsLoading ? (
                 <div className="flex items-center justify-center py-20"><Loader2 size={28} className="animate-spin text-primary" /></div>
               ) : (
-                <div className="flex gap-6 h-[700px]">
-                  {/* ─── Left: Ticket List ─── */}
-                  <div className={`overflow-y-auto max-h-[700px] custom-scrollbar ${activeChat ? 'w-[360px] shrink-0 space-y-3' : 'w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 content-start'}`}>
+                <div className="flex gap-6 h-[70dvh] min-h-[420px] md:h-[700px]">
+                  {/* ─── Left: Ticket List (hidden on mobile while a chat is open — master/detail) ─── */}
+                  <div className={`overflow-y-auto max-h-full custom-scrollbar ${activeChat ? 'hidden md:block w-full md:w-[360px] md:shrink-0 space-y-3' : 'w-full grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 content-start'}`}>
                     {tickets
                       .filter(t => {
                         const matchesStatus = ticketFilter === 'all' || t.status === ticketFilter;
@@ -1870,17 +1870,17 @@ export default function AdminDashboard() {
 
                   {/* ─── Right: Live Chat Panel ─── */}
                   {activeChat && (
-                    <div className="flex-1 glass-panel border border-border rounded-3xl flex flex-col overflow-hidden shadow-soft relative">
+                    <div className="flex-1 min-w-0 glass-panel border border-border rounded-3xl flex flex-col overflow-hidden shadow-soft relative">
                       {/* Chat header */}
-                      <div className="px-5 py-4 border-b border-border flex items-center justify-between shrink-0 bg-white/[0.01]">
-                        <div className="flex items-center gap-3">
-                          <button onClick={closeAdminChat} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-text-main transition-colors cursor-pointer">
+                      <div className="px-4 md:px-5 py-4 border-b border-border flex items-center justify-between shrink-0 bg-white/[0.01]">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <button onClick={closeAdminChat} className="w-8 h-8 shrink-0 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-text-muted hover:text-text-main transition-colors cursor-pointer">
                             <ArrowLeft size={16} />
                           </button>
-                          <div>
-                            <h3 className="text-[14px] font-bold text-text-main font-display flex items-center gap-2">
-                              {activeChat.user_name || 'Anonymous User'}
-                              <span className="text-[10px] font-mono text-text-subtle font-normal">({activeChat.id})</span>
+                          <div className="min-w-0">
+                            <h3 className="text-[14px] font-bold text-text-main font-display flex items-center gap-2 min-w-0">
+                              <span className="truncate">{activeChat.user_name || 'Anonymous User'}</span>
+                              <span className="text-[10px] font-mono text-text-subtle font-normal truncate hidden sm:inline">({activeChat.id})</span>
                             </h3>
                             <div className={`flex items-center gap-1 text-[10px] font-semibold ${
                               chatStatus === 'admin_active' ? 'text-emerald-400' :

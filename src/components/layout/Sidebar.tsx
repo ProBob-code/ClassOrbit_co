@@ -105,8 +105,9 @@ export default function Sidebar() {
       <div className="shrink-0 px-4 pb-4 pt-3 border-t border-border flex flex-col gap-1">
 
         {/* New Prompt button */}
+        {/* ?new=1 discards any saved draft — this button means "start fresh". */}
         <Link
-          href="/builder"
+          href="/builder?new=1"
           className="mb-2 bg-gradient-primary text-white rounded-xl py-3 px-6 flex items-center justify-center gap-2 font-semibold hover:shadow-glow active:scale-95 transition-all shadow-md text-label-md"
         >
           <Plus size={18} strokeWidth={3} />

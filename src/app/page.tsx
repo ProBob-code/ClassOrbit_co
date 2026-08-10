@@ -32,6 +32,41 @@ const subjectEmoji: Record<string, string> = {
   geography: '🌍',
   commerce: '💼',
   computer_science: '💻',
+  social_studies: '🏛️',
+  environmental_science: '🌱',
+  languages: '🗣️',
+  art: '🎨',
+  music: '🎵',
+  physical_education: '🏅',
+  business_studies: '📊',
+  mba: '🎓',
+  accounting: '🧾',
+  finance: '🏦',
+  economics: '📈',
+  marketing: '📣',
+  human_resources: '🤝',
+  entrepreneurship: '💡',
+  engineering: '⚙️',
+  mechanical_engineering: '🔧',
+  civil_engineering: '🏗️',
+  electrical_engineering: '🔌',
+  data_science: '🤖',
+  information_technology: '🖥️',
+  architecture: '📐',
+  medicine: '🩺',
+  nursing: '💉',
+  pharmacy: '💊',
+  biotechnology: '🧫',
+  agriculture: '🌾',
+  psychology: '🧠',
+  sociology: '👥',
+  political_science: '🗳️',
+  philosophy: '🤔',
+  law: '⚖️',
+  journalism: '📰',
+  education: '🍎',
+  hospitality: '🍽️',
+  statistics: '📉',
 };
 
 const trustStats = [
@@ -417,7 +452,9 @@ export default function LandingPage() {
                   </div>
                   <div className="min-w-0">
                     <p className="font-bold text-white text-[16px] truncate">{s.label}</p>
-                    <p className="text-[13px] text-text-muted">K–12 · 14 formats</p>
+                    <p className="text-[13px] text-text-muted">
+                      {s.group === 'School Subjects' ? 'K–12' : 'Higher ed'} · 14 formats
+                    </p>
                   </div>
                   <ArrowRight size={18} className="ml-auto text-white/20 group-hover:text-primary group-hover:translate-x-1 transition-all shrink-0" />
                 </Link>
