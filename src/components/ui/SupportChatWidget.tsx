@@ -737,7 +737,9 @@ export default function SupportChatWidget() {
 
   /* ─── Render ─── */
   return (
-    <div className="fixed bottom-6 right-6 z-50 flex flex-col items-end">
+    // On mobile the bottom tab bar owns the last 64px of the screen, so the
+    // launcher sits above it; from md up there is no tab bar to clear.
+    <div className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-50 flex flex-col items-end">
       <AnimatePresence>
         {isOpen && (
           <motion.div
@@ -745,7 +747,7 @@ export default function SupportChatWidget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 350 }}
-            className="w-[370px] sm:w-[410px] h-[580px] max-h-[85vh] bg-[#0c0a1f]/90 backdrop-blur-xl border border-white/[0.08] rounded-3xl shadow-2xl flex flex-col overflow-hidden mb-4 relative z-50"
+            className="w-[calc(100vw-2rem)] sm:w-[410px] h-[580px] max-h-[calc(100dvh-180px)] bg-[#0c0a1f]/90 backdrop-blur-xl border border-white/[0.08] rounded-3xl shadow-2xl flex flex-col overflow-hidden mb-4 relative z-50"
           >
             {/* Ambient glow */}
             <div className="absolute top-0 left-0 w-full h-[60px] bg-gradient-to-b from-primary/10 to-transparent pointer-events-none" />
