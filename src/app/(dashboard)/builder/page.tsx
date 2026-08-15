@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { contentTypes } from '@/data/content-types';
+import { contentTypes, isNewContentLive } from '@/data/content-types';
 import { subjects } from '@/data/subjects';
 import { grades } from '@/data/grades';
 import { launchTool, supportsAutoFill } from '@/lib/tools/router';
@@ -20,10 +20,12 @@ import {
   Palette, History, Music, PenLine, SlidersHorizontal,
   Send, Bookmark, RotateCcw, X, Plus, Share2, Lock,
   Briefcase, Brain, Stethoscope, Cog, TrendingUp, Landmark, Cpu, Leaf,
-  Languages, Dumbbell, Newspaper, Pill, GraduationCap, Sigma, Utensils, Gavel, Ruler
+  Languages, Dumbbell, Newspaper, Pill, GraduationCap, Sigma, Utensils, Gavel, Ruler,
+  KeyRound
 } from 'lucide-react';
 import UpgradeModal from '@/components/ui/UpgradeModal';
 import SelectMenu, { SelectMenuOption } from '@/components/ui/SelectMenu';
+import WhatsNewBanner from '@/components/ui/WhatsNewBanner';
 import { loadDraft, saveDraft, clearDraft, draftHasContent } from '@/lib/builder-draft';
 
 interface AttachedFile {
@@ -115,8 +117,8 @@ const extractPdfText = async (file: File): Promise<string> => {
 // Content types listed here are usable on the Free plan; anything missing shows
 // a Pro lock. Every type is currently free — remove ids to re-enable locks.
 const FREE_CONTENT_TYPES = [
-  'quiz', 'ppt', 'lesson_plan', 'question_paper', 'worksheet', 'story',
-  'homework', 'flashcards', 'classroom_activity', 'debate',
+  'quiz', 'ppt', 'lesson_plan', 'question_paper', 'answer_key', 'worksheet',
+  'story', 'homework', 'flashcards', 'classroom_activity', 'debate',
   'interactive_game', 'video_script', 'rubric', 'notes',
 ];
 
@@ -163,7 +165,7 @@ const iconMap: Record<string, any> = {
   'quiz': PenTool, 'slideshow': Presentation, 'menu_book': BookOpen, 'description': FileText,
   'assignment': ClipboardList, 'auto_stories': Book, 'home_work': Home, 'style': Layers,
   'groups': Users, 'forum': MessageSquare, 'sports_esports': Gamepad2, 'videocam': Video,
-  'grading': CheckSquare, 'note': File
+  'grading': CheckSquare, 'note': File, 'key': KeyRound
 };
 
 // Matched in order, most specific first — several labels contain a broader
@@ -253,6 +255,8 @@ export default function BuilderPage() {
 function BuilderContent() {
   const searchParams = useSearchParams();
   const { tools: systemTools } = useTools();
+  // NEW badges retire themselves on NEW_CONTENT_UNTIL — see content-types.ts.
+  const showNewBadges = isNewContentLive();
   const [mode, setMode] = useState<BuilderMode>('guided');
   const [viewState, setViewState] = useState<ViewState>('building');
 
@@ -1317,6 +1321,8 @@ function BuilderContent() {
           >
             {/* LEFT COLUMN: Builder Form */}
             <div className="lg:col-span-7 space-y-8 glass-panel p-6 sm:p-8 rounded-[32px]">
+              <WhatsNewBanner onTry={() => updateField('contentType', 'question_paper')} />
+
               {/* Step 1: Format */}
               <div className="space-y-4">
                 <h3 className="text-headline-md font-bold text-text-main flex items-center gap-2">
@@ -1324,10 +1330,11 @@ function BuilderContent() {
                   What are we making?
                 </h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {contentTypes.slice(0, 12).map((c) => {
+                  {contentTypes.map((c) => {
                     const isSelected = formData.contentType === c.id;
                     const isPremium = userPlan === 'free' && !FREE_CONTENT_TYPES.includes(c.id);
                     const Icon = iconMap[c.icon] || FileText;
+                    const isNew = c.is_new && showNewBadges;
                     return (
                       <button
                         key={c.id}
@@ -1346,6 +1353,11 @@ function BuilderContent() {
                           <div className="absolute top-2 right-2 bg-secondary/80 backdrop-blur text-warning p-1 rounded-full shadow-sm" title="Pro Feature">
                             <Lock size={12} strokeWidth={2.5} />
                           </div>
+                        )}
+                        {isNew && !isPremium && (
+                          <span className="absolute top-2 right-2 text-[9px] font-bold bg-primary text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                            New
+                          </span>
                         )}
                         <Icon size={28} className={isSelected ? 'text-primary' : 'text-text-subtle'} strokeWidth={1.5} />
                         <span className={`text-label-md font-semibold break-words whitespace-normal leading-tight ${isSelected ? 'text-primary' : 'text-text-main'}`}>
@@ -1566,9 +1578,13 @@ function BuilderContent() {
                   )}
                 </div>
                 <p className="text-body-sm text-text-muted leading-relaxed">
-                  Attach syllabus outlines, reference papers, lesson notes, or textbooks. The AI will ground all generated content directly in these files.
+                  {formData.contentType === 'question_paper'
+                    ? 'Attach a sample question paper and the new paper follows its blueprint — same sections, marks and rigour. Add a sample answer key too and the generated key copies its format.'
+                    : formData.contentType === 'answer_key'
+                    ? 'Attach a sample answer key and the generated key copies its format — numbering, working shown, and the mark-by-mark split. You can attach the question paper instead, or both.'
+                    : 'Attach syllabus outlines, reference papers, lesson notes, or textbooks. The AI will ground all generated content directly in these files.'}
                 </p>
-                
+
                 {/* Upload Zone */}
                 <div className="relative border border-dashed border-border hover:border-primary/50 transition-colors rounded-2xl p-5 text-center bg-surface/30 group">
                   <input

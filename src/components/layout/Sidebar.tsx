@@ -18,9 +18,11 @@ import {
 
 import { useUser } from '@/lib/hooks/useUser';
 import { usePlan } from '@/lib/hooks/usePlan';
+import { isNewContentLive } from '@/data/content-types';
 
+// `isNew` shows a NEW pill until NEW_CONTENT_UNTIL passes — see content-types.ts.
 const navItems = [
-  { href: '/builder', label: 'Prompt Builder', icon: Sparkles },
+  { href: '/builder', label: 'Prompt Builder', icon: Sparkles, isNew: true },
   { href: '/workspace', label: 'Workspace', icon: FolderOpen },
   { href: '/prompts', label: 'Saved Prompts', icon: Bookmark },
   { href: '/tools', label: 'Launchpad', icon: Rocket },
@@ -30,6 +32,7 @@ export default function Sidebar() {
   const pathname = usePathname();
   const { profile, loading } = useUser();
   const plan = usePlan();
+  const showNewBadges = isNewContentLive();
 
   return (
     <aside className="fixed left-0 top-16 h-[calc(100vh-64px)] w-[280px] z-40 bg-surface border-r border-border hidden md:flex flex-col shadow-soft overflow-hidden">
@@ -69,6 +72,11 @@ export default function Sidebar() {
               )}
               <Icon size={20} className="relative z-10" strokeWidth={isActive ? 2.5 : 2} />
               <span className="text-label-md relative z-10">{item.label}</span>
+              {item.isNew && showNewBadges && (
+                <span className="relative z-10 ml-auto text-[9px] font-bold bg-primary text-white px-1.5 py-0.5 rounded-full uppercase tracking-wider animate-pulse">
+                  New
+                </span>
+              )}
             </Link>
           );
         })}

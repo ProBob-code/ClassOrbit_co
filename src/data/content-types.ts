@@ -1,10 +1,20 @@
 import { ContentType } from '@/types';
 
+/**
+ * NEW badges and the launch announcement both stop showing after this date, so
+ * the release stops shouting on its own. Push it out when the next feature
+ * ships rather than leaving badges up indefinitely.
+ */
+export const NEW_CONTENT_UNTIL = new Date('2026-10-15T00:00:00Z');
+
+export const isNewContentLive = () => new Date() < NEW_CONTENT_UNTIL;
+
 export const contentTypes: ContentType[] = [
   { id: 'quiz', label: 'Quiz', icon: 'quiz', description: 'Multiple choice, fill-in-the-blank, or mixed-format assessments' },
   { id: 'ppt', label: 'PPT', icon: 'slideshow', description: 'Slide-based presentations with key points and visuals' },
   { id: 'lesson_plan', label: 'Lesson Plan', icon: 'menu_book', description: 'Structured lesson plans with objectives, activities, and assessments' },
-  { id: 'question_paper', label: 'Question Paper', icon: 'description', description: 'Formal exam or test papers with marking schemes' },
+  { id: 'question_paper', label: 'Question Paper', icon: 'description', description: 'Formal exam or test papers with marking schemes', is_new: true },
+  { id: 'answer_key', label: 'Answer Key', icon: 'key', description: 'Marking schemes and model answers, matched to a sample key', is_new: true },
   { id: 'worksheet', label: 'Worksheet', icon: 'assignment', description: 'Practice worksheets with exercises and problems' },
   { id: 'story', label: 'Story', icon: 'auto_stories', description: 'Educational stories and narratives for classroom use' },
   { id: 'homework', label: 'Homework', icon: 'home_work', description: 'Take-home assignments and practice sets' },

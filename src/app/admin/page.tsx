@@ -78,8 +78,8 @@ interface AdminTool {
 
 const CATEGORIES = ['text', 'visual', 'presentation', 'audio', 'image', 'research'];
 const OUTPUT_OPTIONS = [
-  'quiz', 'lesson_plan', 'question_paper', 'worksheet', 'story', 'homework',
-  'flashcards', 'debate', 'rubric', 'notes', 'video_script', 'ppt',
+  'quiz', 'lesson_plan', 'question_paper', 'answer_key', 'worksheet', 'story',
+  'homework', 'flashcards', 'debate', 'rubric', 'notes', 'video_script', 'ppt',
   'classroom_activity', 'interactive_game',
 ];
 
