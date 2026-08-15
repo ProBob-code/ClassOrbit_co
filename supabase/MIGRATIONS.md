@@ -28,6 +28,7 @@ wrangler d1 execute $DB --remote --file=supabase/migrations/005-blog-body-images
 wrangler d1 execute $DB --remote --file=supabase/migrations/006-platform-settings.sql
 wrangler d1 execute $DB --remote --file=supabase/migrations/007-users.sql
 wrangler d1 execute $DB --remote --file=supabase/migrations/008-analytics.sql
+wrangler d1 execute $DB --remote --file=supabase/migrations/009-answer-key-output.sql
 # One-time on the live DB (own Google auth replacing Supabase): seed users from
 # the Supabase export so existing accounts keep their ids — see
 # worker/scripts/export-supabase-users.mjs for how to generate this file.

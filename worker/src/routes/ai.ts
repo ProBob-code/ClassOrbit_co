@@ -4,6 +4,7 @@ import { getDB } from '../lib/d1';
 import { getSessionUser } from '../lib/user-auth';
 import { getMockChatbotReply } from '../lib/support-ai-fallback';
 import { CHATBOT_SYSTEM_PROMPT, GROQ_MODEL } from '../lib/ai-prompts';
+import { getAssessmentInstructions } from '../lib/paper-rules';
 
 const router = new Hono<AppEnv>();
 
@@ -112,16 +113,14 @@ Reference Files Attached: ${attachedFiles.join(', ')}
 CRITICAL REQUIREMENT (RAG & Grounding):
 The prompts you generate MUST explicitly command the target AI assistant to:
 1. Act as a strict RAG (Retrieval-Augmented Generation) assistant, grounding all generated explanations and facts strictly in the reference documents/materials provided at the bottom of the prompt (which the user will paste).
-2. Mimic the layout, style, and structure of the reference papers, but apply them to the target grade and subject.`;
+2. Mimic the layout, style, and structure of the reference papers, but apply them to the target grade and subject.
+`;
+    }
 
-      if (contentType === 'question_paper') {
-        userPrompt += `
-3. For this question paper/exam:
-   - Carefully analyze the question formats, pattern, marks allocation, and rigor of the attached previous question papers.
-   - Adjust the cognitive complexity of the new questions to match the targeted level: "${studentLevel}".
-   - CRITICAL NON-REPETITION CONSTRAINT: Under no circumstances should the target AI repeat any questions verbatim from the attached papers.`;
-      }
-      userPrompt += `\n`;
+    // Question papers and answer keys carry their own regeneration rules, which
+    // differ by subject — see paper-rules.ts.
+    if (contentType === 'question_paper' || contentType === 'answer_key') {
+      userPrompt += getAssessmentInstructions({ contentType, subject, studentLevel, hasAttachment });
     }
 
     userPrompt += `\nMake sure to format the prompts perfectly according to each tool's limit.\nOutput strictly a valid JSON object matching the schema.`;

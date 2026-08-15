@@ -22,7 +22,8 @@ ClassOrbit is an AI Prompt Studio for Educators. Teachers describe what they nee
 1. Prompt Builder: Two modes:
    • Guided Builder: step-by-step form. Pick content type, grade, subject, topic, and the engine generates an optimized prompt.
    • Free Type: just describe what you want in plain language (e.g. "A fun quiz about the solar system for grade 5") and the engine optimizes it.
-2. Supported content types (14 total): Quiz, Lesson Plan, Question Paper, Worksheet, Story, Homework, Flashcards, Debate, Rubric, Notes, Video Script, Presentation, Classroom Activity, Interactive Game.
+2. Supported content types (15 total): Quiz, Lesson Plan, Question Paper, Answer Key, Worksheet, Story, Homework, Flashcards, Debate, Rubric, Notes, Video Script, Presentation, Classroom Activity, Interactive Game.
+   • Question Paper and Answer Key accept an attached sample. The prompt then tells the AI to rebuild the paper to the sample's blueprint. In language subjects it writes fresh questions testing the same skills; in maths/science subjects it may reuse a question with changed numbers, and keeps case-study scenarios while randomising names and details. Attaching a sample answer key makes the generated key follow that key's format.
 3. AI Tools Launchpad: after generating a prompt, one-click launch into ChatGPT, Claude, Canva, Gamma (presentations), Google NotebookLM, Suno (audio/music), ElevenLabs (voiceovers), Ideogram (images), and any custom tools.
 4. Workspace: a folders + files system to organize teaching materials, generated content, and exported packages.
 5. Saved Prompts: every generated prompt is auto-saved. You can search, favorite, copy, and organize them into folders.

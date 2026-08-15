@@ -110,6 +110,8 @@ export interface ContentType {
   label: string;
   icon: string;
   description: string;
+  /** Shows a NEW badge in the builder until `NEW_CONTENT_UNTIL` passes. */
+  is_new?: boolean;
 }
 
 export interface Subject {

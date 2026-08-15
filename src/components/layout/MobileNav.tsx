@@ -10,9 +10,12 @@ import {
   User, Settings, LifeBuoy, LogOut 
 } from 'lucide-react';
 import { useUser } from '@/lib/hooks/useUser';
+import { isNewContentLive } from '@/data/content-types';
 
+// `isNew` shows a dot until NEW_CONTENT_UNTIL passes — see content-types.ts.
+// The bottom bar is too cramped for the sidebar's NEW pill.
 const navItems = [
-  { href: '/builder', label: 'Builder', icon: Sparkles },
+  { href: '/builder', label: 'Builder', icon: Sparkles, isNew: true },
   { href: '/workspace', label: 'Drive', icon: FolderOpen },
   { href: '/prompts', label: 'Prompts', icon: Bookmark },
   { href: '/tools', label: 'Tools', icon: Rocket },
@@ -22,6 +25,7 @@ export default function MobileNav() {
   const pathname = usePathname();
   const [isOpen, setIsOpen] = useState(false);
   const { profile, loading, signOut } = useUser();
+  const showNewBadges = isNewContentLive();
 
   return (
     <>
@@ -46,7 +50,12 @@ export default function MobileNav() {
                 isActive ? 'text-primary' : 'text-text-muted'
               }`}
             >
-              <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+              <span className="relative">
+                <Icon size={20} strokeWidth={isActive ? 2.5 : 2} />
+                {item.isNew && showNewBadges && (
+                  <span className="absolute -top-0.5 -right-1 w-2 h-2 rounded-full bg-primary animate-pulse" />
+                )}
+              </span>
               <span className="text-[10px] font-bold">{item.label}</span>
             </Link>
           );
