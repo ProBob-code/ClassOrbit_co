@@ -9,6 +9,11 @@ interface AnimatedContainerProps {
   className?: string;
   delay?: number;
   direction?: 'up' | 'down' | 'left' | 'right';
+  /**
+   * Render visible immediately, with no entrance animation. Use this for
+   * anything above the fold — see the comment in the component body.
+   */
+  immediate?: boolean;
 }
 
 export default function AnimatedContainer({
@@ -16,9 +21,20 @@ export default function AnimatedContainer({
   className = '',
   delay = 0,
   direction = 'up',
+  immediate = false,
 }: AnimatedContainerProps) {
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '0px' });
+
+  // The reveal starts at opacity 0 and only plays once React has hydrated and
+  // the in-view effect has fired. For content already on screen at load that
+  // makes the text invisible for as long as hydration takes — it made the
+  // landing hero's <h1> the LCP element with 2.4s of render delay on mobile.
+  // Above the fold there is nothing to reveal anyway, so skip the wrapper and
+  // let the server HTML paint.
+  if (immediate) {
+    return <div className={className}>{children}</div>;
+  }
 
   const directionVariants = {
     up: { y: 40 },

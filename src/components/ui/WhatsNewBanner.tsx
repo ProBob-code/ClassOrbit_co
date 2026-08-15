@@ -60,21 +60,21 @@ export default function WhatsNewBanner({ onTry }: { onTry: () => void }) {
                   New
                 </span>
                 <h4 className="text-label-md font-bold text-text-main">
-                  Upload last year&apos;s paper. Get this year&apos;s back.
+                  New feature added
                 </h4>
               </div>
               <p className="text-body-sm text-text-muted leading-relaxed">
-                Question Paper and the brand-new <strong className="text-text-main">Answer Key</strong> now
-                rebuild an exam from a sample you attach — same sections, same marks, same rigour.
-                In Maths and Science the questions stay and the numbers change; in English you get
-                fresh questions testing the very same skills. Attaching a sample is optional, so
-                they still build a paper from scratch.
+                Upload an old question paper and get a new one back in the same format.
+                In Maths and Science, the questions stay and the numbers change.
+                In English, the questions are new but test the same skills.
+                We have also added <strong className="text-text-main">Answer Key</strong>.
+                Uploading a sample is optional.
               </p>
               <button
                 onClick={() => { dismiss(); onTry(); }}
                 className="inline-flex items-center gap-1.5 text-label-sm font-bold text-primary hover:gap-2.5 transition-all"
               >
-                Try it on a question paper
+                Try it now
                 <ArrowRight size={14} />
               </button>
             </div>

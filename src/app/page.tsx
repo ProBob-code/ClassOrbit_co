@@ -198,7 +198,7 @@ export default function LandingPage() {
         <section className="relative px-margin-mobile md:px-margin-page pt-10 pb-14 md:pt-14 z-10">
           <div className="max-w-[1500px] mx-auto grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left: copy */}
-            <AnimatedContainer className="flex flex-col items-center lg:items-start text-center lg:text-left">
+            <AnimatedContainer immediate className="flex flex-col items-center lg:items-start text-center lg:text-left">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass-card mb-6">
                 <span className="text-[13px]">✨</span>
                 <span className="text-[12px] font-bold text-white tracking-widest uppercase">Built for educators, by educators</span>
@@ -251,7 +251,7 @@ export default function LandingPage() {
             </AnimatedContainer>
 
             {/* Right: cosmic visual with orbit rings */}
-            <AnimatedContainer delay={0.15} className="relative flex items-center justify-center">
+            <AnimatedContainer immediate className="relative flex items-center justify-center">
               {/* Rings around the artwork */}
               <div className="absolute w-[115%] aspect-square max-w-none pointer-events-none opacity-80">
                 <div className="absolute inset-0 rounded-full border border-secondary/15" />

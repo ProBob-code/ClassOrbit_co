@@ -1,9 +1,16 @@
 import type { Metadata } from 'next';
+import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
 import ToastProvider from '@/components/ui/Toast';
 import AnalyticsBeacon from '@/components/AnalyticsBeacon';
 
 const BASE_URL = 'https://classorbit.co';
+
+// Self-hosted at build time, so the browser makes no request to Google and
+// nothing render-blocking sits in front of first paint. Both are variable
+// fonts, so the old 300–800 weight list needs no `weight` option.
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter', display: 'swap' });
+const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit', display: 'swap' });
 
 export const metadata: Metadata = {
   metadataBase: new URL(BASE_URL),
@@ -73,7 +80,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth h-full antialiased" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${outfit.variable} scroll-smooth h-full antialiased`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col bg-background text-on-surface font-body overflow-x-hidden" suppressHydrationWarning>
         {children}
         <ToastProvider />

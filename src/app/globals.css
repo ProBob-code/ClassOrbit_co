@@ -1,5 +1,7 @@
-/* ===== Google Fonts ===== */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@300;400;500;600;700;800&display=swap');
+/* Inter and Outfit are self-hosted by next/font/google in app/layout.tsx, which
+   exposes them as --font-inter / --font-outfit. Do NOT @import them from
+   fonts.googleapis.com: that stylesheet is render-blocking and measured at
+   ~866ms on mobile, delaying first paint on every page. */
 
 @import "tailwindcss";
 
@@ -29,9 +31,9 @@
   --spacing-margin-page: 48px;
   --spacing-margin-mobile: 24px;
 
-  /* --- Fonts --- */
-  --font-display: 'Outfit', sans-serif;
-  --font-body: 'Inter', sans-serif;
+  /* --- Fonts (self-hosted via next/font/google — see layout.tsx) --- */
+  --font-display: var(--font-outfit), sans-serif;
+  --font-body: var(--font-inter), sans-serif;
 }
 
 /* Base Body Styles */
