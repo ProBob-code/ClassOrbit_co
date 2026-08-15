@@ -675,6 +675,14 @@ function BuilderContent() {
         throw new Error('Failed to fetch');
       }
 
+      if (res.status === 429) {
+        const errData = (await res.json()) as any;
+        toast.dismiss(loader);
+        toast.error(`ClassOrbit is busy right now. Please try again in ${errData.retry_after ?? 30} seconds.`);
+        setIsGenerating(false);
+        return;
+      }
+
       if (!res.ok) throw new Error('Failed to fetch');
       const data = (await res.json()) as any;
       
