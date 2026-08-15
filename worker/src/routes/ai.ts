@@ -3,13 +3,13 @@ import type { AppEnv } from '../types';
 import { getDB } from '../lib/d1';
 import { getSessionUser } from '../lib/user-auth';
 import { getMockChatbotReply } from '../lib/support-ai-fallback';
-import { CHATBOT_SYSTEM_PROMPT } from '../lib/ai-prompts';
+import { CHATBOT_SYSTEM_PROMPT, GROQ_MODEL } from '../lib/ai-prompts';
 
 const router = new Hono<AppEnv>();
 
 const FREE_LIMIT = 25;
 
-async function checkAndIncrementUsage(c: Context<AppEnv>, userId: string): Promise<{ allowed: boolean; used: number }> {
+async function checkUsage(c: Context<AppEnv>, userId: string): Promise<{ allowed: boolean; used: number }> {
   const db = getDB(c);
   const month = new Date().toISOString().slice(0, 7);
 
@@ -21,25 +21,23 @@ async function checkAndIncrementUsage(c: Context<AppEnv>, userId: string): Promi
   const expired = plan === 'pro' && profile?.plan_expires_at && new Date(profile.plan_expires_at) < new Date();
   const isPro = (plan === 'pro' || plan === 'school') && !expired;
 
-  if (isPro) {
-    await db.prepare(
-      'INSERT INTO prompt_usage (user_id, month, count) VALUES (?, ?, 1) ON CONFLICT(user_id, month) DO UPDATE SET count = count + 1'
-    ).bind(userId, month).run();
-    return { allowed: true, used: 0 };
-  }
+  if (isPro) return { allowed: true, used: 0 };
 
   const usage = await db.prepare(
     'SELECT count FROM prompt_usage WHERE user_id = ? AND month = ?'
   ).bind(userId, month).first<{ count: number }>();
 
   const used = usage?.count ?? 0;
-  if (used >= FREE_LIMIT) return { allowed: false, used };
+  return { allowed: used < FREE_LIMIT, used };
+}
 
-  await db.prepare(
+// Call only once a prompt has actually been generated, so an upstream outage
+// never spends a free user's monthly quota.
+async function recordUsage(c: Context<AppEnv>, userId: string): Promise<void> {
+  const month = new Date().toISOString().slice(0, 7);
+  await getDB(c).prepare(
     'INSERT INTO prompt_usage (user_id, month, count) VALUES (?, ?, 1) ON CONFLICT(user_id, month) DO UPDATE SET count = count + 1'
   ).bind(userId, month).run();
-
-  return { allowed: true, used: used + 1 };
 }
 
 router.post('/groq', async (c) => {
@@ -47,7 +45,7 @@ router.post('/groq', async (c) => {
     const user = await getSessionUser(c);
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
-    const { allowed, used } = await checkAndIncrementUsage(c, user.id);
+    const { allowed, used } = await checkUsage(c, user.id);
     if (!allowed) {
       return c.json(
         { error: 'LIMIT_REACHED', prompts_used: used, prompt_limit: FREE_LIMIT },
@@ -131,14 +129,16 @@ The prompts you generate MUST explicitly command the target AI assistant to:
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.1-8b-instant',
+        model: GROQ_MODEL,
         messages: [
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt },
         ],
         temperature: 0.7,
         response_format: { type: 'json_object' },
-        max_tokens: 2048,
+        // Kept well under the 8k free-tier TPM ceiling while leaving room for
+        // reasoning tokens, which share this budget with the JSON output.
+        max_completion_tokens: 4096,
       }),
     });
 
@@ -155,6 +155,8 @@ The prompts you generate MUST explicitly command the target AI assistant to:
     } catch {
       resultJson = { prompts: { chatgpt: data.choices[0].message.content.trim() } };
     }
+
+    await recordUsage(c, user.id);
 
     return c.json(resultJson);
   } catch (error: any) {
@@ -199,11 +201,11 @@ router.post('/support/chat', async (c) => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'llama-3.3-70b-versatile',
+        model: GROQ_MODEL,
         messages,
         temperature: 0.3,
         response_format: { type: 'json_object' },
-        max_tokens: 1024,
+        max_completion_tokens: 2048,
       }),
     });
 
