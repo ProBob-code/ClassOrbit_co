@@ -87,6 +87,10 @@ Customize the prompt generated for each requested tool in "selectedTools" based 
 6. 'elevenlabs': Strictly under 1200 characters. Return a PURE narrative spoken voice script for reading (NO markdown headings, NO bullet points, NO prompt commands, just pure spoken speech text).
 7. 'ideogram': Strictly under 500 characters. Return a highly descriptive, visual-only text-to-image graphic prompt describing a crisp educational diagram, visual poster, or educational vector artwork. No conversational text.
 
+GRADE-APPROPRIATENESS (non-negotiable):
+Every concept, formula, term and activity must be within reach of the stated grade/audience. The difficulty target adjusts depth and rigour WITHIN that grade's material; it never licenses reaching into a higher grade (e.g. no trigonometry, refractive index or Snell's law in a primary-grade lesson on light). Explain ideas at that age through observation, everyday examples and hands-on activity instead.
+Never cite specific chapter, unit or page numbers for a curriculum or textbook — you cannot verify them. Refer to the curriculum by name only.
+
 Return ONLY a valid JSON object. Do not include markdown wrappers like \`\`\`json or raw text before or after the JSON.`;
 
     let userPrompt = `
