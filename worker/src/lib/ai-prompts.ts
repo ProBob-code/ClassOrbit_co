@@ -3,6 +3,17 @@
  * Used by: /api/support/chat, /api/support/tickets/[id]/assign-ai, /api/support/tickets/[id]/ai-respond
  */
 
+/**
+ * Groq chat model for every ClassOrbit AI call. Groq decommissions models on
+ * notice — llama-3.1-8b-instant and llama-3.3-70b-versatile were both retired
+ * on 2026-08-16 — so keep this in one place and check
+ * console.groq.com/docs/deprecations before changing it.
+ *
+ * This is a reasoning model: it returns its chain of thought in a separate
+ * `reasoning` field, so `message.content` stays clean JSON.
+ */
+export const GROQ_MODEL = 'openai/gpt-oss-120b';
+
 export const CLASSORBIT_KNOWLEDGE = `
 # What is ClassOrbit?
 ClassOrbit is an AI Prompt Studio for Educators. Teachers describe what they need, and ClassOrbit transforms it into a highly-optimized prompt they can paste into any AI tool. ClassOrbit does NOT run AI models itself; it crafts the perfect prompt.

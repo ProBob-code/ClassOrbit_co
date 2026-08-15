@@ -5,7 +5,7 @@ import { getSessionUser } from '../lib/user-auth';
 import { isAdminRequest } from '../lib/admin-auth';
 import { alertAdmin } from '../lib/alert';
 import { getMockAiAgentReply } from '../lib/support-ai-fallback';
-import { TICKET_AI_SYSTEM_PROMPT } from '../lib/ai-prompts';
+import { TICKET_AI_SYSTEM_PROMPT, GROQ_MODEL } from '../lib/ai-prompts';
 
 const router = new Hono<AppEnv>();
 
@@ -348,10 +348,10 @@ router.post('/support/tickets/:id/:action', async (c) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
+            model: GROQ_MODEL,
             messages: groqMessages,
             temperature: 0.4,
-            max_tokens: 1024,
+            max_completion_tokens: 2048,
           }),
         });
 
@@ -430,10 +430,10 @@ router.post('/support/tickets/:id/:action', async (c) => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            model: 'llama-3.3-70b-versatile',
+            model: GROQ_MODEL,
             messages: groqMessages,
             temperature: 0.4,
-            max_tokens: 1024,
+            max_completion_tokens: 2048,
           }),
         });
         if (groqResponse.ok) {
