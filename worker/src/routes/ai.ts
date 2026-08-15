@@ -136,6 +136,11 @@ The prompts you generate MUST explicitly command the target AI assistant to:
         ],
         temperature: 0.7,
         response_format: { type: 'json_object' },
+        // Reasoning is ~85% of completion tokens at the default 'medium', and
+        // this task is formatting rather than deduction. Measured across three
+        // content types, 'low' halved total usage with no platform-limit
+        // violations on any tool whose output actually reaches the user.
+        reasoning_effort: 'low',
         // Kept well under the 8k free-tier TPM ceiling while leaving room for
         // reasoning tokens, which share this budget with the JSON output.
         max_completion_tokens: 4096,
@@ -145,7 +150,17 @@ The prompts you generate MUST explicitly command the target AI assistant to:
     if (!response.ok) {
       const errorData = await response.text();
       console.error('Groq API Error:', errorData);
-      return c.json({ error: 'Failed to generate prompt from Groq' }, response.status as any);
+
+      // Rate limiting is routine on Groq's free tier, so it gets its own code
+      // the client can turn into "try again shortly" rather than a hard error.
+      if (response.status === 429) {
+        const retryAfter = Number(response.headers.get('retry-after')) || 30;
+        return c.json({ error: 'RATE_LIMITED', retry_after: retryAfter }, 429);
+      }
+
+      // Never forward Groq's status verbatim: a 403 from upstream would be read
+      // by the client as our own LIMIT_REACHED and pop the upgrade modal.
+      return c.json({ error: 'Failed to generate prompt from Groq' }, 502);
     }
 
     const data = await response.json() as any;
