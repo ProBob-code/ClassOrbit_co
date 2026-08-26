@@ -2,6 +2,7 @@ import { Hono, type Context } from 'hono';
 import type { AppEnv } from '../types';
 import { getDB, nanoid } from '../lib/d1';
 import { isAdminRequest, signAdminToken, makeCookie } from '../lib/admin-auth';
+import { FREE_LIMIT, currentMonth, promptsRemaining } from '../lib/plan-limits';
 
 const router = new Hono<AppEnv>();
 
@@ -91,10 +92,33 @@ router.get('/admin/:action{.+}', async (c) => {
 
   if (path === 'users') {
     try {
+      // Left-join this month's counter so the table can show remaining free
+      // prompts; users who have not generated yet simply have no usage row.
       const users = await db.prepare(
-        'SELECT user_id, plan_type, subscription_status, plan_expires_at, is_blocked, email, name, created_at FROM user_profiles ORDER BY created_at DESC'
-      ).all();
-      return c.json({ users: users.results || [] });
+        `SELECT p.user_id, p.plan_type, p.subscription_status, p.plan_expires_at,
+                p.is_blocked, p.email, p.name, p.created_at,
+                COALESCE(u.count, 0) AS prompts_used
+         FROM user_profiles p
+         LEFT JOIN prompt_usage u ON u.user_id = p.user_id AND u.month = ?
+         ORDER BY p.created_at DESC`
+      ).bind(currentMonth()).all();
+
+      const rows = (users.results || []) as any[];
+      const expired = (r: any) =>
+        r.plan_expires_at && new Date(r.plan_expires_at) < new Date();
+      const withQuota = rows.map((r) => {
+        const isPro = (r.plan_type === 'pro' || r.plan_type === 'school') && !expired(r);
+        const used = Number(r.prompts_used) || 0;
+        return {
+          ...r,
+          prompts_used: used,
+          // null on Pro/School means unlimited, matching /api/me/plan.
+          prompt_limit: isPro ? null : FREE_LIMIT,
+          prompts_remaining: isPro ? null : promptsRemaining(used),
+        };
+      });
+
+      return c.json({ users: withQuota, usage_month: currentMonth() });
     } catch (error: any) {
       console.error('Failed to fetch users:', error);
       return c.json({ error: 'Failed to fetch users' }, 500);

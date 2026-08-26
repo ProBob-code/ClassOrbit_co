@@ -2,10 +2,9 @@ import { Hono } from 'hono';
 import type { AppEnv } from '../types';
 import { getDB, nanoid } from '../lib/d1';
 import { getSessionUser } from '../lib/user-auth';
+import { FREE_LIMIT, currentMonth, promptsRemaining } from '../lib/plan-limits';
 
 const router = new Hono<AppEnv>();
-
-const FREE_LIMIT = 25;
 
 router.post('/waitlist', async (c) => {
   const db = getDB(c);
@@ -118,7 +117,7 @@ router.get('/me/plan', async (c) => {
   }
 
   // Get this month's prompt usage
-  const month = new Date().toISOString().slice(0, 7); // '2026-06'
+  const month = currentMonth();
   const usage = await db.prepare(
     'SELECT count FROM prompt_usage WHERE user_id = ? AND month = ?'
   ).bind(user.id, month).first<{ count: number }>();
@@ -131,6 +130,7 @@ router.get('/me/plan', async (c) => {
     plan_type,
     prompts_used,
     prompt_limit,
+    prompts_remaining: is_pro ? null : promptsRemaining(prompts_used),
     is_pro,
     plan_expires_at: profile?.plan_expires_at ?? null,
     subscription_status,

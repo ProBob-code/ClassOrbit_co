@@ -21,7 +21,7 @@ import {
   Send, Bookmark, RotateCcw, X, Plus, Share2, Lock,
   Briefcase, Brain, Stethoscope, Cog, TrendingUp, Landmark, Cpu, Leaf,
   Languages, Dumbbell, Newspaper, Pill, GraduationCap, Sigma, Utensils, Gavel, Ruler,
-  KeyRound
+  KeyRound, Zap
 } from 'lucide-react';
 import UpgradeModal from '@/components/ui/UpgradeModal';
 import SelectMenu, { SelectMenuOption } from '@/components/ui/SelectMenu';
@@ -113,6 +113,13 @@ const extractPdfText = async (file: File): Promise<string> => {
     reader.readAsArrayBuffer(file);
   });
 };
+
+// Fallback quota used only until /api/me/plan answers; the worker is the
+// authority on the real number (worker/src/lib/plan-limits.ts).
+const FREE_PROMPT_LIMIT = 25;
+
+// How many prompts left before a free user starts seeing the heads-up.
+const LOW_QUOTA_THRESHOLD = 5;
 
 // Content types listed here are usable on the Free plan; anything missing shows
 // a Pro lock. Every type is currently free — remove ids to re-enable locks.
@@ -439,8 +446,15 @@ function BuilderContent() {
 
   // Upgrade modal state
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
-  const [usageInfo, setUsageInfo] = useState({ used: 0, limit: 15 });
+  const [usageInfo, setUsageInfo] = useState({ used: 0, limit: FREE_PROMPT_LIMIT });
   const [userPlan, setUserPlan] = useState<'free' | 'pro' | 'school'>('free');
+  const [planLoaded, setPlanLoaded] = useState(false);
+
+  const isFreePlan = userPlan === 'free';
+  const promptsLeft = Math.max(usageInfo.limit - usageInfo.used, 0);
+  // Only warn a free user whose quota is genuinely running low, and only once
+  // the real counter has loaded so the banner never flashes wrong numbers.
+  const showQuotaWarning = planLoaded && isFreePlan && promptsLeft <= LOW_QUOTA_THRESHOLD;
 
   useEffect(() => {
     const fetchPlan = async () => {
@@ -449,6 +463,11 @@ function BuilderContent() {
         if (res.ok) {
           const data = (await res.json()) as any;
           setUserPlan(data.plan_type || 'free');
+          setUsageInfo({
+            used: data.prompts_used ?? 0,
+            limit: data.prompt_limit ?? FREE_PROMPT_LIMIT,
+          });
+          setPlanLoaded(true);
         }
       } catch (err) {
         console.error('Failed to fetch plan', err);
@@ -671,7 +690,11 @@ function BuilderContent() {
         const errData = (await res.json()) as any;
         if (errData.error === 'LIMIT_REACHED') {
           toast.dismiss(loader);
-          setUsageInfo({ used: errData.prompts_used ?? 25, limit: errData.prompt_limit ?? 25 });
+          setUsageInfo({
+            used: errData.prompts_used ?? FREE_PROMPT_LIMIT,
+            limit: errData.prompt_limit ?? FREE_PROMPT_LIMIT,
+          });
+          setPlanLoaded(true);
           setShowUpgradeModal(true);
           setIsGenerating(false);
           return;
@@ -689,6 +712,22 @@ function BuilderContent() {
 
       if (!res.ok) throw new Error('Failed to fetch');
       const data = (await res.json()) as any;
+
+      // The worker returns the fresh counter with every generation, so the
+      // free user learns where they stand as they go, not only once cut off.
+      if (data.usage && !data.usage.is_pro) {
+        const { prompts_used, prompt_limit, prompts_remaining } = data.usage;
+        setUsageInfo({ used: prompts_used, limit: prompt_limit ?? FREE_PROMPT_LIMIT });
+        setPlanLoaded(true);
+        if (prompts_remaining === 0) {
+          setShowUpgradeModal(true);
+        } else if (prompts_remaining <= LOW_QUOTA_THRESHOLD) {
+          toast(
+            `${prompts_remaining} free prompt${prompts_remaining === 1 ? '' : 's'} left this month. Go Pro for unlimited.`,
+            { icon: '⚡', duration: 6000 }
+          );
+        }
+      }
       
       const tools = mode === 'free' ? freeTools : formData.selectedTools;
       const selectedToolData = systemTools.filter(t => tools.includes(t.id));
@@ -1098,6 +1137,51 @@ function BuilderContent() {
           </p>
         </motion.div>
       </header>
+
+      {/* Free-plan quota heads-up: warns while prompts remain, converts at zero. */}
+      {showQuotaWarning && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className={`mb-6 rounded-2xl border px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-4 ${
+            promptsLeft === 0
+              ? 'bg-rose-500/[0.06] border-rose-500/25'
+              : 'bg-primary/[0.06] border-primary/25'
+          }`}
+        >
+          <div className={`w-9 h-9 shrink-0 rounded-xl flex items-center justify-center ${
+            promptsLeft === 0 ? 'bg-rose-500/10 text-rose-400' : 'bg-primary/10 text-primary'
+          }`}>
+            <Zap size={18} fill="currentColor" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            <p className="text-label-md font-bold text-text-main">
+              {promptsLeft === 0
+                ? `You've used all ${usageInfo.limit} free prompts this month`
+                : `${promptsLeft} free prompt${promptsLeft === 1 ? '' : 's'} left this month`}
+            </p>
+            <p className="text-[13px] text-text-muted mt-0.5 leading-relaxed">
+              {promptsLeft === 0
+                ? 'Your free quota resets at the start of next month. Upgrade to Pro for unlimited prompts right now.'
+                : `The Free plan includes ${usageInfo.limit} prompts a month (${usageInfo.used} used). Pro removes the cap entirely.`}
+            </p>
+            <div className="h-1.5 bg-background border border-border rounded-full overflow-hidden mt-2.5 max-w-[280px]">
+              <div
+                className={`h-full rounded-full transition-all ${promptsLeft === 0 ? 'bg-rose-500' : 'bg-primary'}`}
+                style={{ width: `${Math.min((usageInfo.used / usageInfo.limit) * 100, 100)}%` }}
+              />
+            </div>
+          </div>
+
+          <Link
+            href="/upgrade"
+            className="shrink-0 px-4 py-2.5 rounded-xl bg-primary hover:bg-primary-hover text-white text-label-md font-bold transition-colors text-center"
+          >
+            Go Pro
+          </Link>
+        </motion.div>
+      )}
 
       {/* Mode Toggle */}
       <motion.div 
