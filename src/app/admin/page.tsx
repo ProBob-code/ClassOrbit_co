@@ -115,6 +115,11 @@ interface AdminUser {
   email?: string | null;
   name?: string | null;
   created_at: string;
+  /** Prompts generated in the current calendar month. */
+  prompts_used: number;
+  /** null on Pro/School, which are unlimited. */
+  prompt_limit: number | null;
+  prompts_remaining: number | null;
 }
 
 /** Full prompt record from GET /api/admin/prompts (joined with the users table). */
@@ -172,6 +177,45 @@ function StatCard({ icon, label, value, color = 'primary', onClick }: { icon: Re
       </div>
       <p className="text-[30px] font-extrabold text-text-main leading-none font-display tracking-tight">{value}</p>
     </motion.div>
+  );
+}
+
+/* ─── Free prompt quota cell (Users tab) ─── */
+// Matches the threshold the builder warns free users at, so the admin sees the
+// same "running low" state the teacher does.
+const LOW_QUOTA_THRESHOLD = 5;
+
+function UserQuotaCell({ user }: { user: AdminUser }) {
+  const limit = user.prompt_limit;
+
+  // Pro and School are uncapped, so there is nothing to count down.
+  if (limit === null || limit === undefined) {
+    return (
+      <span className="text-[11px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        Unlimited
+      </span>
+    );
+  }
+
+  const used = user.prompts_used ?? 0;
+  const left = user.prompts_remaining ?? Math.max(limit - used, 0);
+  const pct = Math.min((used / limit) * 100, 100);
+  const tone =
+    left === 0 ? { text: 'text-rose-400', bar: 'bg-rose-500' }
+    : left <= LOW_QUOTA_THRESHOLD ? { text: 'text-orange-400', bar: 'bg-orange-500' }
+    : { text: 'text-emerald-400', bar: 'bg-emerald-500' };
+
+  return (
+    <div className="min-w-[130px]">
+      <div className="flex items-baseline gap-1.5">
+        <span className={`text-[15px] font-extrabold leading-none ${tone.text}`}>{left}</span>
+        <span className="text-[11px] text-text-muted">left of {limit}</span>
+      </div>
+      <div className="h-1.5 bg-background border border-border rounded-full overflow-hidden mt-2">
+        <div className={`h-full ${tone.bar} rounded-full transition-all`} style={{ width: `${pct}%` }} />
+      </div>
+      <p className="text-[10px] text-text-subtle mt-1">{used} used this month</p>
+    </div>
   );
 }
 
@@ -1644,6 +1688,7 @@ export default function AdminDashboard() {
                         <tr className="border-b border-border text-[11px] font-bold text-text-muted uppercase tracking-wider bg-white/[0.01]">
                           <th className="px-6 py-4">User ID</th>
                           <th className="px-6 py-4">Plan & Status</th>
+                          <th className="px-6 py-4">Free Prompts Left</th>
                           <th className="px-6 py-4">Joined / Expires</th>
                           <th className="px-6 py-4 text-right">Actions</th>
                         </tr>
@@ -1679,6 +1724,9 @@ export default function AdminDashboard() {
                                   {u.subscription_status}
                                 </span>
                               </div>
+                            </td>
+                            <td className="px-6 py-4">
+                              <UserQuotaCell user={u} />
                             </td>
                             <td className="px-6 py-4">
                               <p className="text-[12px] text-text-main">

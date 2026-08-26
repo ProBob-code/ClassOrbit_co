@@ -5,14 +5,16 @@ import { getSessionUser } from '../lib/user-auth';
 import { getMockChatbotReply } from '../lib/support-ai-fallback';
 import { CHATBOT_SYSTEM_PROMPT, GROQ_MODEL } from '../lib/ai-prompts';
 import { getAssessmentInstructions } from '../lib/paper-rules';
+import { FREE_LIMIT, currentMonth } from '../lib/plan-limits';
 
 const router = new Hono<AppEnv>();
 
-const FREE_LIMIT = 25;
-
-async function checkUsage(c: Context<AppEnv>, userId: string): Promise<{ allowed: boolean; used: number }> {
+async function checkUsage(
+  c: Context<AppEnv>,
+  userId: string
+): Promise<{ allowed: boolean; used: number; isPro: boolean }> {
   const db = getDB(c);
-  const month = new Date().toISOString().slice(0, 7);
+  const month = currentMonth();
 
   const profile = await db.prepare(
     'SELECT plan_type, plan_expires_at FROM user_profiles WHERE user_id = ?'
@@ -22,20 +24,20 @@ async function checkUsage(c: Context<AppEnv>, userId: string): Promise<{ allowed
   const expired = plan === 'pro' && profile?.plan_expires_at && new Date(profile.plan_expires_at) < new Date();
   const isPro = (plan === 'pro' || plan === 'school') && !expired;
 
-  if (isPro) return { allowed: true, used: 0 };
+  if (isPro) return { allowed: true, used: 0, isPro: true };
 
   const usage = await db.prepare(
     'SELECT count FROM prompt_usage WHERE user_id = ? AND month = ?'
   ).bind(userId, month).first<{ count: number }>();
 
   const used = usage?.count ?? 0;
-  return { allowed: used < FREE_LIMIT, used };
+  return { allowed: used < FREE_LIMIT, used, isPro: false };
 }
 
 // Call only once a prompt has actually been generated, so an upstream outage
 // never spends a free user's monthly quota.
 async function recordUsage(c: Context<AppEnv>, userId: string): Promise<void> {
-  const month = new Date().toISOString().slice(0, 7);
+  const month = currentMonth();
   await getDB(c).prepare(
     'INSERT INTO prompt_usage (user_id, month, count) VALUES (?, ?, 1) ON CONFLICT(user_id, month) DO UPDATE SET count = count + 1'
   ).bind(userId, month).run();
@@ -46,7 +48,7 @@ router.post('/groq', async (c) => {
     const user = await getSessionUser(c);
     if (!user) return c.json({ error: 'Unauthorized' }, 401);
 
-    const { allowed, used } = await checkUsage(c, user.id);
+    const { allowed, used, isPro } = await checkUsage(c, user.id);
     if (!allowed) {
       return c.json(
         { error: 'LIMIT_REACHED', prompts_used: used, prompt_limit: FREE_LIMIT },
@@ -176,7 +178,19 @@ The prompts you generate MUST explicitly command the target AI assistant to:
 
     await recordUsage(c, user.id);
 
-    return c.json(resultJson);
+    // Ship the fresh counter back with the prompt so the builder can warn a
+    // free user as they approach the cap instead of only once it slams shut.
+    return c.json({
+      ...resultJson,
+      usage: isPro
+        ? { is_pro: true, prompts_used: 0, prompt_limit: null, prompts_remaining: null }
+        : {
+            is_pro: false,
+            prompts_used: used + 1,
+            prompt_limit: FREE_LIMIT,
+            prompts_remaining: Math.max(FREE_LIMIT - (used + 1), 0),
+          },
+    });
   } catch (error: any) {
     console.error('Error in /api/groq:', error);
     return c.json({ error: 'Internal Server Error' }, 500);
